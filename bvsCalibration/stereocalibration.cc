@@ -1,12 +1,4 @@
 #include "stereocalibration.h"
-
-//#include<chrono>
-//#include<iostream>
-//#include<map>
-//#include<string>
-//#include<vector>
-
-//#include<sys/stat.h>
 #include "opencv2/opencv.hpp"
 
 
@@ -180,8 +172,6 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 	nodes[1].rectificationMatrix = nodes[1].cameraMatrix.inv()*H2*nodes[1].cameraMatrix;
 	nodes[0].projectionMatrix = nodes[0].cameraMatrix;
 	nodes[1].projectionMatrix = nodes[1].cameraMatrix;
-
-	
 }
 
 
