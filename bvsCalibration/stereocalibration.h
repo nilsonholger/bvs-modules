@@ -2,6 +2,7 @@
 #define STEREOCALIBRATION_H
 
 #include<string>
+#include<thread>
 #include<vector>
 
 #include "calibrationnode.h"

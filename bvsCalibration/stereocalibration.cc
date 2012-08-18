@@ -84,12 +84,34 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 {
 	this->imageSize = imageSize;
 
+	// generate a priori object points
 	objectPoints.resize(numImages);
 	for (int i=0; i<numImages; i++)
 		for (int j=0; j<boardSize.height; j++)
 			for (int k=0; k<boardSize.width; k++)
 				objectPoints[i].push_back(cv::Point3f(j*circleSize, k*circleSize, 0));
 
+	LOG(2, "calibrating individual cameras intrinsics!");
+	std::vector<std::thread> threads;
+	std::vector<cv::Mat> rvecs;
+	std::vector<cv::Mat> tvecs;
+	for (auto& node: nodes)
+	{
+		threads.push_back(std::thread([&]{cv::calibrateCamera(
+						objectPoints,
+						node.pointStore,
+						imageSize,
+						node.cameraMatrix,
+						node.distCoeffs,
+						rvecs,
+						tvecs,
+						CV_CALIB_RATIONAL_MODEL,
+						cv::TermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5)
+						);}));
+	}
+	for (auto& t: threads) t.join();
+
+	LOG(2, "calibrating stereo!");
 	rms = cv::stereoCalibrate(
 			objectPoints,
 			nodes[0].pointStore,
@@ -104,6 +126,7 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 			stereoEssential,
 			stereoFundamental,
 			cv::TermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5),
+			CV_CALIB_USE_INTRINSIC_GUESS +
 			CV_CALIB_FIX_ASPECT_RATIO +
 			CV_CALIB_ZERO_TANGENT_DIST +
 			CV_CALIB_SAME_FOCAL_LENGTH +
