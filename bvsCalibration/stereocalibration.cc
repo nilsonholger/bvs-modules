@@ -120,7 +120,7 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 
 	for(int i = 0; i < numImages; i++ )
 	{
-		int npt = 0;//(int)nodes[0].pointStore[i].size();
+		int npt = nodes[0].pointStore[i].size();
 		cv::Mat imgpt[2];
 		for(int k = 0; k < 2; k++ )
 		{
