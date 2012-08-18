@@ -75,6 +75,7 @@ class bvsCalibration : public BVS::Module
 		int autoShotDelay;
 		std::string directory;
 		bool saveImages;
+		bool useSavedImages;
 		bool loadCalibration;
 		bool saveCalibration;
 		std::string calibrationFile;

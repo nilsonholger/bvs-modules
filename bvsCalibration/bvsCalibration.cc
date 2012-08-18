@@ -23,6 +23,7 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 	, autoShotDelay(bvs.config.getValue<int>(id + ".autoShotDelay", 2))
 	, directory(bvs.config.getValue<std::string>(id + ".directory", "calibrationData"))
 	, saveImages(bvs.config.getValue<bool>(id + ".saveImages", false))
+	, useSavedImages(bvs.config.getValue<bool>(id + ".useSavedImages", false))
 	, loadCalibration(bvs.config.getValue<bool>(id + ".loadCalibration", true))
 	, saveCalibration(bvs.config.getValue<bool>(id + ".saveCalibration", true))
 	, calibrationFile(bvs.config.getValue<std::string>(id + ".calibrationFile", "calibration.xml"))
@@ -238,6 +239,23 @@ void bvsCalibration::collectCalibrationImages()
 	bool foundPattern = false;
 	int numPositives = 0;
 
+	if (useSavedImages && numDetections<=numImages)
+	{
+		for (auto& node: nodes)
+		{
+			node.frame = cv::imread(std::string(directory + "/img") + std::to_string(numDetections+1)
+					+ "-" + std::to_string(node.id) + ".pbm");
+			if (node.frame.empty())
+			{
+				LOG(0, "NOT FOUND: " << std::string(directory + "/img") + std::to_string(numDetections+1)
+					+ "-" + std::to_string(node.id) + ".pbm");
+				exit(1);
+			}
+		}
+		notifyDetectionThread();
+		return;
+	}
+
 	for (auto& node: nodes)
 	{
 		foundPattern = cv::findCirclesGrid(node.scaledFrame, boardSize,
@@ -262,8 +280,10 @@ void bvsCalibration::notifyDetectionThread()
 	if (detectionRunning) return;
 
 	if (autoShotMode && std::chrono::duration_cast<std::chrono::seconds>
-			(std::chrono::steady_clock::now() - shotTimer).count() < autoShotDelay)
+			(std::chrono::steady_clock::now() - shotTimer).count() < autoShotDelay && !useSavedImages)
 		return;
+
+	if (useSavedImages) LOG(1, "loading image: " << numDetections+1 << "/" << numImages);
 	
 	shotTimer = std::chrono::steady_clock::now();
 	numDetections++;
@@ -299,10 +319,12 @@ void bvsCalibration::detectCalibrationPoints()
 			if (numPositives==numNodes)
 			{
 				for (auto& node: nodes)
+				{
 					node.pointStore.at(numDetections-1) = node.points;
-				if (saveImages)
-					cv::imwrite(std::string(directory + "/img") + std::to_string(numDetections)
-							+ "-" + std::to_string(node.id) + ".pbm", node.sample);
+					if (saveImages)
+						cv::imwrite(std::string(directory + "/img") + std::to_string(numDetections)
+								+ "-" + std::to_string(node.id) + ".pbm", node.sample);
+				}
 			}
 		}
 		detectionRunning = false;
