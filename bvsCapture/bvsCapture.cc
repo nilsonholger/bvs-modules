@@ -17,6 +17,8 @@ bvsCapture::bvsCapture(const std::string id, const BVS::Info& bvs)
 	, captureL()
 	, captureR()
 {
+	(void) bvs;
+
 	captureL.open(0);
 	captureR.open(1);
 
