@@ -105,10 +105,10 @@ BVS::Status bvsCalibration::execute()
 	if (calibrated && createRectifiedOutput) rectifyOutput(addGridOverlay);
 
 	static double avgFPS = 15;
-	// apply exponential smoothing with alpha = 0.05
+	// apply exponential smoothing with alpha = 0.2
 	double duration = bvs.lastRoundDuration.count();
 	duration = duration > 1000 ? 1000 : duration;
-	avgFPS = (1000/duration + 19 * avgFPS)/20;
+	avgFPS = (1000/duration + 4 * avgFPS)/5;
 	std::string fps = std::to_string(avgFPS);
 	fps.resize(fps.length()-5);
 
@@ -126,7 +126,7 @@ BVS::Status bvsCalibration::execute()
 			cv::putText(node.scaledFrame,fps, cv::Point(10, 30),
 					CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 0, 255), 2);
 			cv::putText(node.scaledFrame, std::to_string(numDetections) + "/" + std::to_string(numImages),
-					cv::Point(10, 70), CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 255, 0), 2);
+					cv::Point(100, 30), CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 255, 0), 2, 8);
 
 			if (!node.scaledFrame.empty()) cv::imshow(std::to_string(node.id), node.scaledFrame);
 			cv::moveWindow(std::to_string(node.id), node.id*node.scaledFrame.cols, 0);
@@ -315,7 +315,8 @@ void bvsCalibration::detectCalibrationPoints()
 				numDetections--;
 				break;
 			}
-			if(foundPattern) numPositives++;
+			else numPositives++;
+
 			if (numPositives==numNodes)
 			{
 				for (auto& node: nodes)
