@@ -128,8 +128,8 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 			cv::TermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5),
 			CV_CALIB_USE_INTRINSIC_GUESS +
 			CV_CALIB_FIX_ASPECT_RATIO +
-			CV_CALIB_ZERO_TANGENT_DIST +
 			CV_CALIB_SAME_FOCAL_LENGTH +
+			CV_CALIB_ZERO_TANGENT_DIST +
 			CV_CALIB_RATIONAL_MODEL +
 			CV_CALIB_FIX_K3 +
 			CV_CALIB_FIX_K4 +
