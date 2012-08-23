@@ -29,7 +29,7 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 	, calibrationFile(bvs.config.getValue<std::string>(id + ".calibrationFile", "calibration.xml"))
 	, createRectifiedOutput(bvs.config.getValue<bool>(id + ".createRectifiedOutput", true))
 	, addGridOverlay(bvs.config.getValue<bool>(id + ".addGridOverlay", false))
-	, useCalibrationGuide(bvs.config.getValue<bool>(id + ".addGridOverlay", false))
+	, useCalibrationGuide(bvs.config.getValue<bool>(id + ".useCalibrationGuide", false))
 	, centerScale(bvs.config.getValue<float>(id + ".centerScale", 0.5))
 	, centerDetections(bvs.config.getValue<int>(id + ".centerDetections", 10))
 	, sectorDetections(bvs.config.getValue<int>(id + ".sectorDetections", 5))
@@ -102,8 +102,11 @@ BVS::Status bvsCalibration::execute()
 	if (!calibrated && numDetections<numImages) collectCalibrationImages();
 	if (!calibrated && numDetections==numImages && !detectionRunning)
 	{
-		guide.reorderDetections(nodes[0].pointStore);
-		guide.reorderDetections(nodes[1].pointStore);
+		if (useCalibrationGuide)
+		{
+			guide.reorderDetections(nodes[0].pointStore);
+			guide.reorderDetections(nodes[1].pointStore);
+		}
 		calibrate();
 		clearCalibrationData();
 		calibrated = true;
