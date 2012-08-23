@@ -29,6 +29,10 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 	, calibrationFile(bvs.config.getValue<std::string>(id + ".calibrationFile", "calibration.xml"))
 	, createRectifiedOutput(bvs.config.getValue<bool>(id + ".createRectifiedOutput", true))
 	, addGridOverlay(bvs.config.getValue<bool>(id + ".addGridOverlay", false))
+	, useCalibrationGuide(bvs.config.getValue<bool>(id + ".addGridOverlay", false))
+	, centerScale(bvs.config.getValue<float>(id + ".centerScale", 0.5))
+	, centerDetections(bvs.config.getValue<int>(id + ".centerDetections", 10))
+	, sectorDetections(bvs.config.getValue<int>(id + ".sectorDetections", 5))
 	, nodes()
 	, objectPoints()
 	, imageSize()
@@ -39,6 +43,7 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 	, detectionLock(detectionMutex)
 	, detectionCond()
 	, shotTimer(std::chrono::steady_clock::now())
+	, guide(numImages, numDetections, centerScale, centerDetections, sectorDetections)
 {
 	for (int i=0; i<numNodes; i++)
 	{
@@ -97,6 +102,8 @@ BVS::Status bvsCalibration::execute()
 	if (!calibrated && numDetections<numImages) collectCalibrationImages();
 	if (!calibrated && numDetections==numImages && !detectionRunning)
 	{
+		guide.reorderDetections(nodes[0].pointStore);
+		guide.reorderDetections(nodes[1].pointStore);
 		calibrate();
 		clearCalibrationData();
 		calibrated = true;
@@ -123,6 +130,7 @@ BVS::Status bvsCalibration::execute()
 		}
 		else
 		{
+			if (useCalibrationGuide) guide.addTargetOverlay(node.scaledFrame);
 			cv::putText(node.scaledFrame,fps, cv::Point(10, 30),
 					CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 0, 255), 2);
 			cv::putText(node.scaledFrame, std::to_string(numDetections) + "/" + std::to_string(numImages),
@@ -268,6 +276,9 @@ void bvsCalibration::collectCalibrationImages()
 		if (numPositives==numNodes)
 		{
 			if (!autoShotMode) return;
+			if (useCalibrationGuide)
+				if (!guide.checkDetectionQuality(nodes[0].scaledFrame, nodes[0].framePoints))
+					return;
 			notifyDetectionThread();
 		}
 	}

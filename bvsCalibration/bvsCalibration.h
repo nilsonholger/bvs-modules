@@ -10,6 +10,7 @@
 #include "bvs/module.h"
 #include "calibrationnode.h"
 #include "stereocalibration.h"
+#include "calibrationguide.h"
 #include "opencv2/opencv.hpp"
 
 
@@ -81,6 +82,10 @@ class bvsCalibration : public BVS::Module
 		std::string calibrationFile;
 		bool createRectifiedOutput;
 		bool addGridOverlay;
+		bool useCalibrationGuide;
+		float centerScale;
+		int centerDetections;
+		int sectorDetections;
 
 		CalNodeVec nodes;
 
@@ -107,6 +112,8 @@ class bvsCalibration : public BVS::Module
 		void clearCalibrationData();
 
 		void rectifyOutput(bool addGridOverlay = false);
+
+		CalibrationGuide guide;
 
 		bvsCalibration(const bvsCalibration&) = delete; /**< -Weffc++ */
 		bvsCalibration& operator=(const bvsCalibration&) = delete; /**< -Weffc++ */
