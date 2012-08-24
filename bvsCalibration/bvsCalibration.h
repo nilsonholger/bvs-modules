@@ -104,6 +104,7 @@ class bvsCalibration : public BVS::Module
 
 		bool loadCalibrationFrom(const std::string& directory, const std::string& file);
 		bool saveCalibrationTo(const std::string& directory, const std::string& file);
+		void generateReflectionMap();
 		void calibrate();
 
 		void collectCalibrationImages();
@@ -114,6 +115,9 @@ class bvsCalibration : public BVS::Module
 		void rectifyOutput(bool addGridOverlay = false);
 
 		CalibrationGuide guide;
+
+		cv::Mat reflectX;
+		cv::Mat reflectY;
 
 		bvsCalibration(const bvsCalibration&) = delete; /**< -Weffc++ */
 		bvsCalibration& operator=(const bvsCalibration&) = delete; /**< -Weffc++ */

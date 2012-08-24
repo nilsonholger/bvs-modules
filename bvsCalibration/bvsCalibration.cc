@@ -44,6 +44,8 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 	, detectionCond()
 	, shotTimer(std::chrono::steady_clock::now())
 	, guide(numImages, numDetections, centerScale, centerDetections, sectorDetections)
+	, reflectX()
+	, reflectY()
 {
 	for (int i=0; i<numNodes; i++)
 	{
@@ -68,7 +70,6 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 	if (stat(directory.c_str(), buf)) mkdir(directory.c_str(), 0755);
 
 	if (loadCalibration) calibrated = loadCalibrationFrom(directory, calibrationFile);
-	
 	if (!calibrated)
 	{
 		detectionThread = std::thread(&bvsCalibration::detectCalibrationPoints, this);
@@ -93,11 +94,17 @@ BVS::Status bvsCalibration::execute()
 	LOG(2, "Execution of " << id << "!");
 
 	for (auto& node: nodes)
+		if(!node.input.receive(node.frame)) return BVS::Status::NOINPUT;
+
+	if (imageSize == cv::Size())
 	{
-		node.input.receive(node.frame);
-		if (!calibrated) cv::pyrDown(node.frame, node.scaledFrame, cv::Size(imageSize.width/2, imageSize.height/2));
+		imageSize = nodes[0].frame.size();
+		generateReflectionMap();
 	}
-	if (imageSize == cv::Size()) imageSize = nodes[0].frame.size();
+
+	for (auto& node: nodes)
+		if(!calibrated) cv::remap(node.frame, *node.output, reflectX, reflectY, 0);
+		//*node.output = node.frame.clone();
 
 	if (!calibrated && numDetections<numImages) collectCalibrationImages();
 	if (!calibrated && numDetections==numImages && !detectionRunning)
@@ -207,6 +214,23 @@ bool bvsCalibration::saveCalibrationTo(const std::string& directory, const std::
 
 
 
+void bvsCalibration::generateReflectionMap()
+{
+	cv::Mat mapX;
+	cv::Mat mapY;
+	mapX.create(imageSize, CV_32FC1);
+	mapY.create(imageSize, CV_32FC1);
+	for (int i=0; i<imageSize.height; i++)
+		for (int j=0; j<imageSize.width; j++)
+		{
+			mapX.at<float>(i,j) = imageSize.width-j;
+			mapY.at<float>(i,j) = i;
+		}
+	cv::convertMaps(mapX, mapY, reflectX, reflectY, CV_16SC2);
+}
+
+
+
 void bvsCalibration::calibrate()
 {
 	switch (numNodes)
@@ -269,7 +293,7 @@ void bvsCalibration::collectCalibrationImages()
 				node.framePoints, cv::CALIB_CB_ASYMMETRIC_GRID);
 		for (auto& point: node.framePoints)
 		{
-			point.x = point.x * 2;
+			point.x = node.frame.cols - point.x * 2;
 			point.y = point.y * 2;
 		}
 		cv::drawChessboardCorners(*node.output, boardSize,
