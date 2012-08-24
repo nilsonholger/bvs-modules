@@ -122,27 +122,22 @@ BVS::Status bvsCalibration::execute()
 	std::string fps = std::to_string(avgFPS);
 	fps.resize(fps.length()-5);
 
+	if (!calibrated && useCalibrationGuide) guide.addTargetOverlay(*nodes[0].output);
 	for (auto& node: nodes)
 	{
+		cv::putText(*(node.output),fps, cv::Point(10, 30),
+				CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 0, 255), 2);
 		if (calibrated)
 		{
-			cv::putText(*(node.output),fps, cv::Point(10, 30),
-					CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 0, 255), 2);
-			cv::imshow(std::to_string(node.id), *(node.output));
-			cv::moveWindow(std::to_string(node.id), node.id*node.output->cols, 0);
 		}
 		else
 		{
-			if (useCalibrationGuide) guide.addTargetOverlay(node.scaledFrame);
-			cv::putText(node.scaledFrame,fps, cv::Point(10, 30),
-					CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 0, 255), 2);
-			cv::putText(node.scaledFrame, std::to_string(numDetections) + "/" + std::to_string(numImages),
+			cv::putText(*node.output, std::to_string(numDetections) + "/" + std::to_string(numImages),
 					cv::Point(100, 30), CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 255, 0), 2, 8);
-
-			if (!node.scaledFrame.empty()) cv::imshow(std::to_string(node.id), node.scaledFrame);
-			cv::moveWindow(std::to_string(node.id), node.id*node.scaledFrame.cols, 0);
 		}
 
+		cv::imshow(std::to_string(node.id), *node.output);
+		//cv::moveWindow(std::to_string(node.id), node.id*node.output->cols, 0);
 	}
 
 	char c = cv::waitKey(1);
@@ -269,9 +264,15 @@ void bvsCalibration::collectCalibrationImages()
 
 	for (auto& node: nodes)
 	{
+		cv::pyrDown(node.frame, node.scaledFrame, cv::Size(imageSize.width/2, imageSize.height/2));
 		foundPattern = cv::findCirclesGrid(node.scaledFrame, boardSize,
 				node.framePoints, cv::CALIB_CB_ASYMMETRIC_GRID);
-		cv::drawChessboardCorners(node.scaledFrame, boardSize,
+		for (auto& point: node.framePoints)
+		{
+			point.x = point.x * 2;
+			point.y = point.y * 2;
+		}
+		cv::drawChessboardCorners(*node.output, boardSize,
 				cv::Mat(node.framePoints), foundPattern);
 
 		if (!foundPattern) break;
@@ -280,7 +281,7 @@ void bvsCalibration::collectCalibrationImages()
 		{
 			if (!autoShotMode) return;
 			if (useCalibrationGuide)
-				if (!guide.checkDetectionQuality(nodes[0].scaledFrame, nodes[0].framePoints))
+				if (!guide.checkDetectionQuality(*nodes[0].output, nodes[0].framePoints))
 					return;
 			notifyDetectionThread();
 		}
