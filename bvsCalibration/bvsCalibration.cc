@@ -91,10 +91,8 @@ bvsCalibration::~bvsCalibration()
 // Put all your work here.
 BVS::Status bvsCalibration::execute()
 {
-	LOG(2, "Execution of " << id << "!");
-
 	for (auto& node: nodes)
-		if(!node.input.receive(node.frame)) return BVS::Status::NOINPUT;
+		if(!useSavedImages && !node.input.receive(node.frame)) return BVS::Status::NOINPUT;
 
 	if (imageSize == cv::Size())
 	{
