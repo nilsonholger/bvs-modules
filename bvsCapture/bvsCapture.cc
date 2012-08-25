@@ -53,8 +53,6 @@ bvsCapture::~bvsCapture()
 // Put all your work here.
 BVS::Status bvsCapture::execute()
 {
-	LOG(2, "Execution of " << id << "!");
-
 	outL.lockConnection();
 	outR.lockConnection();
 	captureL.grab();
