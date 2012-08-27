@@ -49,7 +49,7 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 {
 	for (int i=0; i<numNodes; i++)
 	{
-		nodes.emplace_back(CalibrationNode{
+		nodes.emplace_back(new CalibrationNode(
 				i
 				, BVS::Connector<cv::Mat>(std::string("input") + std::to_string(i), BVS::ConnectorType::INPUT)
 				, BVS::Connector<cv::Mat>(std::string("output") + std::to_string(i), BVS::ConnectorType::OUTPUT)
@@ -63,7 +63,7 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 				, cv::Mat()
 				, cv::Mat()
 				, cv::Mat()
-				});
+				));
 	}
 
 	struct stat *buf = nullptr;
@@ -92,32 +92,32 @@ bvsCalibration::~bvsCalibration()
 BVS::Status bvsCalibration::execute()
 {
 	for (auto& node: nodes)
-		if(!useSavedImages && !node.input.receive(node.frame)) return BVS::Status::NOINPUT;
+		if(!useSavedImages && !node->input.receive(node->frame)) return BVS::Status::NOINPUT;
 
 	if (imageSize == cv::Size())
 	{
-		imageSize = nodes[0].frame.size();
+		imageSize = nodes[0]->frame.size();
 		generateReflectionMap();
 	}
 
 	for (auto& node: nodes)
-		if(!calibrated) cv::remap(node.frame, *node.output, reflectX, reflectY, 0);
-		//*node.output = node.frame.clone();
+		if(!calibrated) cv::remap(node->frame, *node->output, reflectX, reflectY, 0);
+		//*node->output = node->frame.clone();
 
 	if (!calibrated && numDetections<numImages) collectCalibrationImages();
 	if (!calibrated && numDetections==numImages && !detectionRunning)
 	{
 		if (useCalibrationGuide)
 		{
-			guide.reorderDetections(nodes[0].pointStore);
-			guide.reorderDetections(nodes[1].pointStore);
+			guide.reorderDetections(nodes[0]->pointStore);
+			guide.reorderDetections(nodes[1]->pointStore);
 		}
 		calibrate();
 		clearCalibrationData();
 		calibrated = true;
 	}
 
-	if (calibrated && createRectifiedOutput) rectifyOutput(addGridOverlay);
+	if (calibrated && createRectifiedOutput && !useSavedImages) rectifyOutput(addGridOverlay);
 
 	static double avgFPS = 15;
 	// apply exponential smoothing with alpha = 0.2
@@ -127,22 +127,22 @@ BVS::Status bvsCalibration::execute()
 	std::string fps = std::to_string(avgFPS);
 	fps.resize(fps.length()-5);
 
-	if (!calibrated && useCalibrationGuide) guide.addTargetOverlay(*nodes[0].output);
+	if (!calibrated && useCalibrationGuide) guide.addTargetOverlay(*nodes[0]->output);
 	for (auto& node: nodes)
 	{
-		cv::putText(*(node.output),fps, cv::Point(10, 30),
+		cv::putText(*node->output,fps, cv::Point(10, 30),
 				CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 0, 255), 2);
 		if (calibrated)
 		{
 		}
 		else
 		{
-			cv::putText(*node.output, std::to_string(numDetections) + "/" + std::to_string(numImages),
+			cv::putText(*node->output, std::to_string(numDetections) + "/" + std::to_string(numImages),
 					cv::Point(100, 30), CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 255, 0), 2, 8);
 		}
 
-		cv::imshow(std::to_string(node.id), *node.output);
-		//cv::moveWindow(std::to_string(node.id), node.id*node.output->cols, 0);
+		if (!useSavedImages) cv::imshow(std::to_string(node->id), *node->output);
+		//cv::moveWindow(std::to_string(node->id), node->id*node->output->cols, 0);
 	}
 
 	char c = cv::waitKey(1);
@@ -271,12 +271,12 @@ void bvsCalibration::collectCalibrationImages()
 	{
 		for (auto& node: nodes)
 		{
-			node.frame = cv::imread(std::string(directory + "/img") + std::to_string(numDetections+1)
-					+ "-" + std::to_string(node.id) + ".pbm");
-			if (node.frame.empty())
+			node->frame = cv::imread(std::string(directory + "/img") + std::to_string(numDetections+1)
+					+ "-" + std::to_string(node->id) + ".pbm");
+			if (node->frame.empty())
 			{
 				LOG(0, "NOT FOUND: " << std::string(directory + "/img") + std::to_string(numDetections+1)
-					+ "-" + std::to_string(node.id) + ".pbm");
+					+ "-" + std::to_string(node->id) + ".pbm");
 				exit(1);
 			}
 		}
@@ -286,16 +286,16 @@ void bvsCalibration::collectCalibrationImages()
 
 	for (auto& node: nodes)
 	{
-		cv::pyrDown(node.frame, node.scaledFrame, cv::Size(imageSize.width/2, imageSize.height/2));
-		foundPattern = cv::findCirclesGrid(node.scaledFrame, boardSize,
-				node.framePoints, cv::CALIB_CB_ASYMMETRIC_GRID);
-		for (auto& point: node.framePoints)
+		cv::pyrDown(node->frame, node->scaledFrame, cv::Size(imageSize.width/2, imageSize.height/2));
+		foundPattern = cv::findCirclesGrid(node->scaledFrame, boardSize,
+				node->framePoints, cv::CALIB_CB_ASYMMETRIC_GRID);
+		for (auto& point: node->framePoints)
 		{
-			point.x = node.frame.cols - point.x * 2;
+			point.x = node->frame.cols - point.x * 2;
 			point.y = point.y * 2;
 		}
-		cv::drawChessboardCorners(*node.output, boardSize,
-				cv::Mat(node.framePoints), foundPattern);
+		cv::drawChessboardCorners(*node->output, boardSize,
+				cv::Mat(node->framePoints), foundPattern);
 
 		if (!foundPattern) break;
 		if(foundPattern) numPositives++;
@@ -303,7 +303,7 @@ void bvsCalibration::collectCalibrationImages()
 		{
 			if (!autoShotMode) return;
 			if (useCalibrationGuide)
-				if (!guide.checkDetectionQuality(*nodes[0].output, nodes[0].framePoints))
+				if (!guide.checkDetectionQuality(*nodes[0]->output, nodes[0]->framePoints))
 					return;
 			notifyDetectionThread();
 		}
@@ -325,7 +325,7 @@ void bvsCalibration::notifyDetectionThread()
 	shotTimer = std::chrono::high_resolution_clock::now();
 	numDetections++;
 	for (auto& node: nodes)
-		node.sample = node.frame.clone();
+		node->sample = node->frame.clone();
 	detectionRunning = true;
 	detectionCond.notify_one();
 }
@@ -338,7 +338,7 @@ void bvsCalibration::detectCalibrationPoints()
 	int numPositives;
 
 	for (auto& node: nodes)
-		node.pointStore.resize(numImages);
+		node->pointStore.resize(numImages);
 
 	while (numDetections<numImages)
 	{
@@ -346,7 +346,7 @@ void bvsCalibration::detectCalibrationPoints()
 		numPositives = 0;
 		for (auto& node: nodes)
 		{
-			foundPattern = cv::findCirclesGrid(node.sample, boardSize, node.points, cv::CALIB_CB_ASYMMETRIC_GRID);
+			foundPattern = cv::findCirclesGrid(node->sample, boardSize, node->points, cv::CALIB_CB_ASYMMETRIC_GRID);
 			if (!foundPattern)
 			{
 				numDetections--;
@@ -358,10 +358,10 @@ void bvsCalibration::detectCalibrationPoints()
 			{
 				for (auto& node: nodes)
 				{
-					node.pointStore.at(numDetections-1) = node.points;
+					node->pointStore.at(numDetections-1) = node->points;
 					if (saveImages)
 						cv::imwrite(std::string(directory + "/img") + std::to_string(numDetections)
-								+ "-" + std::to_string(node.id) + ".pbm", node.sample);
+								+ "-" + std::to_string(node->id) + ".pbm", node->sample);
 				}
 			}
 		}
@@ -375,13 +375,13 @@ void bvsCalibration::clearCalibrationData()
 {
 	for (auto& node: nodes)
 	{
-		node.scaledFrame.release();
-		node.framePoints.clear();
-		node.framePoints.shrink_to_fit();
-		node.sample.release();
-		node.points.clear();
-		node.points.shrink_to_fit();
-		node.pointStore.clear();
-		node.pointStore.shrink_to_fit();
+		node->scaledFrame.release();
+		node->framePoints.clear();
+		node->framePoints.shrink_to_fit();
+		node->sample.release();
+		node->points.clear();
+		node->points.shrink_to_fit();
+		node->pointStore.clear();
+		node->pointStore.shrink_to_fit();
 	}
 }

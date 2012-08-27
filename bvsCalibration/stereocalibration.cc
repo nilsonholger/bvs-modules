@@ -38,11 +38,11 @@ bool StereoCalibration::loadFromFile(const std::string& path, const std::string&
 
 	for (auto& node: nodes)
 	{
-		std::string id = std::to_string(node.id);
-		fs["cameraMatrix"+id] >> node.cameraMatrix;
-		fs["distCoeffs"+id] >> node.distCoeffs;
-		fs["rectificationMatrix"+id] >> node.rectificationMatrix;
-		fs["projectionMatrix"+id] >> node.projectionMatrix;
+		std::string id = std::to_string(node->id);
+		fs["cameraMatrix"+id] >> node->cameraMatrix;
+		fs["distCoeffs"+id] >> node->distCoeffs;
+		fs["rectificationMatrix"+id] >> node->rectificationMatrix;
+		fs["projectionMatrix"+id] >> node->projectionMatrix;
 	}
 
 	return true;
@@ -68,11 +68,11 @@ bool StereoCalibration::saveToFile(const std::string& path, const std::string& f
 
 	for (auto& node: nodes)
 	{
-		std::string id = std::to_string(node.id);
-		fs << "cameraMatrix"+id << node.cameraMatrix;
-		fs << "distCoeffs"+id << node.distCoeffs;
-		fs << "rectificationMatrix"+id << node.rectificationMatrix;
-		fs << "projectionMatrix"+id << node.projectionMatrix;
+		std::string id = std::to_string(node->id);
+		fs << "cameraMatrix"+id << node->cameraMatrix;
+		fs << "distCoeffs"+id << node->distCoeffs;
+		fs << "rectificationMatrix"+id << node->rectificationMatrix;
+		fs << "projectionMatrix"+id << node->projectionMatrix;
 	}
 
 	return true;
@@ -99,10 +99,10 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 	{
 		threads.push_back(std::thread([&]{cv::calibrateCamera(
 						objectPoints,
-						node.pointStore,
+						node->pointStore,
 						imageSize,
-						node.cameraMatrix,
-						node.distCoeffs,
+						node->cameraMatrix,
+						node->distCoeffs,
 						rvecs,
 						tvecs,
 						CV_CALIB_FIX_PRINCIPAL_POINT +
@@ -121,8 +121,8 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 
 	LOG(2, "calibrating stereo!");
 	rms = cv::stereoCalibrate(
-			objectPoints, nodes[0].pointStore, nodes[1].pointStore,
-			nodes[0].cameraMatrix, nodes[0].distCoeffs, nodes[1].cameraMatrix, nodes[1].distCoeffs,
+			objectPoints, nodes[0]->pointStore, nodes[1]->pointStore,
+			nodes[0]->cameraMatrix, nodes[0]->distCoeffs, nodes[1]->cameraMatrix, nodes[1]->distCoeffs,
 			imageSize, stereoRotation, stereoTranslation, stereoEssential, stereoFundamental,
 			cv::TermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5),
 			//CV_CALIB_FIX_INTRINSIC +
@@ -145,21 +145,21 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 
 	for(int i = 0; i < numImages; i++ )
 	{
-		int npt = nodes[0].pointStore[i].size();
+		int npt = nodes[0]->pointStore[i].size();
 		cv::Mat imgpt[2];
 		for(int k = 0; k < 2; k++ )
 		{
-			imgpt[k] = cv::Mat(nodes[k].pointStore[i]);
-			undistortPoints(imgpt[k], imgpt[k], nodes[k].cameraMatrix, nodes[k].distCoeffs, cv::Mat(), nodes[k].cameraMatrix);
+			imgpt[k] = cv::Mat(nodes[k]->pointStore[i]);
+			undistortPoints(imgpt[k], imgpt[k], nodes[k]->cameraMatrix, nodes[k]->distCoeffs, cv::Mat(), nodes[k]->cameraMatrix);
 			computeCorrespondEpilines(imgpt[k], k+1, stereoFundamental, lines[k]);
 		}
 		for(int j = 0; j < npt; j++ )
 		{
 			double errIJ =
-				fabs(nodes[0].pointStore[i][j].x*lines[1][j][0] +
-				nodes[0].pointStore[i][j].y*lines[1][j][1] + lines[1][j][2]) +
-				fabs(nodes[0].pointStore[i][j].x*lines[0][j][0] +
-				nodes[1].pointStore[i][j].y*lines[0][j][1] + lines[0][j][2]);
+				fabs(nodes[0]->pointStore[i][j].x*lines[1][j][0] +
+				nodes[0]->pointStore[i][j].y*lines[1][j][1] + lines[1][j][2]) +
+				fabs(nodes[0]->pointStore[i][j].x*lines[0][j][0] +
+				nodes[1]->pointStore[i][j].y*lines[0][j][1] + lines[0][j][2]);
 			averageError += errIJ;
 		}
 		npoints += npt;
@@ -174,11 +174,11 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 
 	LOG(2, "calculating stereo rectification!");
 	cv::stereoRectify(
-			nodes[0].cameraMatrix, nodes[0].distCoeffs,
-			nodes[1].cameraMatrix, nodes[1].distCoeffs,
+			nodes[0]->cameraMatrix, nodes[0]->distCoeffs,
+			nodes[1]->cameraMatrix, nodes[1]->distCoeffs,
 			imageSize, stereoRotation, stereoTranslation,
-			nodes[0].rectificationMatrix, nodes[1].rectificationMatrix,
-			nodes[0].projectionMatrix, nodes[1].projectionMatrix,
+			nodes[0]->rectificationMatrix, nodes[1]->rectificationMatrix,
+			nodes[0]->projectionMatrix, nodes[1]->projectionMatrix,
 			disparityToDepthMapping, CV_CALIB_ZERO_DISPARITY, 1, imageSize,
 			&validRoi[0], &validRoi[1]);
 
@@ -190,7 +190,7 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 	for( int k = 0; k < 2; k++ )
 	{
 		for( int i = 0; i < numImages; i++ )
-			std::copy(nodes[k].pointStore[i].begin(), nodes[k].pointStore[i].end(), back_inserter(allimgpt[k]));
+			std::copy(nodes[k]->pointStore[i].begin(), nodes[k]->pointStore[i].end(), back_inserter(allimgpt[k]));
 	}
 	stereoFundamental = cv::findFundamentalMat(cv::Mat(allimgpt[0]), cv::Mat(allimgpt[1]), CV_FM_8POINT, 0, 0);
 	//TODO use/test RANSAC and others, or use from stereoCalibrate...
@@ -199,10 +199,10 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 	cv::Mat H1, H2;
 	cv::stereoRectifyUncalibrated(cv::Mat(allimgpt[0]), cv::Mat(allimgpt[1]), stereoFundamental, imageSize, H1, H2, 3);
 
-	nodes[0].rectificationMatrix = nodes[0].cameraMatrix.inv()*H1*nodes[0].cameraMatrix;
-	nodes[1].rectificationMatrix = nodes[1].cameraMatrix.inv()*H2*nodes[1].cameraMatrix;
-	nodes[0].projectionMatrix = nodes[0].cameraMatrix;
-	nodes[1].projectionMatrix = nodes[1].cameraMatrix;
+	nodes[0]->rectificationMatrix = nodes[0]->cameraMatrix.inv()*H1*nodes[0]->cameraMatrix;
+	nodes[1]->rectificationMatrix = nodes[1]->cameraMatrix.inv()*H2*nodes[1]->cameraMatrix;
+	nodes[0]->projectionMatrix = nodes[0]->cameraMatrix;
+	nodes[1]->projectionMatrix = nodes[1]->cameraMatrix;
 	
 	LOG(2, "calibration done!");
 }
@@ -215,26 +215,26 @@ void StereoCalibration::rectify(bool addGridOverlay)
 
 	if (initRectifyMap)
 	{
-		cv::initUndistortRectifyMap(nodes[0].cameraMatrix, nodes[0].distCoeffs,
-				nodes[0].rectificationMatrix, nodes[0].projectionMatrix, imageSize,
+		cv::initUndistortRectifyMap(nodes[0]->cameraMatrix, nodes[0]->distCoeffs,
+				nodes[0]->rectificationMatrix, nodes[0]->projectionMatrix, imageSize,
 				CV_16SC2, rectifyMap[0][0], rectifyMap[0][1]);
-		cv::initUndistortRectifyMap(nodes[1].cameraMatrix, nodes[1].distCoeffs,
-				nodes[1].rectificationMatrix, nodes[1].projectionMatrix, imageSize,
+		cv::initUndistortRectifyMap(nodes[1]->cameraMatrix, nodes[1]->distCoeffs,
+				nodes[1]->rectificationMatrix, nodes[1]->projectionMatrix, imageSize,
 				CV_16SC2, rectifyMap[1][0], rectifyMap[1][1]);
 		initRectifyMap = false;
 	}
 
-	cv::remap(nodes[0].frame, *nodes[0].output, rectifyMap[0][0], rectifyMap[0][1], CV_INTER_LINEAR);
-	cv::remap(nodes[1].frame, *nodes[1].output, rectifyMap[1][0], rectifyMap[1][1], CV_INTER_LINEAR);
+	cv::remap(nodes[0]->frame, *nodes[0]->output, rectifyMap[0][0], rectifyMap[0][1], CV_INTER_LINEAR);
+	cv::remap(nodes[1]->frame, *nodes[1]->output, rectifyMap[1][0], rectifyMap[1][1], CV_INTER_LINEAR);
 
 	if (addGridOverlay)
 	{
 		for (auto& node: nodes)
 		{
-			for(int i = 0; i < node.output->rows; i += node.output->rows/10)
-				cv::line(*node.output, cv::Point(0, i), cv::Point(node.output->cols, i), cv::Scalar(0, 255, 0), 1, 8);
-			for(int i = 0; i < node.output->cols; i += node.output->cols/10)
-				cv::line(*node.output, cv::Point(i, 0), cv::Point(i, node.output->rows), cv::Scalar(0, 255, 0), 1, 8);
+			for(int i = 0; i < node->output->rows; i += node->output->rows/10)
+				cv::line(*node->output, cv::Point(0, i), cv::Point(node->output->cols, i), cv::Scalar(0, 255, 0), 1, 8);
+			for(int i = 0; i < node->output->cols; i += node->output->cols/10)
+				cv::line(*node->output, cv::Point(i, 0), cv::Point(i, node->output->rows), cv::Scalar(0, 255, 0), 1, 8);
 		}
 	}
 }
