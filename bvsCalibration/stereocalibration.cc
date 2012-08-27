@@ -105,31 +105,31 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 						node.distCoeffs,
 						rvecs,
 						tvecs,
-						CV_CALIB_RATIONAL_MODEL,
+						CV_CALIB_FIX_PRINCIPAL_POINT +
+						CV_CALIB_FIX_ASPECT_RATIO +
+						CV_CALIB_ZERO_TANGENT_DIST +
+						CV_CALIB_SAME_FOCAL_LENGTH +
+						CV_CALIB_RATIONAL_MODEL +
+						CV_CALIB_FIX_K3 +
+						CV_CALIB_FIX_K4 +
+						CV_CALIB_FIX_K5,
 						cv::TermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5)
 						);}));
 	}
 	for (auto& t: threads) t.join();
 
+
 	LOG(2, "calibrating stereo!");
 	rms = cv::stereoCalibrate(
-			objectPoints,
-			nodes[0].pointStore,
-			nodes[1].pointStore,
-			nodes[0].cameraMatrix,
-			nodes[0].distCoeffs,
-			nodes[1].cameraMatrix,
-			nodes[1].distCoeffs,
-			imageSize,
-			stereoRotation,
-			stereoTranslation,
-			stereoEssential,
-			stereoFundamental,
+			objectPoints, nodes[0].pointStore, nodes[1].pointStore,
+			nodes[0].cameraMatrix, nodes[0].distCoeffs, nodes[1].cameraMatrix, nodes[1].distCoeffs,
+			imageSize, stereoRotation, stereoTranslation, stereoEssential, stereoFundamental,
 			cv::TermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5),
+			//CV_CALIB_FIX_INTRINSIC +
 			CV_CALIB_USE_INTRINSIC_GUESS +
+			CV_CALIB_FIX_PRINCIPAL_POINT +
 			CV_CALIB_FIX_ASPECT_RATIO +
 			CV_CALIB_SAME_FOCAL_LENGTH +
-			CV_CALIB_ZERO_TANGENT_DIST +
 			CV_CALIB_RATIONAL_MODEL +
 			CV_CALIB_FIX_K3 +
 			CV_CALIB_FIX_K4 +
@@ -138,6 +138,8 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 
 
 
+	//TODO nicefy
+	LOG(2, "calculating average calibration error!");
 	int npoints = 0;
 	std::vector<cv::Vec3f> lines[2];
 
@@ -167,20 +169,23 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 
 
 
+	// TODO put validRoi in node struct, display later on to check size of valid pixel region
 	cv::Rect validRoi[2];
 
+	LOG(2, "calculating stereo rectification!");
 	cv::stereoRectify(
 			nodes[0].cameraMatrix, nodes[0].distCoeffs,
 			nodes[1].cameraMatrix, nodes[1].distCoeffs,
-			imageSize,
-			stereoRotation,
-			stereoTranslation,
+			imageSize, stereoRotation, stereoTranslation,
 			nodes[0].rectificationMatrix, nodes[1].rectificationMatrix,
 			nodes[0].projectionMatrix, nodes[1].projectionMatrix,
-			disparityToDepthMapping,
-			CV_CALIB_ZERO_DISPARITY, 1, imageSize,
+			disparityToDepthMapping, CV_CALIB_ZERO_DISPARITY, 1, imageSize,
 			&validRoi[0], &validRoi[1]);
 
+	// TODO rectification and projection for both heads are 0, comes from alpha=1, check their calculations below, must have some weird error, compare to stereo_calib.cpp from samples
+
+	LOG(2, "using fundamental matrix to recalculate rectification and projection matrices!");
+	//TODO nicefy
 	std::vector<cv::Point2f> allimgpt[2];
 	for( int k = 0; k < 2; k++ )
 	{
@@ -188,6 +193,9 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 			std::copy(nodes[k].pointStore[i].begin(), nodes[k].pointStore[i].end(), back_inserter(allimgpt[k]));
 	}
 	stereoFundamental = cv::findFundamentalMat(cv::Mat(allimgpt[0]), cv::Mat(allimgpt[1]), CV_FM_8POINT, 0, 0);
+	//TODO use/test RANSAC and others, or use from stereoCalibrate...
+	// TODO use these fundamental matrices or the one from stereo calibrate? COMPARE!
+	//stereoFundamental = cv::findFundamentalMat(cv::Mat(allimgpt[0]), cv::Mat(allimgpt[1]));
 	cv::Mat H1, H2;
 	cv::stereoRectifyUncalibrated(cv::Mat(allimgpt[0]), cv::Mat(allimgpt[1]), stereoFundamental, imageSize, H1, H2, 3);
 
@@ -195,6 +203,8 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 	nodes[1].rectificationMatrix = nodes[1].cameraMatrix.inv()*H2*nodes[1].cameraMatrix;
 	nodes[0].projectionMatrix = nodes[0].cameraMatrix;
 	nodes[1].projectionMatrix = nodes[1].cameraMatrix;
+	
+	LOG(2, "calibration done!");
 }
 
 
