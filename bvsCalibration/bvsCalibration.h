@@ -100,7 +100,7 @@ class bvsCalibration : public BVS::Module
 		std::unique_lock<std::mutex> detectionLock; /**< Lock for detectionThread. */
 		std::condition_variable detectionCond; /**< Condition variable for detectionThread. */
 
-		std::chrono::time_point<std::chrono::steady_clock> shotTimer;
+		std::chrono::time_point<std::chrono::high_resolution_clock> shotTimer;
 
 		bool loadCalibrationFrom(const std::string& directory, const std::string& file);
 		bool saveCalibrationTo(const std::string& directory, const std::string& file);

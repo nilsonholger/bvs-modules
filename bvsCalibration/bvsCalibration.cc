@@ -42,7 +42,7 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 	, detectionMutex()
 	, detectionLock(detectionMutex)
 	, detectionCond()
-	, shotTimer(std::chrono::steady_clock::now())
+	, shotTimer(std::chrono::high_resolution_clock::now())
 	, guide(numImages, numDetections, centerScale, centerDetections, sectorDetections)
 	, reflectX()
 	, reflectY()
@@ -317,12 +317,12 @@ void bvsCalibration::notifyDetectionThread()
 	if (detectionRunning) return;
 
 	if (autoShotMode && std::chrono::duration_cast<std::chrono::seconds>
-			(std::chrono::steady_clock::now() - shotTimer).count() < autoShotDelay && !useSavedImages)
+			(std::chrono::high_resolution_clock::now() - shotTimer).count() < autoShotDelay && !useSavedImages)
 		return;
 
 	if (useSavedImages) LOG(1, "loading image: " << numDetections+1 << "/" << numImages);
 	
-	shotTimer = std::chrono::steady_clock::now();
+	shotTimer = std::chrono::high_resolution_clock::now();
 	numDetections++;
 	for (auto& node: nodes)
 		node.sample = node.frame.clone();
