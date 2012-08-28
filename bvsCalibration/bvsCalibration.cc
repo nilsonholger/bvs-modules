@@ -3,67 +3,54 @@
 
 
 
-// This is your module's constructor.
-// Please do not change its signature as it is called by the framework (so the
-// framework actually creates your module) and the framework assigns the unique
-// identifier and gives you access to the its config.
-// However, you should use it to create your data structures etc.
 bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
-	: BVS::Module()
-	, id(id)
-	, logger(id)
-	, bvs(bvs)
-	, calibrated(false)
-	, detectionRunning(false)
-	, numNodes(bvs.config.getValue<int>(id + ".numNodes", 0))
-	, numImages(bvs.config.getValue<int>(id + ".numImages", 50))
-	, numDetections(0)
-	, circleSize(bvs.config.getValue<float>(id + ".circleSize", 2.42f))
-	, autoShotMode(bvs.config.getValue<bool>(id + ".autoShotMode", true))
-	, autoShotDelay(bvs.config.getValue<int>(id + ".autoShotDelay", 2))
-	, directory(bvs.config.getValue<std::string>(id + ".directory", "calibrationData"))
-	, saveImages(bvs.config.getValue<bool>(id + ".saveImages", false))
-	, useSavedImages(bvs.config.getValue<bool>(id + ".useSavedImages", false))
-	, loadCalibration(bvs.config.getValue<bool>(id + ".loadCalibration", true))
-	, saveCalibration(bvs.config.getValue<bool>(id + ".saveCalibration", true))
-	, calibrationFile(bvs.config.getValue<std::string>(id + ".calibrationFile", "calibration.xml"))
-	, createRectifiedOutput(bvs.config.getValue<bool>(id + ".createRectifiedOutput", true))
-	, addGridOverlay(bvs.config.getValue<bool>(id + ".addGridOverlay", false))
-	, useCalibrationGuide(bvs.config.getValue<bool>(id + ".useCalibrationGuide", false))
-	, centerScale(bvs.config.getValue<float>(id + ".centerScale", 0.5))
-	, centerDetections(bvs.config.getValue<int>(id + ".centerDetections", 10))
-	, sectorDetections(bvs.config.getValue<int>(id + ".sectorDetections", 5))
-	, nodes()
-	, objectPoints()
-	, imageSize()
-	, boardSize(4, 11)
-	, stereo(nodes)
-	, detectionThread()
-	, detectionMutex()
-	, detectionLock(detectionMutex)
-	, detectionCond()
-	, shotTimer(std::chrono::high_resolution_clock::now())
-	, guide(numImages, numDetections, centerScale, centerDetections, sectorDetections)
-	, reflectX()
-	, reflectY()
+	: BVS::Module(),
+	id(id),
+	logger(id),
+	bvs(bvs),
+	numNodes(bvs.config.getValue<int>(id + ".numNodes", 0)),
+	numImages(bvs.config.getValue<int>(id + ".numImages", 50)),
+	circleSize(bvs.config.getValue<float>(id + ".circleSize", 2.42f)),
+	autoShotMode(bvs.config.getValue<bool>(id + ".autoShotMode", true)),
+	autoShotDelay(bvs.config.getValue<int>(id + ".autoShotDelay", 2)),
+	directory(bvs.config.getValue<std::string>(id + ".directory", "calibrationData")),
+	saveImages(bvs.config.getValue<bool>(id + ".saveImages", false)),
+	useSavedImages(bvs.config.getValue<bool>(id + ".useSavedImages", false)),
+	loadCalibration(bvs.config.getValue<bool>(id + ".loadCalibration", true)),
+	saveCalibration(bvs.config.getValue<bool>(id + ".saveCalibration", true)),
+	calibrationFile(bvs.config.getValue<std::string>(id + ".calibrationFile", "calibration.xml")),
+	createRectifiedOutput(bvs.config.getValue<bool>(id + ".createRectifiedOutput", true)),
+	addGridOverlay(bvs.config.getValue<bool>(id + ".addGridOverlay", false)),
+	useCalibrationGuide(bvs.config.getValue<bool>(id + ".useCalibrationGuide", false)),
+	centerScale(bvs.config.getValue<float>(id + ".centerScale", 0.5)),
+	centerDetections(bvs.config.getValue<int>(id + ".centerDetections", 10)),
+	sectorDetections(bvs.config.getValue<int>(id + ".sectorDetections", 5)),
+	calibrated(false),
+	detectionRunning(false),
+	numDetections(0),
+	objectPoints(),
+	imageSize(),
+	boardSize(4, 11),
+	detectionThread(),
+	detectionMutex(),
+	detectionLock(detectionMutex),
+	detectionCond(),
+	shotTimer(std::chrono::high_resolution_clock::now()),
+	reflectX(),
+	reflectY(),
+	nodes(),
+	stereo(nodes),
+	guide(numImages, numDetections, centerScale, centerDetections, sectorDetections)
 {
 	for (int i=0; i<numNodes; i++)
 	{
 		nodes.emplace_back(new CalibrationNode(
-				i
-				, BVS::Connector<cv::Mat>(std::string("input") + std::to_string(i), BVS::ConnectorType::INPUT)
-				, BVS::Connector<cv::Mat>(std::string("output") + std::to_string(i), BVS::ConnectorType::OUTPUT)
-				, cv::Mat()
-				, cv::Mat()
-				, std::vector<cv::Point2f>()
-				, cv::Mat()
-				, std::vector<cv::Point2f>()
-				, std::vector<std::vector<cv::Point2f>>()
-				, cv::Mat::eye(3, 3, CV_64F)
-				, cv::Mat()
-				, cv::Mat()
-				, cv::Mat()
-				));
+				i,
+				BVS::Connector<cv::Mat>(std::string("input") + std::to_string(i), BVS::ConnectorType::INPUT),
+				BVS::Connector<cv::Mat>(std::string("output") + std::to_string(i), BVS::ConnectorType::OUTPUT),
+				cv::Mat(), cv::Mat(), std::vector<cv::Point2f>(), cv::Mat(),
+				std::vector<cv::Point2f>(), std::vector<std::vector<cv::Point2f>>(),
+				cv::Mat::eye(3, 3, CV_64F), cv::Mat(), cv::Mat(), cv::Mat(), cv::Mat(), cv::Rect()));
 	}
 
 	struct stat *buf = nullptr;
@@ -79,16 +66,16 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 
 
 
-// This is your module's destructor.
-// See the constructor for more info.
 bvsCalibration::~bvsCalibration()
 {
-
+	for (auto& it: nodes)
+	{
+		delete it;
+	}
 }
 
 
 
-// Put all your work here.
 BVS::Status bvsCalibration::execute()
 {
 	for (auto& node: nodes)
@@ -102,7 +89,6 @@ BVS::Status bvsCalibration::execute()
 
 	for (auto& node: nodes)
 		if(!calibrated) cv::remap(node->frame, *node->output, reflectX, reflectY, 0);
-		//*node->output = node->frame.clone();
 
 	if (!calibrated && numDetections<numImages) collectCalibrationImages();
 	if (!calibrated && numDetections==numImages && !detectionRunning)
@@ -138,7 +124,7 @@ BVS::Status bvsCalibration::execute()
 		else
 		{
 			cv::putText(*node->output, std::to_string(numDetections) + "/" + std::to_string(numImages),
-					cv::Point(100, 30), CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 255, 0), 2, 8);
+					cv::Point(100, 30), CV_FONT_HERSHEY_SIMPLEX, 1.0f, cv::Scalar(0, 255, 0), 2, 8);
 		}
 
 		if (!useSavedImages) cv::imshow(std::to_string(node->id), *node->output);
@@ -162,9 +148,6 @@ BVS::Status bvsCalibration::debugDisplay()
 
 
 
-// This function is called by the framework upon creating a module instance of
-// this class. It creates the module and registers it within the framework.
-// DO NOT CHANGE OR DELETE
 extern "C" {
 	int bvsRegisterModule(std::string id, const BVS::Info& bvs)
 	{
@@ -237,7 +220,6 @@ void bvsCalibration::calibrate()
 			// single camera
 			break;
 		case 2:
-			// stereo
 			stereo.calibrate(numDetections, imageSize, boardSize, circleSize);
 			if (saveCalibration) saveCalibrationTo(directory, calibrationFile);
 			break;
@@ -254,7 +236,6 @@ void bvsCalibration::rectifyOutput(bool addGridOverlay)
 			// single camera
 			break;
 		case 2:
-			// stereo
 			stereo.rectify(addGridOverlay);
 			break;
 	}
@@ -385,3 +366,4 @@ void bvsCalibration::clearCalibrationData()
 		node->pointStore.shrink_to_fit();
 	}
 }
+
