@@ -131,9 +131,27 @@ BVS::Status bvsCalibration::execute()
 		//cv::moveWindow(std::to_string(node->id), node->id*node->output->cols, 0);
 	}
 
-	char c = cv::waitKey(1);
-	if (c==27) exit(0);
-	if (!autoShotMode && c==' ') notifyDetectionThread();
+	if (false) //(calibrated) //TODO make 'headless' mode to calibrate offline
+	{
+		static int i = 1;
+		LOG(1, "rectifying image " << i);
+		nodes[0]->frame = cv::imread(std::string(directory + "/img") + std::to_string(i)
+					+ "-0.pbm");
+		nodes[1]->frame = cv::imread(std::string(directory + "/img") + std::to_string(i)
+					+ "-1.pbm");
+		rectifyOutput(addGridOverlay);
+		cv::imwrite(directory + "/test" + std::to_string(i) + "-0.jpg", *nodes[0]->output);
+		cv::imwrite(directory + "/test" + std::to_string(i) + "-1.jpg", *nodes[1]->output);
+		i++;
+		if (i>numImages) exit(0);
+	}
+
+	if (!useSavedImages)
+	{
+		char c = cv::waitKey(1);
+		if (c==27) exit(0);
+		if (!autoShotMode && c==' ') notifyDetectionThread();
+	}
 
 	return BVS::Status::OK;
 }
