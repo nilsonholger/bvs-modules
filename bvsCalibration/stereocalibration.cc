@@ -17,13 +17,7 @@ StereoCalibration::StereoCalibration(CalNodeVec& nodes)
 	, stereoFundamental()
 	, disparityToDepthMapping()
 	, rectifyMap{{cv::Mat(), cv::Mat()}, {cv::Mat(), cv::Mat()}}
-{
-	if (nodes.size()!=2)
-	{
-		std::cerr << "Size of input nodes vector is not 2!" << std::endl;
-		exit(1);
-	}
-}
+{ }
 
 
 
@@ -89,6 +83,11 @@ bool StereoCalibration::saveToFile(const std::string& path, const std::string& f
 
 void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size boardSize, float blobSize)
 {
+	if (nodes.size()!=2)
+	{
+		std::cerr << "Size of input nodes vector is not 2!" << std::endl;
+		exit(1);
+	}
 	this->imageSize = imageSize;
 
 	// generate a priori object points of detection pattern
