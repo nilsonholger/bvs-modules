@@ -279,8 +279,14 @@ void bvsCalibration::collectCalibrationImages()
 		cv::drawChessboardCorners(*node->output, boardSize,
 				cv::Mat(node->framePoints), foundPattern);
 
-		if (!foundPattern) break;
-		if(foundPattern) numPositives++;
+		if (!foundPattern)
+		{
+			cv::putText(*nodes[0]->output, "Pattern NOT FOUND!.",
+					cv::Point(10, imageSize.height-10), CV_FONT_HERSHEY_DUPLEX,
+					1.0f, cv::Scalar(0, 0, 255));
+			break;
+		}
+		else numPositives++;
 		if (numPositives==numNodes)
 		{
 			if (!autoShotMode) return;
