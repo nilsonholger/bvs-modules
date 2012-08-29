@@ -121,7 +121,7 @@ BVS::Status bvsCalibration::execute()
 			cv::putText(*node->output, std::to_string(numDetections) + "/" + std::to_string(numImages),
 					cv::Point(100, 30), CV_FONT_HERSHEY_SIMPLEX, 1.0f, cv::Scalar(0, 255, 0), 2, 8);
 
-		if (!useSavedImages) cv::imshow(std::to_string(node->id), *node->output);
+		if (!useSavedImages && !node->output->empty()) cv::imshow(std::to_string(node->id), *node->output);
 		//cv::moveWindow(std::to_string(node->id), node->id*node->output->cols, 0);
 	}
 
