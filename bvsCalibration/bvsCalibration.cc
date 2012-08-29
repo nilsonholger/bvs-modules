@@ -111,7 +111,7 @@ BVS::Status bvsCalibration::execute()
 		calibrated = true;
 	}
 
-	if (calibrated && createRectifiedOutput && !useSavedImages) rectifyOutput(addGridOverlay);
+	if (!calibrated && useCalibrationGuide) guide.addTargetOverlay(*nodes[0]->output);
 
 	static double avgFPS = 15;
 	// apply exponential smoothing with alpha = 0.2
@@ -121,40 +121,19 @@ BVS::Status bvsCalibration::execute()
 	std::string fps = std::to_string(avgFPS);
 	fps.resize(fps.length()-5);
 
-	if (!calibrated && useCalibrationGuide) guide.addTargetOverlay(*nodes[0]->output);
 	for (auto& node: nodes)
 	{
 		cv::putText(*node->output,fps, cv::Point(10, 30),
 				CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 0, 255), 2);
-		if (calibrated)
-		{
-		}
-		else
-		{
+		if (!calibrated)
 			cv::putText(*node->output, std::to_string(numDetections) + "/" + std::to_string(numImages),
 					cv::Point(100, 30), CV_FONT_HERSHEY_SIMPLEX, 1.0f, cv::Scalar(0, 255, 0), 2, 8);
-		}
 
 		if (!useSavedImages) cv::imshow(std::to_string(node->id), *node->output);
 		//cv::moveWindow(std::to_string(node->id), node->id*node->output->cols, 0);
 	}
 
-	if (rectifyCalImages)
-	{
-		static int i = 1;
-		LOG(1, "rectifying image " << i);
-		nodes[0]->frame = cv::imread(directory + "/" + outputDirectory + "/img"
-				+ std::to_string(i) + "-0.pbm");
-		nodes[1]->frame = cv::imread(directory + "/" + outputDirectory + "/img"
-				+ std::to_string(i) + "-1.pbm");
-		rectifyOutput(addGridOverlay);
-		cv::imwrite(directory + "/" + outputDirectory + "/rect" + std::to_string(i)
-				+ "-0.jpg", *nodes[0]->output);
-		cv::imwrite(directory + "/" + outputDirectory + "/rect" + std::to_string(i)
-				+ "-1.jpg", *nodes[1]->output);
-		i++;
-		if (i>numImages) exit(0);
-	}
+	if (calibrated && createRectifiedOutput && !useSavedImages) rectifyOutput(addGridOverlay);
 
 	if (!useSavedImages)
 	{
@@ -162,6 +141,8 @@ BVS::Status bvsCalibration::execute()
 		if (c==27) exit(0);
 		if (!autoShotMode && c==' ') notifyDetectionThread();
 	}
+
+	if (rectifyCalImages) rectifyCalibrationImages();
 
 	return BVS::Status::OK;
 }
@@ -396,3 +377,21 @@ void bvsCalibration::clearCalibrationData()
 	}
 }
 
+
+
+void bvsCalibration::rectifyCalibrationImages()
+{
+	static int i = 1;
+	LOG(1, "rectifying image " << i);
+
+	nodes[0]->frame = cv::imread(directory + "/" + outputDirectory + "/img" + std::to_string(i) + "-0.pbm");
+	nodes[1]->frame = cv::imread(directory + "/" + outputDirectory + "/img" + std::to_string(i) + "-1.pbm");
+
+	rectifyOutput(addGridOverlay);
+
+	cv::imwrite(directory + "/" + outputDirectory + "/rect" + std::to_string(i) + "-0.jpg", *nodes[0]->output);
+	cv::imwrite(directory + "/" + outputDirectory + "/rect" + std::to_string(i) + "-1.jpg", *nodes[1]->output);
+
+	i++;
+	if (i>numImages) exit(0);
+}

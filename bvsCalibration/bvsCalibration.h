@@ -114,6 +114,9 @@ class bvsCalibration : public BVS::Module
 		 */
 		void rectifyOutput(bool addGridOverlay = false);
 
+		/** Rectify calibration images. */
+		void rectifyCalibrationImages();
+
 
 
 		const std::string id; /**< Your unique module id, set by framework. */
