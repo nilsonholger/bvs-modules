@@ -130,6 +130,9 @@ class bvsCalibration : public BVS::Module
 		std::string directory; /**< Base directory of calibration data. */
 		bool saveImages; /**< Whether to save images or not. */
 		bool useSavedImages; /**< Calculate calibration using saved images. */
+		bool rectifyCalImages; /**< Save rectified calibration images and quit. */
+		std::string imageDirectory; /**< Directory for calibration images (saveImages/useSavedImages). */
+		std::string outputDirectory; /** Directory for rectified calibration images. */
 		bool loadCalibration; /**< Whether to load calibration. */
 		bool saveCalibration; /**< Whether to save calibration. */
 		std::string calibrationFile; /**< File to save/load calibration to/from. */

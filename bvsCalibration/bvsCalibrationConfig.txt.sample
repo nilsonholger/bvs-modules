@@ -28,6 +28,15 @@ saveImages = OFF
 # use saved images taken beforehand
 useSavedImages = OFF
 
+# rectify and save calibration images
+rectifyCalImages = OFF
+
+# directory to store/load calibration images to/from
+imageDirectory = "calibrationImages"
+
+# directory to save rectified calibration images
+outputDirectory = "rectifiedImages"
+
 # load calibration from file (if found)
 loadCalibration = ON
 

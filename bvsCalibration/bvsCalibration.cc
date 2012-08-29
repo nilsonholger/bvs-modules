@@ -17,6 +17,9 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 	directory(config.getValue<std::string>(id + ".directory", "calibrationData")),
 	saveImages(config.getValue<bool>(id + ".saveImages", false)),
 	useSavedImages(config.getValue<bool>(id + ".useSavedImages", false)),
+	rectifyCalImages(config.getValue<bool>(id + ".rectifyCalImages", false)),
+	imageDirectory(config.getValue<std::string>(id + ".imageDirectory", "calibrationImages")),
+	outputDirectory(config.getValue<std::string>(id + ".outputDirectory", "rectifiedImages")),
 	loadCalibration(config.getValue<bool>(id + ".loadCalibration", true)),
 	saveCalibration(config.getValue<bool>(id + ".saveCalibration", true)),
 	calibrationFile(config.getValue<std::string>(id + ".calibrationFile", "calibration.xml")),
@@ -56,6 +59,10 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 
 	struct stat *buf = nullptr;
 	if (stat(directory.c_str(), buf)) mkdir(directory.c_str(), 0755);
+	std::string tmp = directory + "/" + imageDirectory;
+	if (stat(tmp.c_str(), buf)) mkdir(tmp.c_str(), 0755);
+	tmp = directory + "/" + outputDirectory;
+	if (stat(tmp.c_str(), buf)) mkdir(tmp.c_str(), 0755);
 
 	if (loadCalibration) calibrated = loadCalibrationFrom(directory, calibrationFile);
 	if (!calibrated)
@@ -132,17 +139,19 @@ BVS::Status bvsCalibration::execute()
 		//cv::moveWindow(std::to_string(node->id), node->id*node->output->cols, 0);
 	}
 
-	if (false) //(calibrated) //TODO make 'headless' mode to calibrate offline
+	if (rectifyCalImages)
 	{
 		static int i = 1;
 		LOG(1, "rectifying image " << i);
-		nodes[0]->frame = cv::imread(std::string(directory + "/img") + std::to_string(i)
-					+ "-0.pbm");
-		nodes[1]->frame = cv::imread(std::string(directory + "/img") + std::to_string(i)
-					+ "-1.pbm");
+		nodes[0]->frame = cv::imread(directory + "/" + outputDirectory + "/img"
+				+ std::to_string(i) + "-0.pbm");
+		nodes[1]->frame = cv::imread(directory + "/" + outputDirectory + "/img"
+				+ std::to_string(i) + "-1.pbm");
 		rectifyOutput(addGridOverlay);
-		cv::imwrite(directory + "/test" + std::to_string(i) + "-0.jpg", *nodes[0]->output);
-		cv::imwrite(directory + "/test" + std::to_string(i) + "-1.jpg", *nodes[1]->output);
+		cv::imwrite(directory + "/" + outputDirectory + "/rect" + std::to_string(i)
+				+ "-0.jpg", *nodes[0]->output);
+		cv::imwrite(directory + "/" + outputDirectory + "/rect" + std::to_string(i)
+				+ "-1.jpg", *nodes[1]->output);
 		i++;
 		if (i>numImages) exit(0);
 	}
@@ -271,11 +280,11 @@ void bvsCalibration::collectCalibrationImages()
 	{
 		for (auto& node: nodes)
 		{
-			node->frame = cv::imread(std::string(directory + "/img") + std::to_string(numDetections+1)
-					+ "-" + std::to_string(node->id) + ".pbm");
+			node->frame = cv::imread(directory + "/" + imageDirectory + "/img"
+					+ std::to_string(numDetections+1) + "-" + std::to_string(node->id) + ".pbm");
 			if (node->frame.empty())
 			{
-				LOG(0, "NOT FOUND: " << std::string(directory + "/img") + std::to_string(numDetections+1)
+				LOG(0, "NOT FOUND: " << directory + "/img" + std::to_string(numDetections+1)
 					+ "-" + std::to_string(node->id) + ".pbm");
 				exit(1);
 			}
@@ -360,8 +369,9 @@ void bvsCalibration::detectCalibrationPoints()
 				{
 					node->pointStore.at(numDetections-1) = node->points;
 					if (saveImages)
-						cv::imwrite(std::string(directory + "/img") + std::to_string(numDetections)
-								+ "-" + std::to_string(node->id) + ".pbm", node->sample);
+						cv::imwrite(directory + "/" + imageDirectory + "/img"
+								+ std::to_string(numDetections) + "-" + std::to_string(node->id)
+								+ ".pbm", node->sample);
 				}
 			}
 		}
