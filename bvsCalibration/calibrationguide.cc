@@ -25,8 +25,10 @@ void CalibrationGuide::addTargetOverlay(cv::Mat& img)
 {
 	if (numImages!=centerDetections+8*sectorDetections)
 	{
-		cv::putText(img, "WARNING: CHECK numDetections == centerDetections + 8 * sectorDetections!",
-				cv::Point(10, img.rows/2), CV_FONT_HERSHEY_SIMPLEX, 1.0f, cv::Scalar(0, 0, 255));
+		cv::putText(img, "ERROR!!!",
+				cv::Point(10, img.rows/2), CV_FONT_HERSHEY_DUPLEX, 1.0f, cv::Scalar(0, 0, 255), 2);
+		cv::putText(img, "numDetections != centerDetections + 8 * sectorDetections!",
+				cv::Point(10, img.rows/2+30), CV_FONT_HERSHEY_DUPLEX, 1.0f, cv::Scalar(0, 0, 255));
 		return;
 	}
 
@@ -50,6 +52,26 @@ void CalibrationGuide::addTargetOverlay(cv::Mat& img)
 		case 7: updateTarget(0, 2); break;
 		case 8: updateTarget(0, 1); break;
 	}
+
+	switch (state)
+	{
+		case 0:
+			cv::putText(img, "GREEN: detected pattern size ok.",
+					cv::Point(10, img.rows-40), CV_FONT_HERSHEY_DUPLEX,
+					1.0f, cv::Scalar(0, 255, 0));
+			cv::putText(img, "RED: detected pattern size to small, move closer.",
+					cv::Point(10, img.rows-10), CV_FONT_HERSHEY_DUPLEX,
+					1.0f, cv::Scalar(0, 0, 255));
+			break;
+		case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8:
+			cv::putText(img, "GREEN: pattern center position ok.",
+					cv::Point(10, img.rows-40), CV_FONT_HERSHEY_SIMPLEX,
+					1.0f, cv::Scalar(0, 255, 0));
+			cv::putText(img, "RED: pattern center outside of target.",
+					cv::Point(10, img.rows-10), CV_FONT_HERSHEY_SIMPLEX,
+					1.0f, cv::Scalar(0, 0, 255));
+			break;
+	}
 	
 	cv::rectangle(img, cv::Point(p1.x, p1.y), cv::Point(p2.x, p2.y), color, 2);
 }
@@ -71,24 +93,12 @@ bool CalibrationGuide::checkDetectionQuality(cv::Mat& img, std::vector<cv::Point
 		case 0:
 			if (diag < imgDiag*scale) returnValue = false;
 			if (numDetections >= centerDetections) state++;
-			cv::putText(img, "GREEN: detected pattern size ok.",
-					cv::Point(10, img.rows-40), CV_FONT_HERSHEY_SIMPLEX,
-					1.0f, cv::Scalar(0, 255, 0));
-			cv::putText(img, "RED: detected pattern size to small, move closer.",
-					cv::Point(10, img.rows-10), CV_FONT_HERSHEY_SIMPLEX,
-					1.0f, cv::Scalar(0, 0, 255));
 			break;
 		case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8:
 			if (numDetections < centerDetections+sectorDetections*(state-1)) state--;
 			if (diag > imgDiag/2) returnValue = false;
 			if (std::abs(detCenter.x-center.x)>size.x/6 || std::abs(detCenter.y-center.y)>size.y/6)
 				returnValue = false;
-			cv::putText(img, "GREEN: pattern center position ok.",
-					cv::Point(10, img.rows-40), CV_FONT_HERSHEY_SIMPLEX,
-					1.0f, cv::Scalar(0, 255, 0));
-			cv::putText(img, "RED: pattern center outside of target.",
-					cv::Point(10, img.rows-10), CV_FONT_HERSHEY_SIMPLEX,
-					1.0f, cv::Scalar(0, 0, 255));
 			if (numDetections >= centerDetections+sectorDetections*state) state++;
 			break;
 		default:
