@@ -98,6 +98,7 @@ BVS::Status bvsCalibration::execute()
 	for (auto& node: nodes)
 		if(!calibrated) cv::remap(node->frame, *node->output, reflectX, reflectY, 0);
 
+	if (!calibrated && useCalibrationGuide) guide.addTargetOverlay(*nodes[0]->output);
 	if (!calibrated && numDetections<numImages) collectCalibrationImages();
 	if (!calibrated && numDetections==numImages && !detectionRunning)
 	{
@@ -111,19 +112,10 @@ BVS::Status bvsCalibration::execute()
 		calibrated = true;
 	}
 
-	if (!calibrated && useCalibrationGuide) guide.addTargetOverlay(*nodes[0]->output);
-
-	static double avgFPS = 15;
-	// apply exponential smoothing with alpha = 0.2
-	double duration = bvs.lastRoundDuration.count();
-	duration = duration > 1000 ? 1000 : duration;
-	avgFPS = (1000/duration + 4 * avgFPS)/5;
-	std::string fps = std::to_string(avgFPS);
-	fps.resize(fps.length()-5);
 
 	for (auto& node: nodes)
 	{
-		cv::putText(*node->output,fps, cv::Point(10, 30),
+		cv::putText(*node->output, bvs.getFPS(), cv::Point(10, 30),
 				CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 0, 255), 2);
 		if (!calibrated)
 			cv::putText(*node->output, std::to_string(numDetections) + "/" + std::to_string(numImages),
