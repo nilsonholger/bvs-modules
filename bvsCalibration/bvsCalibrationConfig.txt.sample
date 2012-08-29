@@ -1,0 +1,63 @@
+# This is bvsCalibration's sample config.
+# Copy it to your 'bin' directory so the system can find it.
+
+# replace this id with your used id
+[uniqueID]
+
+# number of nodes (cameras) to calibrate
+numNodes = 0
+
+# number of images to use for calibration
+numImages = 100
+
+# size of circles in calibration pattern
+circleSize = 2.42
+
+# use auto shot mode (if OFF, use SPACE to take picture)
+autoShotMode = ON
+
+# minimum delay in seconds between auto mode shots
+autoShotDelay = 1
+
+# base directory of calibration data
+directory = "calibrationData"
+
+# save images taken for calibration
+saveImages = OFF
+
+# use saved images taken beforehand
+useSavedImages = OFF
+
+# load calibration from file (if found)
+loadCalibration = ON
+
+# save calibration to file (after successfull calibration)
+saveCalibration = ON
+
+# calibration file name (possible extensions: .yml, .xml)
+calibrationFile = "stereoCalibration.yml"
+
+# rectify module output (if calibration available)
+createRectifiedOutput = ON
+
+# add grid overlay to output (if calibration available)
+addGridOverlay = ON
+
+
+
+# use calibration guide
+# This is a system to improve calibration quality.
+# It will show some usage hints on screen.
+# IMPORTANT: numImages == centerDetections + 8 * sectorDetections must be guaranteed
+useCalibrationGuide = ON
+
+# the scale of center detections (as a fraction of 1) of the image diagonal
+centerScale = 0.5
+
+# number of center detections
+centerDetections = 60
+
+# number of per sector detections
+sectorDetections = 5
+
+# This line tells vim something about the file type. -- vim:ft=config:

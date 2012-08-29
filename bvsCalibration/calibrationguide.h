@@ -24,7 +24,7 @@ class CalibrationGuide
 		 * @param[in] numImages The overall number of images.
 		 * This should be centerDetections + 8 * sectorDetections.
 		 * @param[in] numDetections The number of pattern detections so far.
-		 * @param[in] scale The scale of center detections in percent of the image diagonal.
+		 * @param[in] scale The scale of center detections (as a fraction of 1) of the image diagonal.
 		 * @param[in] centerDetections Number of center detections.
 		 * @param[in] sectorDetections Number of per sector detections.
 		 */
