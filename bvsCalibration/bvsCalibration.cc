@@ -280,7 +280,7 @@ void bvsCalibration::collectCalibrationImages()
 
 		if (!foundPattern)
 		{
-			cv::putText(*nodes[0]->output, "Pattern NOT FOUND!.",
+			cv::putText(*nodes[0]->output, "Pattern NOT FOUND!",
 					cv::Point(10, imageSize.height-10), CV_FONT_HERSHEY_DUPLEX,
 					1.0f, cv::Scalar(0, 0, 255));
 			break;
