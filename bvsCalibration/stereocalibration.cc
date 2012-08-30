@@ -5,18 +5,18 @@
 
 
 StereoCalibration::StereoCalibration(CalNodeVec& nodes)
-	: logger("StereoCalib")
-	, nodes(nodes)
-	, imageSize()
-	, rms(0)
-	, averageError(0)
-	, objectPoints()
-	, stereoRotation()
-	, stereoTranslation()
-	, stereoEssential()
-	, stereoFundamental()
-	, disparityToDepthMapping()
-	, rectifyMap{{cv::Mat(), cv::Mat()}, {cv::Mat(), cv::Mat()}}
+	: logger("StereoCalib"),
+	nodes(nodes),
+	imageSize(),
+	rms(0),
+	averageError(0),
+	objectPoints(),
+	stereoRotation(),
+	stereoTranslation(),
+	stereoEssential(),
+	stereoFundamental(),
+	disparityToDepthMapping(),
+	rectifyMap{{cv::Mat(), cv::Mat()}, {cv::Mat(), cv::Mat()}}
 { }
 
 
@@ -44,6 +44,11 @@ bool StereoCalibration::loadFromFile(const std::string& path, const std::string&
 		fs["distCoeffs"+id] >> node->distCoeffs;
 		fs["rectificationMatrix"+id] >> node->rectificationMatrix;
 		fs["projectionMatrix"+id] >> node->projectionMatrix;
+		fs["homographyMatrix"+id] >> node->homographyMatrix;
+		fs["validRegionOfInterest"+id+"x"] >> node->validRegionOfInterest.x;
+		fs["validRegionOfInterest"+id+"y"] >> node->validRegionOfInterest.y;
+		fs["validRegionOfInterest"+id+"width"] >> node->validRegionOfInterest.width;
+		fs["validRegionOfInterest"+id+"height"] >> node->validRegionOfInterest.height;
 	}
 
 	return true;
@@ -74,6 +79,11 @@ bool StereoCalibration::saveToFile(const std::string& path, const std::string& f
 		fs << "distCoeffs"+id << node->distCoeffs;
 		fs << "rectificationMatrix"+id << node->rectificationMatrix;
 		fs << "projectionMatrix"+id << node->projectionMatrix;
+		fs << "homographyMatrix"+id << node->homographyMatrix;
+		fs << "validRegionOfInterest"+id+"x" << node->validRegionOfInterest.x;
+		fs << "validRegionOfInterest"+id+"y" << node->validRegionOfInterest.y;
+		fs << "validRegionOfInterest"+id+"width" << node->validRegionOfInterest.width;
+		fs << "validRegionOfInterest"+id+"height" << node->validRegionOfInterest.height;
 	}
 
 	return true;
@@ -103,24 +113,16 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 	std::vector<cv::Mat> tvecs;
 	for (auto& node: nodes)
 	{
-		threads.push_back(std::thread([&]{cv::calibrateCamera(
-						objectPoints,
-						node->pointStore,
-						imageSize,
-						node->cameraMatrix,
-						node->distCoeffs,
-						rvecs,
-						tvecs,
-						CV_CALIB_FIX_PRINCIPAL_POINT +
-						CV_CALIB_FIX_ASPECT_RATIO +
-						CV_CALIB_ZERO_TANGENT_DIST +
-						CV_CALIB_SAME_FOCAL_LENGTH +
-						CV_CALIB_RATIONAL_MODEL +
-						CV_CALIB_FIX_K3 +
-						CV_CALIB_FIX_K4 +
-						CV_CALIB_FIX_K5,
-						cv::TermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5)
-						);}));
+		threads.push_back(std::thread([&]{
+					LOG(1, "reprojection error for node " << node->id << ": " << 
+						cv::calibrateCamera(objectPoints, node->pointStore, imageSize,
+							node->cameraMatrix, node->distCoeffs, rvecs, tvecs,
+							CV_CALIB_FIX_PRINCIPAL_POINT + CV_CALIB_FIX_ASPECT_RATIO +
+							CV_CALIB_ZERO_TANGENT_DIST + CV_CALIB_SAME_FOCAL_LENGTH +
+							CV_CALIB_RATIONAL_MODEL +
+							CV_CALIB_FIX_K3 + CV_CALIB_FIX_K4 + CV_CALIB_FIX_K5,
+							cv::TermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5)
+							));}));
 	}
 	for (auto& t: threads) t.join();
 
@@ -131,15 +133,9 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 			nodes.at(0)->cameraMatrix, nodes.at(0)->distCoeffs, nodes.at(1)->cameraMatrix, nodes.at(1)->distCoeffs,
 			imageSize, stereoRotation, stereoTranslation, stereoEssential, stereoFundamental,
 			cv::TermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5),
-			CV_CALIB_USE_INTRINSIC_GUESS +
-			CV_CALIB_FIX_PRINCIPAL_POINT +
-			CV_CALIB_FIX_ASPECT_RATIO +
-			CV_CALIB_SAME_FOCAL_LENGTH +
-			CV_CALIB_RATIONAL_MODEL +
-			CV_CALIB_FIX_K3 +
-			CV_CALIB_FIX_K4 +
-			CV_CALIB_FIX_K5);
-	LOG(1, "reprojection error: " << rms);
+			CV_CALIB_USE_INTRINSIC_GUESS + CV_CALIB_FIX_PRINCIPAL_POINT + CV_CALIB_FIX_ASPECT_RATIO +
+			CV_CALIB_SAME_FOCAL_LENGTH + CV_CALIB_RATIONAL_MODEL + CV_CALIB_FIX_K3 + CV_CALIB_FIX_K4 + CV_CALIB_FIX_K5);
+	LOG(1, "stereo reprojection error: " << rms);
 
 
 
@@ -181,7 +177,7 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 			imageSize, stereoRotation, stereoTranslation,
 			nodes.at(0)->rectificationMatrix, nodes.at(1)->rectificationMatrix,
 			nodes.at(0)->projectionMatrix, nodes.at(1)->projectionMatrix,
-			disparityToDepthMapping, CV_CALIB_ZERO_DISPARITY, 1, imageSize,
+			disparityToDepthMapping, CV_CALIB_ZERO_DISPARITY, 1.0f, imageSize,
 			&nodes.at(0)->validRegionOfInterest, &nodes.at(1)->validRegionOfInterest);
 
 
