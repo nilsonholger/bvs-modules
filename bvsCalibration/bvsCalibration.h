@@ -25,9 +25,6 @@
  * To compile this module, opencv(2) headers and libs are needed.
  *
  * Please see the config file for more options.
- *
- * TODO load settings from OWN config file and add comments to it
- * TODO display validRegionOfInterest or crop images...
  */
 class bvsCalibration : public BVS::Module
 {
