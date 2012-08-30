@@ -120,7 +120,6 @@ BVS::Status bvsCalibration::execute()
 		if (!calibrated)
 			cv::putText(*node->output, std::to_string(numDetections) + "/" + std::to_string(numImages),
 					cv::Point(100, 30), CV_FONT_HERSHEY_SIMPLEX, 1.0f, cv::Scalar(0, 255, 0), 2, 8);
-
 		if (!useSavedImages && !node->output->empty()) cv::imshow(std::to_string(node->id), *node->output);
 		//cv::moveWindow(std::to_string(node->id), node->id*node->output->cols, 0);
 	}
@@ -134,7 +133,7 @@ BVS::Status bvsCalibration::execute()
 		if (!autoShotMode && c==' ') notifyDetectionThread();
 	}
 
-	if (rectifyCalImages) rectifyCalibrationImages();
+	if (calibrated && rectifyCalImages) rectifyCalibrationImages();
 
 	return BVS::Status::OK;
 }
@@ -382,8 +381,8 @@ void bvsCalibration::rectifyCalibrationImages()
 	static int i = 1;
 	LOG(1, "rectifying image " << i);
 
-	nodes[0]->frame = cv::imread(directory + "/" + outputDirectory + "/img" + std::to_string(i) + "-0.pbm");
-	nodes[1]->frame = cv::imread(directory + "/" + outputDirectory + "/img" + std::to_string(i) + "-1.pbm");
+	nodes[0]->frame = cv::imread(directory + "/" + imageDirectory + "/img" + std::to_string(i) + "-0.pbm");
+	nodes[1]->frame = cv::imread(directory + "/" + imageDirectory + "/img" + std::to_string(i) + "-1.pbm");
 
 	rectifyOutput(addGridOverlay);
 
