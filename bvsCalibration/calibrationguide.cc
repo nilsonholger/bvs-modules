@@ -72,7 +72,7 @@ bool CalibrationGuide::checkDetectionQuality(cv::Mat& img, std::vector<cv::Point
 			if (diag < imgDiag*scale)
 			{
 				color = {0, 0, 255};
-				cv::putText(img, "Detected pattern size TO SMALL, MOVE CLOSER.",
+				cv::putText(img, "Detected pattern size TOO SMALL, MOVE CLOSER.",
 						cv::Point(10, img.rows-10), CV_FONT_HERSHEY_DUPLEX,
 						1.0f, color);
 				return false;
