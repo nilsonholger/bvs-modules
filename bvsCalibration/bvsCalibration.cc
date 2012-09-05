@@ -11,7 +11,7 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 	config("bvsCalibration", 0, nullptr, "bvsCalibrationConfig.txt"),
 	numNodes(config.getValue<int>(id + ".numNodes", 0)),
 	numImages(config.getValue<int>(id + ".numImages", 100)),
-	circleSize(config.getValue<float>(id + ".circleSize", 2.42f)),
+	circleSize(config.getValue<float>(id + ".circleSize", 1.0f)),
 	autoShotMode(config.getValue<bool>(id + ".autoShotMode", true)),
 	autoShotDelay(config.getValue<int>(id + ".autoShotDelay", 1)),
 	directory(config.getValue<std::string>(id + ".directory", "calibrationData")),

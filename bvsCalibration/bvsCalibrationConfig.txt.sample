@@ -11,7 +11,7 @@ numNodes = 0
 numImages = 100
 
 # size of circles in calibration pattern
-circleSize = 2.42
+circleSize = 1.0
 
 # use auto shot mode (if OFF, use SPACE to take picture)
 autoShotMode = ON
