@@ -107,9 +107,8 @@ class bvsCalibration : public BVS::Module
 
 		/** Rectify output.
 		 * This method rectifies the output for all nodes.
-		 * @param[in] addGridOverlay Whether to draw a grid on the output images.
 		 */
-		void rectifyOutput(bool addGridOverlay = false);
+		void rectifyOutput();
 
 		/** Rectify calibration images. */
 		void rectifyCalibrationImages();

@@ -86,54 +86,54 @@ bvsCalibration::~bvsCalibration()
 
 BVS::Status bvsCalibration::execute()
 {
-	for (auto& node: nodes)
-		if(!useSavedImages && !node->input.receive(node->frame)) return BVS::Status::NOINPUT;
-
-	if (imageSize == cv::Size())
+	if (useSavedImages)
 	{
-		imageSize = nodes[0]->frame.size();
-		generateReflectionMap();
-	}
-
-	for (auto& node: nodes)
-		if(!calibrated) cv::remap(node->frame, *node->output, reflectX, reflectY, 0);
-
-	if (!calibrated && useCalibrationGuide) guide.addTargetOverlay(*nodes[0]->output);
-	if (!calibrated && numDetections<numImages) collectCalibrationImages();
-	if (!calibrated && numDetections==numImages && !detectionRunning)
-	{
-		if (useCalibrationGuide)
+		if (numDetections<=numImages)
 		{
-			guide.reorderDetections(nodes[0]->pointStore);
-			guide.reorderDetections(nodes[1]->pointStore);
+			for (auto& node: nodes)
+			{
+				node->frame = cv::imread(directory + "/" + imageDirectory + "/img"
+						+ std::to_string(numDetections+1) + "-" + std::to_string(node->id) + ".pbm");
+				if (node->frame.empty())
+				{
+					LOG(0, "NOT FOUND: " << directory + "/img" + std::to_string(numDetections+1)
+							+ "-" + std::to_string(node->id) + ".pbm");
+					exit(1);
+				}
+			}
+			notifyDetectionThread();
 		}
-		calibrate();
-		clearCalibrationData();
-		calibrated = true;
+		if (numDetections==numImages && !detectionRunning) calibrate();
+		if (calibrated && rectifyCalImages) rectifyCalibrationImages();
 	}
-
-
-	for (auto& node: nodes)
+	else
 	{
-		cv::putText(*node->output, bvs.getFPS(), cv::Point(10, 30),
-				CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 0, 255), 2);
+		for (auto& node: nodes)
+			if(!node->input.receive(node->frame)) return BVS::Status::NOINPUT;
+		if (imageSize == cv::Size())
+		{
+			imageSize = nodes[0]->frame.size();
+			generateReflectionMap();
+		}
 		if (!calibrated)
-			cv::putText(*node->output, std::to_string(numDetections) + "/" + std::to_string(numImages),
-					cv::Point(100, 30), CV_FONT_HERSHEY_SIMPLEX, 1.0f, cv::Scalar(0, 255, 0), 2, 8);
-		if (!useSavedImages && !node->output->empty()) cv::imshow(std::to_string(node->id), *node->output);
-		//cv::moveWindow(std::to_string(node->id), node->id*node->output->cols, 0);
+		{
+			for (auto& node: nodes)
+				cv::remap(node->frame, *node->output, reflectX, reflectY, 0);
+			if (useCalibrationGuide) guide.addTargetOverlay(*nodes[0]->output);
+			if (numDetections<numImages) collectCalibrationImages();
+			if (numDetections==numImages && !detectionRunning) calibrate();
+			for (auto& node: nodes)
+			{
+				cv::putText(*node->output, std::to_string(numDetections) + "/" + std::to_string(numImages),
+						cv::Point(100, 30), CV_FONT_HERSHEY_SIMPLEX, 1.0f, cv::Scalar(0, 255, 0), 2, 8);
+				cv::imshow(std::to_string(node->id), *node->output);
+			}
+			char c = cv::waitKey(1);
+			if (c==27) exit(0);
+			if (!autoShotMode && c==' ') notifyDetectionThread();
+		}
+		else if (createRectifiedOutput) rectifyOutput();
 	}
-
-	if (calibrated && createRectifiedOutput && !useSavedImages) rectifyOutput(addGridOverlay);
-
-	if (!useSavedImages)
-	{
-		char c = cv::waitKey(1);
-		if (c==27) exit(0);
-		if (!autoShotMode && c==' ') notifyDetectionThread();
-	}
-
-	if (calibrated && rectifyCalImages) rectifyCalibrationImages();
 
 	return BVS::Status::OK;
 }
@@ -214,6 +214,10 @@ void bvsCalibration::generateReflectionMap()
 
 void bvsCalibration::calibrate()
 {
+	if (useCalibrationGuide)
+		for (auto& node: nodes)
+			guide.reorderDetections(node->pointStore);
+
 	switch (numNodes)
 	{
 		case 1:
@@ -224,11 +228,14 @@ void bvsCalibration::calibrate()
 			if (saveCalibration) saveCalibrationTo(directory, calibrationFile);
 			break;
 	}
+
+	clearCalibrationData();
+	calibrated = true;
 }
 
 
 
-void bvsCalibration::rectifyOutput(bool addGridOverlay)
+void bvsCalibration::rectifyOutput()
 {
 	switch (numNodes)
 	{
@@ -247,23 +254,6 @@ void bvsCalibration::collectCalibrationImages()
 {
 	bool foundPattern = false;
 	int numPositives = 0;
-
-	if (useSavedImages && numDetections<=numImages)
-	{
-		for (auto& node: nodes)
-		{
-			node->frame = cv::imread(directory + "/" + imageDirectory + "/img"
-					+ std::to_string(numDetections+1) + "-" + std::to_string(node->id) + ".pbm");
-			if (node->frame.empty())
-			{
-				LOG(0, "NOT FOUND: " << directory + "/img" + std::to_string(numDetections+1)
-					+ "-" + std::to_string(node->id) + ".pbm");
-				exit(1);
-			}
-		}
-		notifyDetectionThread();
-		return;
-	}
 
 	for (auto& node: nodes)
 	{
@@ -383,12 +373,11 @@ void bvsCalibration::rectifyCalibrationImages()
 
 	nodes[0]->frame = cv::imread(directory + "/" + imageDirectory + "/img" + std::to_string(i) + "-0.pbm");
 	nodes[1]->frame = cv::imread(directory + "/" + imageDirectory + "/img" + std::to_string(i) + "-1.pbm");
+	if (nodes[0]->frame.empty() || nodes[1]->frame.empty()) exit(0);
 
-	rectifyOutput(addGridOverlay);
-
+	rectifyOutput();
 	cv::imwrite(directory + "/" + outputDirectory + "/rect" + std::to_string(i) + "-0.jpg", *nodes[0]->output);
 	cv::imwrite(directory + "/" + outputDirectory + "/rect" + std::to_string(i) + "-1.jpg", *nodes[1]->output);
-
 	i++;
-	if (i>numImages) exit(0);
 }
+
