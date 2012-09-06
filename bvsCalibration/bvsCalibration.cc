@@ -128,6 +128,8 @@ BVS::Status bvsCalibration::execute()
 			if (numDetections==numImages && !detectionRunning) calibrate();
 			for (auto& node: nodes)
 			{
+				cv::putText(*node->output, bvs.getFPS(), cv::Point(10, 30),
+						CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 0, 255), 2);
 				cv::putText(*node->output, std::to_string(numDetections) + "/" + std::to_string(numImages),
 						cv::Point(100, 30), CV_FONT_HERSHEY_SIMPLEX, 1.0f, cv::Scalar(0, 255, 0), 2, 8);
 				cv::imshow(std::to_string(node->id), *node->output);
