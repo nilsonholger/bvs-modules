@@ -123,7 +123,7 @@ class bvsCalibration : public BVS::Module
 		// config options
 		int numNodes; /**< Number of calibration nodes. */
 		int numImages; /**< Number of calibration images. */
-		float circleSize; /**< Circle size of detection pattern. */
+		float blobSize; /**< Square size or circle center distance of detection pattern. */
 		bool autoShotMode; /**< Auto or manual mode. */
 		int autoShotDelay; /**< Delay for auto mode. */
 		std::string directory; /**< Base directory of calibration data. */

@@ -11,7 +11,7 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 	config("bvsCalibration", 0, nullptr, "bvsCalibrationConfig.txt"),
 	numNodes(config.getValue<int>(id + ".numNodes", 0)),
 	numImages(config.getValue<int>(id + ".numImages", 100)),
-	circleSize(config.getValue<float>(id + ".circleSize", 1.0f)),
+	blobSize(config.getValue<float>(id + ".blobSize", 1.0f)),
 	autoShotMode(config.getValue<bool>(id + ".autoShotMode", true)),
 	autoShotDelay(config.getValue<int>(id + ".autoShotDelay", 1)),
 	directory(config.getValue<std::string>(id + ".directory", "calibrationData")),
@@ -224,7 +224,7 @@ void bvsCalibration::calibrate()
 			// single camera
 			break;
 		case 2:
-			stereo.calibrate(numDetections, imageSize, boardSize, circleSize);
+			stereo.calibrate(numDetections, imageSize, boardSize, blobSize);
 			if (saveCalibration) saveCalibrationTo(directory, calibrationFile);
 			break;
 	}
