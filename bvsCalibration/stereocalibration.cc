@@ -105,7 +105,10 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 	for (int i=0; i<numImages; i++)
 		for (int j=0; j<boardSize.height; j++)
 			for (int k=0; k<boardSize.width; k++)
-				objectPoints.at(i).push_back(cv::Point3f(j*blobSize, k*blobSize, 0));
+				// below works for CHESSBOARDS or SYMMETRIC CIRCLE patterns only
+				//objectPoints.at(i).push_back(cv::Point3f(j*blobSize, k*blobSize, 0));
+				// below is for ASYMMETRIC CIRCLE patterns
+				objectPoints.at(i).push_back(cv::Point3f(double((2*k+j%2)*blobSize/2.), double(j*blobSize/2.), 0.));
 
 	LOG(2, "calibrating individual cameras intrinsics!");
 	std::vector<std::thread> threads;
