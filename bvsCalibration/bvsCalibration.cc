@@ -88,7 +88,7 @@ BVS::Status bvsCalibration::execute()
 {
 	if (useSavedImages)
 	{
-		if (numDetections<=numImages)
+		if (numDetections<numImages)
 		{
 			for (auto& node: nodes)
 			{
@@ -100,6 +100,10 @@ BVS::Status bvsCalibration::execute()
 							+ "-" + std::to_string(node->id) + ".pbm");
 					exit(1);
 				}
+			}
+			if (imageSize == cv::Size())
+			{
+				imageSize = nodes[0]->frame.size();
 			}
 			notifyDetectionThread();
 		}
