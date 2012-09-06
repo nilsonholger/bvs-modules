@@ -40,7 +40,7 @@ class StereoCalibration
 		 * @param[in] numImages Number of images for calibration.
 		 * @param[in] imageSize Size of image where points were detected.
 		 * @param[in] boardSize Size of the calibration pattern.
-		 * @param[in] blobSize Size of pattern blobs (squares or circles).
+		 * @param[in] blobSize Size of pattern blobs (squares or distance of circle centers).
 		 */
 		void calibrate(int numImages, cv::Size imageSize, cv::Size boardSize, float blobSize);
 
