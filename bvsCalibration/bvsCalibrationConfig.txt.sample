@@ -10,8 +10,8 @@ numNodes = 0
 # number of images to use for calibration
 numImages = 100
 
-# size of circles in calibration pattern
-circleSize = 1.0
+# size of squares or circle center distance in calibration pattern
+blobSize = 1.0
 
 # use auto shot mode (if OFF, use SPACE to take picture)
 autoShotMode = ON
