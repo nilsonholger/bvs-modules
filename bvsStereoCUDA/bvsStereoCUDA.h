@@ -76,10 +76,13 @@ class bvsStereoCUDA : public BVS::Module
 		cv::gpu::GpuMat gpuMat1;
 		cv::gpu::GpuMat disparity;
 
+		bool switchInputs;
 		int stereoAlgo;
 		cv::gpu::StereoBM_GPU bmGPU;
 		cv::gpu::StereoBeliefPropagation bpGPU;
 		cv::gpu::StereoConstantSpaceBP csGPU;
+
+		bool estimate;
 
 		bvsStereoCUDA(const bvsStereoCUDA&) = delete; /**< -Weffc++ */
 		bvsStereoCUDA& operator=(const bvsStereoCUDA&) = delete; /**< -Weffc++ */

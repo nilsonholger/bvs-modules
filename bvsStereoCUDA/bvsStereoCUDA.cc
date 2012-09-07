@@ -26,10 +26,12 @@ bvsStereoCUDA::bvsStereoCUDA(const std::string id, const BVS::Info& bvs)
 	gpuMat0(),
 	gpuMat1(),
 	disparity(),
+	switchInputs(false),
 	stereoAlgo(0),
 	bmGPU(),
 	bpGPU(),
-	csGPU()
+	csGPU(),
+	estimate(true)
 {
 	bmGPU.preset = 0;
 	bmGPU.ndisp = 64;
@@ -61,16 +63,30 @@ bvsStereoCUDA::~bvsStereoCUDA()
 // Put all your work here.
 BVS::Status bvsStereoCUDA::execute()
 {
-	if (!input0.receive(in0) || !input1.receive(in1)) return BVS::Status::NOINPUT;
+	if (switchInputs)
+	{
+		if (!input0.receive(in1) || !input1.receive(in0)) return BVS::Status::NOINPUT;
+	}
+	else
+	{
+		if (!input0.receive(in0) || !input1.receive(in1)) return BVS::Status::NOINPUT;
+	}
 
-	cv::pyrDown(in0, grey0, cv::Size(in0.cols/2, in0.rows/2));
-	cv::pyrDown(in1, grey1, cv::Size(in1.cols/2, in1.rows/2));
-	in0 = grey0;
-	in1 = grey1;
+	cv::imshow("0", in0);
+	cv::imshow("1", in1);
+
+	if (stereoAlgo!=0)
+	{
+		cv::pyrDown(in0, grey0, cv::Size(in0.cols/2, in0.rows/2));
+		cv::pyrDown(in1, grey1, cv::Size(in1.cols/2, in1.rows/2));
+		in0 = grey0;
+		in1 = grey1;
+	}
 
 	//LOG(0, cv::gpu::StereoBM_GPU::checkIfGpuCallReasonable());
 	if (in0.type()!=CV_8UC1 || in1.type()!=CV_8UC1)
 	{
+		//TODO test cv::gpu::cvtColor...
 		cv::cvtColor(in0, grey0, CV_RGB2GRAY);
 		cv::cvtColor(in1, grey1, CV_RGB2GRAY);
 	}
@@ -78,10 +94,12 @@ BVS::Status bvsStereoCUDA::execute()
 	gpuMat0.upload(grey0);
 	gpuMat1.upload(grey1);
 
-	//TODO try
-	//bpGPU.estimateRecommendedParams(...)
-	//csGPU.estimateRecommendedParams(...)
-	//cv::gpu::DisparityBilateralFilter()
+	if (estimate)
+	{
+	bpGPU.estimateRecommendedParams(in0.cols, in0.rows, bpGPU.ndisp, bpGPU.iters, bpGPU.levels);
+	csGPU.estimateRecommendedParams(in0.cols, in0.rows, csGPU.ndisp, csGPU.iters, csGPU.levels, csGPU.nr_plane);
+		estimate = false;
+	}
 
 	switch (stereoAlgo)
 	{
@@ -97,11 +115,23 @@ BVS::Status bvsStereoCUDA::execute()
 
 	cv::Mat out;
 	cv::gpu::GpuMat color;
-	cv::gpu::drawColorDisp(disparity, color, bmGPU.ndisp);
+	switch (stereoAlgo)
+	{
+		case 0: cv::gpu::drawColorDisp(disparity, color, bmGPU.ndisp); break;
+		case 1: cv::gpu::drawColorDisp(disparity, color, bpGPU.ndisp); break;
+		case 2: cv::gpu::drawColorDisp(disparity, color, csGPU.ndisp); break;
+	}
 	color.download(out);
 	cv::putText(out, bvs.getFPS(), cv::Point(10, 30),
 			CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 0, 255), 2);
 	cv::imshow("out", out);
+
+	cv::Mat edges;
+	cv::gpu::GpuMat canny;
+	cv::gpu::GaussianBlur(disparity, canny, cv::Size(31,31), 0);
+	cv::gpu::Canny(canny, disparity, 1.0, 2.0);
+	disparity.download(edges);
+	cv::imshow("edges", edges);
 
 	char c = cv::waitKey(1);
 	switch (c)
@@ -109,7 +139,9 @@ BVS::Status bvsStereoCUDA::execute()
 		case 'h':
 			LOG(1, "\n\
 usage:\n\
+    x   - switch inputs: " << switchInputs << "\n\
     a   - change algorithm: " << (stereoAlgo==0? "BM": stereoAlgo==1? "BP": "CSBP") << "\n\
+    e   - estimate BP and CSBP settings\n\
 BM:\n\
     p   - prefilter on/off: " << bmGPU.preset << "\n\
     n/N - change number of disparities: " << bmGPU.ndisp << "\n\
@@ -125,10 +157,12 @@ CS:\n\
     l/L - change number of levels " << csGPU.levels << "\n\
 "); break;
 
+		case 'x': switchInputs = !switchInputs; break;
 		case 'a':
 			stereoAlgo = (stereoAlgo + 1) % 3;
 			LOG(1, "algo: " << (stereoAlgo==0? "BM": stereoAlgo==1? "BP": "CSBP"));
 			break;
+		case 'e': estimate = true; break;
 		case 'p':
 			bmGPU.preset = (bmGPU.preset + 1) % 2;
 			LOG(1, "preset: " << bmGPU.preset);
