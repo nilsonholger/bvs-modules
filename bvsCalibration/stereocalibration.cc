@@ -9,7 +9,6 @@ StereoCalibration::StereoCalibration(CalNodeVec& nodes)
 	nodes(nodes),
 	imageSize(),
 	rms(0),
-	averageError(0),
 	objectPoints(),
 	stereoRotation(),
 	stereoTranslation(),
@@ -129,7 +128,6 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 	}
 	for (auto& t: threads) t.join();
 
-
 	LOG(2, "calibrating stereo!");
 	rms = cv::stereoCalibrate(
 			objectPoints, nodes.at(0)->pointStore, nodes.at(1)->pointStore,
@@ -140,39 +138,6 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 			CV_CALIB_SAME_FOCAL_LENGTH + CV_CALIB_RATIONAL_MODEL + CV_CALIB_FIX_K3 + CV_CALIB_FIX_K4 + CV_CALIB_FIX_K5);
 	LOG(1, "stereo reprojection error: " << rms);
 
-
-
-	LOG(2, "calculating average calibration error!");
-	int points = 0;
-	int sumPoints = 0;
-	std::vector<cv::Vec3f> lines[2];
-
-	for(int i = 0; i < numImages; i++ )
-	{
-		points = nodes[0]->pointStore.at(i).size();
-		cv::Mat imgpt[2];
-		for(int k = 0; k < 2; k++ )
-		{
-			imgpt[k] = cv::Mat(nodes[k]->pointStore.at(i));
-			cv::undistortPoints(imgpt[k], imgpt[k], nodes.at(k)->cameraMatrix, nodes.at(k)->distCoeffs, cv::Mat(), nodes.at(k)->cameraMatrix);
-			cv::computeCorrespondEpilines(imgpt[k], k+1, stereoFundamental, lines[k]);
-		}
-		for(int j = 0; j < points; j++ )
-		{
-			double errIJ =
-				fabs(nodes.at(0)->pointStore[i][j].x*lines[1][j][0] +
-				nodes.at(0)->pointStore[i][j].y*lines[1][j][1] + lines[1][j][2]) +
-				fabs(nodes.at(0)->pointStore[i][j].x*lines[0][j][0] +
-				nodes.at(0)->pointStore[i][j].y*lines[0][j][1] + lines[0][j][2]);
-			averageError += errIJ;
-		}
-		sumPoints += points;
-	}
-	averageError /= sumPoints;
-	LOG(1, "average calibration error: " << averageError);
-
-
-
 	LOG(2, "calculating stereo rectification!");
 	cv::stereoRectify(
 			nodes.at(0)->cameraMatrix, nodes.at(0)->distCoeffs,
@@ -182,8 +147,6 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 			nodes.at(0)->projectionMatrix, nodes.at(1)->projectionMatrix,
 			disparityToDepthMapping, CV_CALIB_ZERO_DISPARITY, 1.0f, imageSize,
 			&nodes.at(0)->validRegionOfInterest, &nodes.at(1)->validRegionOfInterest);
-
-
 
 	LOG(2, "using fundamental matrix to calculate rectification and projection matrices!");
 	std::vector<cv::Point2f> allimgpt[2];
