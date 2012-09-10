@@ -26,10 +26,7 @@ bool StereoCalibration::loadFromFile(const std::string& path, const std::string&
 
 	if (!fs.isOpened()) return false;
 
-	fs["imageWidth"] >> imageSize.width;
-	fs["imageHeigth"] >> imageSize.height;
 	fs["rms"] >> rms;
-	fs["avgerageError"] >> averageError;
 	fs["stereoRotation"] >> stereoRotation;
 	fs["stereoTranslation"] >> stereoTranslation;
 	fs["stereoEssential"] >> stereoEssential;
@@ -61,10 +58,7 @@ bool StereoCalibration::saveToFile(const std::string& path, const std::string& f
 
 	if (!fs.isOpened()) return false;
 
-	fs << "imageWidth" << imageSize.width;
-	fs << "imageHeigth" << imageSize.height;
 	fs << "rms" << rms;
-	fs << "avgerageError" << averageError;
 	fs << "stereoRotation" << stereoRotation;
 	fs << "stereoTranslation" << stereoTranslation;
 	fs << "stereoEssential" << stereoEssential;
@@ -171,8 +165,9 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 
 
 
-void StereoCalibration::rectify(bool addGridOverlay)
+void StereoCalibration::rectify(cv::Size imageSize, bool addGridOverlay)
 {
+	this->imageSize = imageSize;
 	static bool initRectifyMap = true;
 
 	if (initRectifyMap)

@@ -249,7 +249,7 @@ void bvsCalibration::rectifyOutput()
 			// single camera
 			break;
 		case 2:
-			stereo.rectify(addGridOverlay);
+			stereo.rectify(imageSize, addGridOverlay);
 			break;
 	}
 }

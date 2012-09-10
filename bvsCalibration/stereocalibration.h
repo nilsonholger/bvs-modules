@@ -45,16 +45,16 @@ class StereoCalibration
 		void calibrate(int numImages, cv::Size imageSize, cv::Size boardSize, float blobSize);
 
 		/** Rectify output image.
+		 * @param[in] imageSize Size of image where points were detected.
 		 * @param[in] addGridOverlay Whether to overlay a grid on rectified images.
 		 */
-		void rectify(bool addGridOverlay = false);
+		void rectify(cv::Size imageSize, bool addGridOverlay = false);
 
 	private:
 		BVS::Logger logger; /**< Logger instance. */
 		CalNodeVec& nodes; /**< Vector of calibration nodes. */
 		cv::Size imageSize; /**< Image size. */
 		double rms; /** Reprojection error. */
-		double averageError; /** Calculated average error. */
 		/** Pattern object points (in 3-dimensional coordinates). */
 		std::vector<std::vector<cv::Point3f>> objectPoints;
 		cv::Mat stereoRotation; /**< Rotation between principal planes. */
