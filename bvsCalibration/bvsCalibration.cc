@@ -220,10 +220,6 @@ void bvsCalibration::generateReflectionMap()
 
 void bvsCalibration::calibrate()
 {
-	if (useCalibrationGuide)
-		for (auto& node: nodes)
-			guide.reorderDetections(node->pointStore);
-
 	switch (numNodes)
 	{
 		case 1:

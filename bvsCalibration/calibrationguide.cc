@@ -109,28 +109,6 @@ bool CalibrationGuide::checkDetectionQuality(cv::Mat& img, std::vector<cv::Point
 
 
 
-void CalibrationGuide::reorderDetections(std::vector<std::vector<cv::Point2f>>& points)
-{
-	std::vector<std::vector<cv::Point2f>> tmp;
-
-	for (int i=0; i<sectorDetections; i++)
-	{
-		tmp.push_back(points.at(centerDetections+i));
-		tmp.push_back(points.at(centerDetections+i+3*sectorDetections));
-		tmp.push_back(points.at(centerDetections+i+6*sectorDetections));
-		tmp.push_back(points.at(centerDetections+i+1*sectorDetections));
-		tmp.push_back(points.at(centerDetections+i+4*sectorDetections));
-		tmp.push_back(points.at(centerDetections+i+7*sectorDetections));
-		tmp.push_back(points.at(centerDetections+i+2*sectorDetections));
-		tmp.push_back(points.at(centerDetections+i+5*sectorDetections));
-	}
-
-	points.erase(points.begin()+centerDetections, points.end());
-	points.insert(points.begin()+centerDetections, tmp.begin(), tmp.end());
-}
-
-
-
 void CalibrationGuide::updateInputSize(cv::Mat& img)
 {
 	size.x = img.cols;
