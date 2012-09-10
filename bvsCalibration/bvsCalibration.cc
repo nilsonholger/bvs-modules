@@ -113,7 +113,10 @@ BVS::Status bvsCalibration::execute()
 	else
 	{
 		for (auto& node: nodes)
+		{
 			if(!node->input.receive(node->frame)) return BVS::Status::NOINPUT;
+			if (node->frame.empty()) return BVS::Status::NOINPUT;
+		}
 		if (imageSize == cv::Size())
 		{
 			imageSize = nodes[0]->frame.size();
@@ -139,6 +142,7 @@ BVS::Status bvsCalibration::execute()
 			if (!autoShotMode && c==' ') notifyDetectionThread();
 		}
 		else if (createRectifiedOutput) rectifyOutput();
+		else for (auto& node: nodes) *node->output = node->frame;
 	}
 
 	return BVS::Status::OK;

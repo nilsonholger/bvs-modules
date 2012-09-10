@@ -71,6 +71,7 @@ BVS::Status bvsStereoCUDA::execute()
 	{
 		if (!input0.receive(in0) || !input1.receive(in1)) return BVS::Status::NOINPUT;
 	}
+	if (in0.empty() || in1.empty()) return BVS::Status::NOINPUT;
 
 	cv::imshow("0", in0);
 	cv::imshow("1", in1);
