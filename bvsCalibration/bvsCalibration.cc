@@ -125,7 +125,10 @@ BVS::Status bvsCalibration::execute()
 		if (!calibrated)
 		{
 			for (auto& node: nodes)
+			{
 				cv::remap(node->frame, *node->output, reflectX, reflectY, 0);
+				if(node->output->type()==CV_8UC1) cv::cvtColor(*node->output, *node->output, CV_GRAY2BGR);
+			}
 			if (useCalibrationGuide) guide.addTargetOverlay(*nodes[0]->output);
 			if (numDetections<numImages) collectCalibrationImages();
 			if (numDetections==numImages && !detectionRunning) calibrate();
