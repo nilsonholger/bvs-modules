@@ -11,9 +11,7 @@
  * to be more precise, the position and size of the detected patterns. The
  * purpose of this is to increase absolute pixel coverage by the detected
  * patterns.
- * The system separates detections into large center detections and smaller
- * per sector detections (of which there are 8). The calibration guide will
- * first collect center detections and then per sector detections.
+ * TODO add different size enforcements...
  */
 class CalibrationGuide
 {
@@ -22,11 +20,10 @@ class CalibrationGuide
 		 * @param[in] numImages The overall number of images.
 		 * This should be centerDetections + 8 * sectorDetections.
 		 * @param[in] numDetections The number of pattern detections so far.
-		 * @param[in] scale The scale of center detections (as a fraction of 1) of the image diagonal.
 		 * @param[in] centerDetections Number of center detections.
 		 * @param[in] sectorDetections Number of per sector detections.
 		 */
-		CalibrationGuide(const int& numImages, const int& numDetections, float scale, int centerDetections, int sectorDetections);
+		CalibrationGuide(const int& numImages, const int& numDetections, int sectorDetections);
 
 		/** Draws target information.
 		 * This method draws target information on an image. These consists of a
@@ -60,13 +57,13 @@ class CalibrationGuide
 		 * state: n
 		 *
 		 *   00  |  10  |  20
-		 *    1  |   2  |   3
+		 *    0  |   1  |   2
 		 * --------------------
 		 *   01  |  11  |  21
-		 *    8  |   0  |   4
+		 *    5  |   4  |   3
 		 * --------------------
 		 *   02  |  12  |  22
-		 *    7  |   6  |   5
+		 *    6  |   7  |   8
 		 * @endcode
 		 *
 		 * @param[in] sectorX X coordinate of sector.
@@ -76,8 +73,6 @@ class CalibrationGuide
 
 		const int& numImages; /**< Overall number of images used for calibration. */
 		const int& numDetections; /**< Number of actual detections. */
-		float scale; /**< Center detection scale in percent. */
-		int centerDetections; /**< Number of center detections. */
 		int sectorDetections; /**< Number of per sector detections. */
 
 		/** Detection state.
@@ -88,7 +83,7 @@ class CalibrationGuide
 		 * if center close to sector center
 		 */
 		int state;
-		int imgDiag; /**< Lenght of image diagonal. */
+		double imgDiag; /**< Lenght of image diagonal. */
 
 		/** Point structure. */
 		struct point

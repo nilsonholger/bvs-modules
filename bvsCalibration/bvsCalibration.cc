@@ -26,8 +26,6 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 	createRectifiedOutput(config.getValue<bool>(id + ".createRectifiedOutput", true)),
 	addGridOverlay(config.getValue<bool>(id + ".addGridOverlay", false)),
 	useCalibrationGuide(config.getValue<bool>(id + ".useCalibrationGuide", false)),
-	centerScale(config.getValue<float>(id + ".centerScale", 0.5)),
-	centerDetections(config.getValue<int>(id + ".centerDetections", 60)),
 	sectorDetections(config.getValue<int>(id + ".sectorDetections", 5)),
 	calibrated(false),
 	detectionRunning(false),
@@ -44,7 +42,7 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 	reflectY(),
 	nodes(),
 	stereo(nodes),
-	guide(numImages, numDetections, centerScale, centerDetections, sectorDetections)
+	guide(numImages, numDetections, sectorDetections)
 {
 	for (int i=0; i<numNodes; i++)
 	{
@@ -266,6 +264,7 @@ void bvsCalibration::collectCalibrationImages()
 
 	for (auto& node: nodes)
 	{
+		//TODO paralellize with threads to decrease latency?
 		cv::pyrDown(node->frame, node->scaledFrame, cv::Size(imageSize.width/2, imageSize.height/2));
 		foundPattern = cv::findCirclesGrid(node->scaledFrame, boardSize,
 				node->framePoints, cv::CALIB_CB_ASYMMETRIC_GRID);

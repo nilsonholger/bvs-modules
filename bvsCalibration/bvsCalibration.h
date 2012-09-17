@@ -138,8 +138,6 @@ class bvsCalibration : public BVS::Module
 		bool createRectifiedOutput; /**< Whether to rectify the output images. */
 		bool addGridOverlay; /**< Whether to add grid overlay on output images. */
 		bool useCalibrationGuide; /**< Whether to use the calibration guide. */
-		float centerScale; /**< Scale of center detections in percent of image size. */
-		int centerDetections; /**< Number of center detections. */
 		int sectorDetections; /**< Number of per sector detections. */
 
 		bool calibrated; /** Calibration status. */
