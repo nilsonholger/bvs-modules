@@ -2,8 +2,8 @@
 #define BVSCAPTURE_H
 
 #include "bvs/module.h"
-
 #include "opencv2/opencv.hpp"
+#include <vector>
 
 
 
@@ -58,11 +58,10 @@ class bvsCapture : public BVS::Module
 		/** Example Connector used to retrieve/send data from/to other modules.
 		 * @see Connector
 		 */
-		BVS::Connector<cv::Mat> outL;
-		BVS::Connector<cv::Mat> outR;
+		std::vector<BVS::Connector<cv::Mat>> outputs;
 
-		cv::VideoCapture captureL;
-		cv::VideoCapture captureR;
+		std::vector<cv::VideoCapture> captures;
+		int numInputs;
 
 		bvsCapture(const bvsCapture&) = delete; /**< -Weffc++ */
 		bvsCapture& operator=(const bvsCapture&) = delete; /**< -Weffc++ */
