@@ -23,7 +23,7 @@ class bvsCapture : public BVS::Module
 		 * framework.
 		 * You can use the constructor/destructor pair to create/destroy your data.
 		 * @param[in] id Your modules unique identifier, will be set by framework.
-		 * @param[in] config Reference to config to enable option retrieval.
+		 * @param[in] bvs Reference to framework info for e.g. config option retrieval.
 		 */
 		bvsCapture(const std::string id, const BVS::Info& bvs);
 

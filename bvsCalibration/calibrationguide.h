@@ -20,7 +20,6 @@ class CalibrationGuide
 		 * @param[in] numImages The overall number of images.
 		 * This should be centerDetections + 8 * sectorDetections.
 		 * @param[in] numDetections The number of pattern detections so far.
-		 * @param[in] centerDetections Number of center detections.
 		 * @param[in] sectorDetections Number of per sector detections.
 		 */
 		CalibrationGuide(const int& numImages, const int& numDetections, int sectorDetections);
