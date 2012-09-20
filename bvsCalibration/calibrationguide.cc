@@ -66,7 +66,7 @@ bool CalibrationGuide::checkDetectionQuality(cv::Mat& img, std::vector<cv::Point
 	cv::line(img, cv::Point(center.x, center.y), cv::Point(detCenter.x, detCenter.y), color, 2);
 
 	// display advice
-	if (diag > imgDiag/2 || std::abs(detCenter.x-center.x)>size.x/6 || std::abs(detCenter.y-center.y)>size.y/6)
+	if (/*diag > imgDiag/2 ||*/ std::abs(detCenter.x-center.x)>size.x/6 || std::abs(detCenter.y-center.y)>size.y/6)
 	{
 		color = {0, 0, 255};
 		cv::putText(img, "Pattern center position OUTSIDE OF TARGET.",
