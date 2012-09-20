@@ -139,27 +139,9 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 			imageSize, stereoRotation, stereoTranslation,
 			nodes.at(0)->rectificationMatrix, nodes.at(1)->rectificationMatrix,
 			nodes.at(0)->projectionMatrix, nodes.at(1)->projectionMatrix,
-			disparityToDepthMapping, CV_CALIB_ZERO_DISPARITY, 1.0f, imageSize,
+			disparityToDepthMapping, CV_CALIB_ZERO_DISPARITY, 0.0f, imageSize,
 			&nodes.at(0)->validRegionOfInterest, &nodes.at(1)->validRegionOfInterest);
 
-	LOG(2, "using fundamental matrix to calculate rectification and projection matrices!");
-	std::vector<cv::Point2f> allimgpt[2];
-	for( int k = 0; k < 2; k++ )
-	{
-		for( int i = 0; i < numImages; i++ )
-			std::copy(nodes.at(k)->pointStore.at(i).begin(), nodes.at(k)->pointStore.at(i).end(), back_inserter(allimgpt[k]));
-	}
-	//TODO test RANSAC and others, or use fundamental from stereoCalibrate, compare quality
-	stereoFundamental = cv::findFundamentalMat(cv::Mat(allimgpt[0]),
-			cv::Mat(allimgpt[1]), CV_FM_8POINT, 0, 0);
-	cv::stereoRectifyUncalibrated(cv::Mat(allimgpt[0]), cv::Mat(allimgpt[1]),
-			stereoFundamental, imageSize, nodes.at(0)->homographyMatrix, nodes.at(1)->homographyMatrix, 3);
-
-	nodes.at(0)->rectificationMatrix = nodes.at(0)->cameraMatrix.inv()*nodes.at(0)->homographyMatrix*nodes.at(0)->cameraMatrix;
-	nodes.at(1)->rectificationMatrix = nodes.at(1)->cameraMatrix.inv()*nodes.at(1)->homographyMatrix*nodes.at(1)->cameraMatrix;
-	nodes.at(0)->projectionMatrix = nodes.at(0)->cameraMatrix;
-	nodes.at(1)->projectionMatrix = nodes.at(1)->cameraMatrix;
-	
 	LOG(2, "calibration done!");
 }
 
