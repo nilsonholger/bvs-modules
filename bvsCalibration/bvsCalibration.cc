@@ -52,7 +52,7 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 				BVS::Connector<cv::Mat>(std::string("output") + std::to_string(i), BVS::ConnectorType::OUTPUT),
 				cv::Mat(), cv::Mat(), std::vector<cv::Point2f>(), cv::Mat(),
 				std::vector<cv::Point2f>(), std::vector<std::vector<cv::Point2f>>(),
-				cv::Mat::eye(3, 3, CV_64F), cv::Mat(), cv::Mat(), cv::Mat(), cv::Mat(), cv::Rect()));
+				cv::Mat::eye(3, 3, CV_64F), cv::Mat(), cv::Mat(), cv::Mat(), cv::Rect()));
 	}
 
 	struct stat *buf = nullptr;

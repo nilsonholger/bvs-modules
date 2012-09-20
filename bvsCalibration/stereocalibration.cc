@@ -40,7 +40,6 @@ bool StereoCalibration::loadFromFile(const std::string& path, const std::string&
 		fs["distCoeffs"+id] >> node->distCoeffs;
 		fs["rectificationMatrix"+id] >> node->rectificationMatrix;
 		fs["projectionMatrix"+id] >> node->projectionMatrix;
-		fs["homographyMatrix"+id] >> node->homographyMatrix;
 		fs["validRegionOfInterest"+id+"x"] >> node->validRegionOfInterest.x;
 		fs["validRegionOfInterest"+id+"y"] >> node->validRegionOfInterest.y;
 		fs["validRegionOfInterest"+id+"width"] >> node->validRegionOfInterest.width;
@@ -72,7 +71,6 @@ bool StereoCalibration::saveToFile(const std::string& path, const std::string& f
 		fs << "distCoeffs"+id << node->distCoeffs;
 		fs << "rectificationMatrix"+id << node->rectificationMatrix;
 		fs << "projectionMatrix"+id << node->projectionMatrix;
-		fs << "homographyMatrix"+id << node->homographyMatrix;
 		fs << "validRegionOfInterest"+id+"x" << node->validRegionOfInterest.x;
 		fs << "validRegionOfInterest"+id+"y" << node->validRegionOfInterest.y;
 		fs << "validRegionOfInterest"+id+"width" << node->validRegionOfInterest.width;

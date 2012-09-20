@@ -34,14 +34,13 @@ struct CalibrationNode
 	 * @param[in] distCoeffs Distortion coefficients.
 	 * @param[in] rectificationMatrix Rectification matrix.
 	 * @param[in] projectionMatrix Projection matrix.
-	 * @param[in] homographyMatrix Homography matrix.
 	 * @param[in] validRegionOfInterest Calculated valid region of interest.
 	 */
 	CalibrationNode(int id, BVS::Connector<cv::Mat> input, BVS::Connector<cv::Mat> output,
 			cv::Mat frame, cv::Mat scaledFrame, std::vector<cv::Point2f> framePoints, cv::Mat sample,
 			std::vector<cv::Point2f> points, std::vector<std::vector<cv::Point2f>> pointStore,
 			cv::Mat cameraMatrix, cv::Mat distCoeffs, cv::Mat rectificationMatrix, cv::Mat projectionMatrix,
-			cv::Mat homographyMatrix, cv::Rect validRegionOfInterest)
+			cv::Rect validRegionOfInterest)
 		: id(id),
 		input(input),
 		output(output),
@@ -55,7 +54,6 @@ struct CalibrationNode
 		distCoeffs(distCoeffs),
 		rectificationMatrix(rectificationMatrix),
 		projectionMatrix(projectionMatrix),
-		homographyMatrix(homographyMatrix),
 		validRegionOfInterest(validRegionOfInterest)
 	{ }
 
@@ -72,7 +70,6 @@ struct CalibrationNode
 	cv::Mat distCoeffs; /**< Distortion coefficients. */
 	cv::Mat rectificationMatrix; /**< Rectification matrix. */
 	cv::Mat projectionMatrix; /**< Projection matrix. */
-	cv::Mat homographyMatrix; /**< Homography matrix. */
 	cv::Rect validRegionOfInterest; /**< Calculated valid region of interest. */
 };
 
