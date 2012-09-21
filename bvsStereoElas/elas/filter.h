@@ -94,6 +94,6 @@ namespace filter {
   // -1  1  1  1 -1
   // -1 -1 -1 -1 -1
   void blob5x5( const uint8_t* in, int16_t* out, int w, int h );
-};
+}
 
 #endif

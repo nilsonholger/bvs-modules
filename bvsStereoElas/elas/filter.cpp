@@ -380,7 +380,7 @@ namespace filter {
         *(result_v+1) = _mm_add_epi16( *(result_v+1), ilo );
       }
     }
-  };
+  }
   
   void sobel3x3( const uint8_t* in, uint8_t* out_v, uint8_t* out_h, int w, int h ) {
     int16_t* temp_h = (int16_t*)( _mm_malloc( w*h*sizeof( int16_t ), 16 ) );
@@ -442,4 +442,4 @@ namespace filter {
     }
     _mm_free( integral );
   }
-};
+}
