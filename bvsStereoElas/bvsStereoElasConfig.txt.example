@@ -1,24 +1,18 @@
 # This is an example config file for bvsStereoElas. Please copy it to
 # [build/]bin/bvsStereoElasConfig.txt to get started right away.
-#
-# short syntax:
-#
-# [section]
-# option = value
-#
-# Spaces and tabs are ignored (except inside '' and "") and everything is case
-# insensitive. For more information on syntax as well as further capabilities,
-# please see 'libbvs/include/bvs/config.h' or 'DOXYGEN:Classes->BVS::Config'.
 
-# This is a section/configuration header.
-# It can be used to create 'configurations' of your module, simply by creating
-# various sections with different options belonging to them. These are selected
-# by using them as a uniqueID in BVSConfig.txt when adding modules to the
-# system (if you use 'id + ".option"' to retrieve them), e.g.
-# modules += uniqueID(bvsStereoElas)...
-#
-# [uniqueID]
-# # please comment your settings
-# option = value
+[elas]
+# size of border on top of image (neglected space)
+discardTopLines = 0
+
+# size of border on bottom of image (neglected space)
+discardBottomLines = 0
+
+# number of slices/threads used to do work on the image
+sliceCount = 2
+
+# size of slice overlap to reduce artifacts due to missing information
+sliceOverlap = 10
+
 
 # This line tells vim something about the file type. -- vim:ft=config:

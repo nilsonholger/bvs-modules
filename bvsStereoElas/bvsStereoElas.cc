@@ -6,10 +6,22 @@ bvsStereoElas::bvsStereoElas(const std::string id, const BVS::Info& bvs)
 	: BVS::Module(),
 	id(id),
 	logger(id),
-	config("bvsStereoElas", 0, nullptr), // "bvsStereoElasConfig.txt"),
+	config("bvsStereoElas", 0, nullptr, "bvsStereoElasConfig.txt"),
 	bvs(bvs),
 	inL("inL", BVS::ConnectorType::INPUT),
 	inR("inR", BVS::ConnectorType::INPUT),
+	discardTopLines(config.getValue<int>(id+".discardTopLines", 0)),
+	discardBottomLines(config.getValue<int>(id+".discardBottomLines", 0)),
+	sliceCount(config.getValue<int>(id+".sliceCount", 1)),
+	sliceOverlap(config.getValue<int>(id+".sliceOverlap", 10)),
+	sliceExit(false),
+	masterMutex(),
+	sliceMutex(),
+	masterLock(masterMutex),
+	monitor(),
+	threadMonitor(),
+	threads(),
+	flags(sliceCount),
 	tmpL(),
 	tmpR(),
 	left(),
@@ -20,15 +32,31 @@ bvsStereoElas::bvsStereoElas(const std::string id, const BVS::Info& bvs)
 	param(),
 	elas(param)
 {
+	if (sliceCount<=0)
+	{
+		LOG(0, "ERROR: sliceCount <= 0! Aborting...");
+		exit(1);
+	}
+
 	param.postprocess_only_left = false;
 	elas = Elas(param);
+
+	runningThreads.store(0, std::memory_order_release);
+	for (int i=0; i<sliceCount; i++)
+		threads.push_back(std::thread(&bvsStereoElas::sliceThread, this, i));
+	flags.resize(sliceCount);
+	for (auto f: flags) f = false;
 }
 
 
 
 bvsStereoElas::~bvsStereoElas()
 {
-
+	sliceExit = true;
+	for (auto f: flags) f = true;
+	runningThreads.store(sliceCount);
+	threadMonitor.notify_all();
+	for (auto& t: threads) if (t.joinable()) t.join();
 }
 
 
@@ -45,32 +73,60 @@ BVS::Status bvsStereoElas::execute()
 		dispL = cv::Mat(left.size(), CV_32FC1);
 		dispR = cv::Mat(left.size(), CV_32FC1);
 		dimensions[0] = left.cols;
-		dimensions[1] = left.rows;
-		dimensions[2] = left.cols;
+		dimensions[1] = (left.rows-discardTopLines-discardBottomLines)/sliceCount; //TODO + sliceOverlap;
+		dimensions[2] = dimensions[0];
 	}
 
-	elas.process(left.data,right.data,(float*)dispL.data,(float*)dispR.data,dimensions);
+	for (auto f: flags) f = true;
+	runningThreads.store(sliceCount);
+	threadMonitor.notify_all();
 
-	float disp_max = 0;
-	for (int32_t i=0; i<left.cols*left.rows; i++) {
-		if (*((float*)dispL.data+i)>disp_max) disp_max = *((float*)dispL.data+i);
-		if (*((float*)dispR.data+i)>disp_max) disp_max = *((float*)dispR.data+i);
-	}
+	monitor.wait(masterLock, [&](){ return runningThreads.load()==0; });
 
-	cv::Mat showL = cv::Mat(left.size(), CV_8UC1);
-	cv::Mat showR = cv::Mat(left.size(), CV_8UC1);
-	for (int32_t i=0; i<left.cols*left.rows; i++) {
-		*(showL.data+i) = (uint8_t)std::max(255.0* *((float*)dispL.data+i)/disp_max,0.0);
-		*(showR.data+i) = (uint8_t)std::max(255.0* *((float*)dispR.data+i)/disp_max,0.0);
-	}
+	//float disp_max = 0;
+	//for (int32_t i=0; i<left.cols*left.rows; i++) {
+		//if (*((float*)dispL.data+i)>disp_max) disp_max = *((float*)dispL.data+i);
+		//if (*((float*)dispR.data+i)>disp_max) disp_max = *((float*)dispR.data+i);
+	//}
 
-	cv::imshow("iL", left);
-	cv::imshow("iR", right);
-	cv::imshow("dL", showL);
-	cv::imshow("dR", showR);
-	cv::waitKey(1);
+	//cv::Mat showL = cv::Mat(left.size(), CV_8UC1);
+	//cv::Mat showR = cv::Mat(left.size(), CV_8UC1);
+	//for (int32_t i=0; i<left.cols*left.rows; i++) {
+		//*(showL.data+i) = (uint8_t)std::max(255.0* *((float*)dispL.data+i)/disp_max,0.0);
+		//*(showR.data+i) = (uint8_t)std::max(255.0* *((float*)dispR.data+i)/disp_max,0.0);
+	//}
+
+	std::cerr<<bvs.getFPS()<<std::endl;
+	//cv::putText(showL, bvs.getFPS(), cv::Point(10, 30),
+			//CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(255, 255, 255), 2);
+
+	//cv::imshow("iL", left);
+	//cv::imshow("iR", right);
+	//cv::imshow("dL", showL);
+	//cv::imshow("dR", showR);
+	//cv::waitKey(1);
 
 	return BVS::Status::OK;
+}
+
+
+
+void bvsStereoElas::sliceThread(int id)
+{
+	std::unique_lock<std::mutex> lock(sliceMutex);
+
+	while (!sliceExit)
+	{
+		threadMonitor.wait(lock, [&](){ return flags[id]; });
+
+		int offset = (discardTopLines+id*dimensions[1]) * dimensions[0]; //TODO - sliceOverlap; //except for id==0
+		elas.process(left.data+offset, right.data+offset, (float*)dispL.data+offset, (float*)dispR.data+offset, dimensions);
+
+		runningThreads.fetch_sub(1);
+		flags[id] = false;
+		monitor.notify_one();
+	}
+	monitor.notify_one();
 }
 
 

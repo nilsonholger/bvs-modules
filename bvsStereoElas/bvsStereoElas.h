@@ -4,6 +4,10 @@
 #include "bvs/module.h"
 #include "opencv2/opencv.hpp"
 #include "elas/elas.h"
+#include <atomic>
+#include <condition_variable>
+#include <thread>
+#include <vector>
 
 
 
@@ -66,6 +70,21 @@ class bvsStereoElas : public BVS::Module
 		BVS::Connector<cv::Mat> inL;
 		BVS::Connector<cv::Mat> inR;
 
+		int discardTopLines;
+		int discardBottomLines;
+		int sliceCount;
+		int sliceOverlap;
+		bool sliceExit;
+
+		std::atomic<int> runningThreads;
+		std::mutex masterMutex;
+		std::mutex sliceMutex;
+		std::unique_lock<std::mutex> masterLock;
+		std::condition_variable monitor;
+		std::condition_variable threadMonitor;
+		std::vector<std::thread> threads;
+		std::vector<bool> flags;
+
 		cv::Mat tmpL;
 		cv::Mat tmpR;
 		cv::Mat left;
@@ -75,6 +94,8 @@ class bvsStereoElas : public BVS::Module
 		int dimensions[3];
 		Elas::parameters param;
 		Elas elas;
+
+		void sliceThread(int id);
 
 		bvsStereoElas(const bvsStereoElas&) = delete; /**< -Weffc++ */
 		bvsStereoElas& operator=(const bvsStereoElas&) = delete; /**< -Weffc++ */
