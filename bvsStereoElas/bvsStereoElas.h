@@ -3,6 +3,7 @@
 
 #include "bvs/module.h"
 #include "opencv2/opencv.hpp"
+#include "elas/elas.h"
 
 
 
@@ -65,8 +66,15 @@ class bvsStereoElas : public BVS::Module
 		BVS::Connector<cv::Mat> inL;
 		BVS::Connector<cv::Mat> inR;
 
+		cv::Mat tmpL;
+		cv::Mat tmpR;
 		cv::Mat left;
 		cv::Mat right;
+		cv::Mat dispL;
+		cv::Mat dispR;
+		int dimensions[3];
+		Elas::parameters param;
+		Elas elas;
 
 		bvsStereoElas(const bvsStereoElas&) = delete; /**< -Weffc++ */
 		bvsStereoElas& operator=(const bvsStereoElas&) = delete; /**< -Weffc++ */
