@@ -8,6 +8,9 @@ discardTopLines = 0
 # size of border on bottom of image (neglected space)
 discardBottomLines = 0
 
+# scaling factor
+scalingFactor = 2
+
 # number of slices/threads used to do work on the image
 sliceCount = 2
 

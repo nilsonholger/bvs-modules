@@ -12,6 +12,7 @@ bvsStereoElas::bvsStereoElas(const std::string id, const BVS::Info& bvs)
 	inR("inR", BVS::ConnectorType::INPUT),
 	discardTopLines(config.getValue<int>(id+".discardTopLines", 0)),
 	discardBottomLines(config.getValue<int>(id+".discardBottomLines", 0)),
+	scalingFactor(config.getValue<float>(id+".scalingFactor", 0)),
 	sliceCount(config.getValue<int>(id+".sliceCount", 1)),
 	sliceOverlap(config.getValue<int>(id+".sliceOverlap", 10)),
 	sliceExit(false),
@@ -65,8 +66,8 @@ BVS::Status bvsStereoElas::execute()
 {
 	if (!inL.receive(tmpL) || !inR.receive(tmpR)) return BVS::Status::NOINPUT;
 
-	cv::pyrDown(tmpL, left);
-	cv::pyrDown(tmpR, right);
+	cv::resize(tmpL, left, cv::Size(tmpL.cols/scalingFactor, tmpL.rows/scalingFactor), 0, 0, cv::INTER_AREA);
+	cv::resize(tmpR, right, cv::Size(tmpR.cols/scalingFactor, tmpR.rows/scalingFactor), 0, 0, cv::INTER_AREA);
 
 	if (dispL.size()==cv::Size())
 	{

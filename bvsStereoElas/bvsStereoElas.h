@@ -72,6 +72,7 @@ class bvsStereoElas : public BVS::Module
 
 		int discardTopLines;
 		int discardBottomLines;
+		float scalingFactor;
 		int sliceCount;
 		int sliceOverlap;
 		bool sliceExit;
