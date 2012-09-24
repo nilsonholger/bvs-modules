@@ -20,8 +20,14 @@ bvsCapture::bvsCapture(const std::string id, const BVS::Info& bvs)
 	for (int i=0; i<numInputs; i++)
 	{
 		captures.emplace_back(cv::VideoCapture(i));
+		// for firewire grasshoppers:
+		// 0 normal
+		// 1
+		// 2 black'n'white
+		// 3 weird black'n'white crop
 		captures[i].open(i);
-		outputs.emplace_back(BVS::Connector<cv::Mat>("out"+std::to_string(i), BVS::ConnectorType::OUTPUT));
+		captures[i].set(CV_CAP_PROP_MODE, 2);
+		outputs.emplace_back(BVS::Connector<cv::Mat>("out"+std::to_string(i+1), BVS::ConnectorType::OUTPUT));
 	}
 
 	for (auto cap: captures)
@@ -30,15 +36,6 @@ bvsCapture::bvsCapture(const std::string id, const BVS::Info& bvs)
 			LOG(0, "Could not open cameras!");
 			exit(1);
 		}
-
-	// for firewire grasshoppers:
-	// 0 normal
-	// 1
-	// 2 black'n'white
-	// 3 weird black'n'white crop
-	//captureL.set(CV_CAP_PROP_MODE, 0);
-	//captureR.set(CV_CAP_PROP_MODE, 0);
-
 }
 
 
