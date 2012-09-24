@@ -65,6 +65,7 @@ bvsStereoElas::~bvsStereoElas()
 BVS::Status bvsStereoElas::execute()
 {
 	if (!inL.receive(tmpL) || !inR.receive(tmpR)) return BVS::Status::NOINPUT;
+	if (tmpL.empty() || tmpR.empty()) return BVS::Status::NOINPUT;
 
 	cv::resize(tmpL, left, cv::Size(tmpL.cols/scalingFactor, tmpL.rows/scalingFactor), 0, 0, cv::INTER_AREA);
 	cv::resize(tmpR, right, cv::Size(tmpR.cols/scalingFactor, tmpR.rows/scalingFactor), 0, 0, cv::INTER_AREA);
