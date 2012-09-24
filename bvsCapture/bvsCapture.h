@@ -58,7 +58,7 @@ class bvsCapture : public BVS::Module
 		/** Example Connector used to retrieve/send data from/to other modules.
 		 * @see Connector
 		 */
-		std::vector<BVS::Connector<cv::Mat>> outputs;
+		std::vector<BVS::Connector<cv::Mat>*> outputs;
 
 		std::vector<cv::VideoCapture> captures;
 		int numInputs;

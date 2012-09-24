@@ -27,7 +27,7 @@ bvsCapture::bvsCapture(const std::string id, const BVS::Info& bvs)
 		// 3 weird black'n'white crop
 		captures[i].open(i);
 		captures[i].set(CV_CAP_PROP_MODE, 2);
-		outputs.emplace_back(BVS::Connector<cv::Mat>("out"+std::to_string(i+1), BVS::ConnectorType::OUTPUT));
+		outputs.emplace_back(new BVS::Connector<cv::Mat>("out"+std::to_string(i+1), BVS::ConnectorType::OUTPUT));
 	}
 
 	for (auto cap: captures)
@@ -43,16 +43,17 @@ bvsCapture::bvsCapture(const std::string id, const BVS::Info& bvs)
 bvsCapture::~bvsCapture()
 {
 	for (auto cap: captures) cap.release();
+	for (auto out: outputs) delete out;
 }
 
 
 
 BVS::Status bvsCapture::execute()
 {
-	for (auto out: outputs) out.lockConnection();
+	for (auto out: outputs) out->lockConnection();
 	for (auto cap: captures) cap.grab();
-	for (int i=0; i<numInputs; i++) captures.at(i).retrieve(*outputs.at(i));
-	for (auto out: outputs) out.unlockConnection();
+	for (int i=0; i<numInputs; i++) captures.at(i).retrieve(**outputs.at(i));
+	for (auto out: outputs) out->unlockConnection();
 
 	return BVS::Status::OK;
 }
