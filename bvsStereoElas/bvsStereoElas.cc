@@ -42,22 +42,28 @@ bvsStereoElas::bvsStereoElas(const std::string id, const BVS::Info& bvs)
 	param.postprocess_only_left = false;
 	elas = Elas(param);
 
-	runningThreads.store(0, std::memory_order_release);
-	for (int i=0; i<sliceCount; i++)
-		threads.push_back(std::thread(&bvsStereoElas::sliceThread, this, i));
-	flags.resize(sliceCount);
-	for (auto f: flags) f = false;
+	if (sliceCount!=1)
+	{
+		runningThreads.store(0, std::memory_order_release);
+		for (int i=0; i<sliceCount; i++)
+			threads.push_back(std::thread(&bvsStereoElas::sliceThread, this, i));
+		flags.resize(sliceCount);
+		for (auto f: flags) f = false;
+	}
 }
 
 
 
 bvsStereoElas::~bvsStereoElas()
 {
-	sliceExit = true;
-	for (auto f: flags) f = true;
-	runningThreads.store(sliceCount);
-	threadMonitor.notify_all();
-	for (auto& t: threads) if (t.joinable()) t.join();
+	if (sliceCount!=1)
+	{
+		sliceExit = true;
+		for (auto f: flags) f = true;
+		runningThreads.store(sliceCount);
+		threadMonitor.notify_all();
+		for (auto& t: threads) if (t.joinable()) t.join();
+	}
 }
 
 
@@ -79,34 +85,40 @@ BVS::Status bvsStereoElas::execute()
 		dimensions[2] = dimensions[0];
 	}
 
-	for (auto f: flags) f = true;
-	runningThreads.store(sliceCount);
-	threadMonitor.notify_all();
+	if (sliceCount!=1)
+	{
+		for (auto f: flags) f = true;
+		runningThreads.store(sliceCount);
+		threadMonitor.notify_all();
+		monitor.wait(masterLock, [&](){ return runningThreads.load()==0; });
+	}
+	else
+	{
+		elas.process(left.data, right.data, (float*)dispL.data, (float*)dispR.data, dimensions);
+	}
 
-	monitor.wait(masterLock, [&](){ return runningThreads.load()==0; });
+	float disp_max = 0;
+	for (int32_t i=0; i<left.cols*left.rows; i++) {
+		if (*((float*)dispL.data+i)>disp_max) disp_max = *((float*)dispL.data+i);
+		if (*((float*)dispR.data+i)>disp_max) disp_max = *((float*)dispR.data+i);
+	}
 
-	//float disp_max = 0;
-	//for (int32_t i=0; i<left.cols*left.rows; i++) {
-		//if (*((float*)dispL.data+i)>disp_max) disp_max = *((float*)dispL.data+i);
-		//if (*((float*)dispR.data+i)>disp_max) disp_max = *((float*)dispR.data+i);
-	//}
-
-	//cv::Mat showL = cv::Mat(left.size(), CV_8UC1);
-	//cv::Mat showR = cv::Mat(left.size(), CV_8UC1);
-	//for (int32_t i=0; i<left.cols*left.rows; i++) {
-		//*(showL.data+i) = (uint8_t)std::max(255.0* *((float*)dispL.data+i)/disp_max,0.0);
-		//*(showR.data+i) = (uint8_t)std::max(255.0* *((float*)dispR.data+i)/disp_max,0.0);
-	//}
+	cv::Mat showL = cv::Mat(left.size(), CV_8UC1);
+	cv::Mat showR = cv::Mat(left.size(), CV_8UC1);
+	for (int32_t i=0; i<left.cols*left.rows; i++) {
+		*(showL.data+i) = (uint8_t)std::max(255.0* *((float*)dispL.data+i)/disp_max,0.0);
+		*(showR.data+i) = (uint8_t)std::max(255.0* *((float*)dispR.data+i)/disp_max,0.0);
+	}
 
 	std::cerr<<bvs.getFPS()<<std::endl;
-	//cv::putText(showL, bvs.getFPS(), cv::Point(10, 30),
-			//CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(255, 255, 255), 2);
+	cv::putText(showL, bvs.getFPS(), cv::Point(10, 30),
+			CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(255, 255, 255), 2);
 
-	//cv::imshow("iL", left);
-	//cv::imshow("iR", right);
-	//cv::imshow("dL", showL);
-	//cv::imshow("dR", showR);
-	//cv::waitKey(1);
+	cv::imshow("iL", left);
+	cv::imshow("iR", right);
+	cv::imshow("dL", showL);
+	cv::imshow("dR", showR);
+	cv::waitKey(1);
 
 	return BVS::Status::OK;
 }
