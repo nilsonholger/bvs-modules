@@ -71,26 +71,20 @@ BVS::Status bvsStereoCUDA::execute()
 	{
 		if (!input0.receive(in0) || !input1.receive(in1)) return BVS::Status::NOINPUT;
 	}
+
 	if (in0.empty() || in1.empty()) return BVS::Status::NOINPUT;
 
-	cv::imshow("0", in0);
-	cv::imshow("1", in1);
-
-	if (stereoAlgo!=0)
-	{
-		cv::pyrDown(in0, grey0, cv::Size(in0.cols/2, in0.rows/2));
-		cv::pyrDown(in1, grey1, cv::Size(in1.cols/2, in1.rows/2));
-		in0 = grey0;
-		in1 = grey1;
-	}
-
-	//LOG(0, cv::gpu::StereoBM_GPU::checkIfGpuCallReasonable());
 	if (in0.type()!=CV_8UC1 || in1.type()!=CV_8UC1)
 	{
 		//TODO test cv::gpu::cvtColor...
 		cv::cvtColor(in0, grey0, CV_RGB2GRAY);
 		cv::cvtColor(in1, grey1, CV_RGB2GRAY);
 	}
+	in0 = grey0;
+	in1 = grey1;
+
+	cv::pyrDown(in0, grey0);
+	cv::pyrDown(in1, grey1);
 
 	gpuMat0.upload(grey0);
 	gpuMat1.upload(grey1);
