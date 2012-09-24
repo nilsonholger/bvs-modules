@@ -37,6 +37,8 @@ class bvsStereoCUDA : public BVS::Module
 		 */
 		BVS::Status execute();
 
+		void handleInput(char c);
+
 		/** UNUSED
 		 * @return Module's status.
 		 */

@@ -106,7 +106,6 @@ BVS::Status bvsStereoCUDA::execute()
 	cv::Mat grey;
 	disparity.download(grey);
 	//TODO needed? grey.convertTo(grey, CV_8U, 1./16.);
-	cv::imshow("grey", grey);
 
 	cv::Mat out;
 	cv::gpu::GpuMat color;
@@ -119,16 +118,27 @@ BVS::Status bvsStereoCUDA::execute()
 	color.download(out);
 	cv::putText(out, bvs.getFPS(), cv::Point(10, 30),
 			CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 0, 255), 2);
+
+	//cv::Mat edges;
+	//cv::gpu::GpuMat canny;
+	//cv::gpu::GaussianBlur(disparity, canny, cv::Size(31,31), 0);
+	//cv::gpu::Canny(canny, disparity, 1.0, 2.0);
+	//disparity.download(edges);
+
+	cv::imshow("grey", grey);
 	cv::imshow("out", out);
+	//cv::imshow("0", grey0);
+	//cv::imshow("1", grey1);
+	//cv::imshow("edges", edges);
 
-	cv::Mat edges;
-	cv::gpu::GpuMat canny;
-	cv::gpu::GaussianBlur(disparity, canny, cv::Size(31,31), 0);
-	cv::gpu::Canny(canny, disparity, 1.0, 2.0);
-	disparity.download(edges);
-	cv::imshow("edges", edges);
+	handleInput(cv::waitKey(1));
+	return BVS::Status::OK;
+}
 
-	char c = cv::waitKey(1);
+
+
+void bvsStereoCUDA::handleInput(char c)
+{
 	switch (c)
 	{
 		case 'h':
@@ -226,9 +236,6 @@ CS:\n\
 			break;
 		case 27: exit (0); break;
 	}
-
-
-	return BVS::Status::OK;
 }
 
 
