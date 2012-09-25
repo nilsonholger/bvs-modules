@@ -25,17 +25,16 @@ bvsCapture::bvsCapture(const std::string id, const BVS::Info& bvs)
 		// 1
 		// 2 black'n'white
 		// 3 weird black'n'white crop
-		captures[i].open(i);
+		//captures[i].open(i);
 		captures[i].set(CV_CAP_PROP_MODE, 2);
 		outputs.emplace_back(new BVS::Connector<cv::Mat>("out"+std::to_string(i+1), BVS::ConnectorType::OUTPUT));
-	}
 
-	for (auto cap: captures)
-		if (!cap.isOpened())
+		if (!captures[i].isOpened())
 		{
 			LOG(0, "Could not open cameras!");
 			exit(1);
 		}
+	}
 }
 
 
