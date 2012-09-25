@@ -14,7 +14,7 @@ bvsStereoElas::bvsStereoElas(const std::string id, const BVS::Info& bvs)
 	outR("outR", BVS::ConnectorType::OUTPUT),
 	discardTopLines(config.getValue<int>(id+".discardTopLines", 0)),
 	discardBottomLines(config.getValue<int>(id+".discardBottomLines", 0)),
-	scalingFactor(config.getValue<float>(id+".scalingFactor", 0)),
+	scalingFactor(config.getValue<float>(id+".scalingFactor", 1)),
 	sliceCount(config.getValue<int>(id+".sliceCount", 1)),
 	sliceOverlap(config.getValue<int>(id+".sliceOverlap", 10)),
 	sliceExit(false),
