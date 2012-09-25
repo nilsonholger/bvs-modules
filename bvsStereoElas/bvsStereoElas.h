@@ -69,6 +69,8 @@ class bvsStereoElas : public BVS::Module
 		 */
 		BVS::Connector<cv::Mat> inL;
 		BVS::Connector<cv::Mat> inR;
+		BVS::Connector<cv::Mat> outL;
+		BVS::Connector<cv::Mat> outR;
 
 		int discardTopLines;
 		int discardBottomLines;

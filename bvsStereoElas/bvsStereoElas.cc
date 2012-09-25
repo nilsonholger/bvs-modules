@@ -10,6 +10,8 @@ bvsStereoElas::bvsStereoElas(const std::string id, const BVS::Info& bvs)
 	bvs(bvs),
 	inL("inL", BVS::ConnectorType::INPUT),
 	inR("inR", BVS::ConnectorType::INPUT),
+	outL("outL", BVS::ConnectorType::OUTPUT),
+	outR("outR", BVS::ConnectorType::OUTPUT),
 	discardTopLines(config.getValue<int>(id+".discardTopLines", 0)),
 	discardBottomLines(config.getValue<int>(id+".discardBottomLines", 0)),
 	scalingFactor(config.getValue<float>(id+".scalingFactor", 0)),
@@ -97,28 +99,30 @@ BVS::Status bvsStereoElas::execute()
 		elas.process(left.data, right.data, (float*)dispL.data, (float*)dispR.data, dimensions);
 	}
 
-	float disp_max = 0;
-	for (int32_t i=0; i<left.cols*left.rows; i++) {
-		if (*((float*)dispL.data+i)>disp_max) disp_max = *((float*)dispL.data+i);
-		if (*((float*)dispR.data+i)>disp_max) disp_max = *((float*)dispR.data+i);
-	}
+	outL.send(dispL);
+	outR.send(dispR);
 
-	cv::Mat showL = cv::Mat(left.size(), CV_8UC1);
-	cv::Mat showR = cv::Mat(left.size(), CV_8UC1);
-	for (int32_t i=0; i<left.cols*left.rows; i++) {
-		*(showL.data+i) = (uint8_t)std::max(255.0* *((float*)dispL.data+i)/disp_max,0.0);
-		*(showR.data+i) = (uint8_t)std::max(255.0* *((float*)dispR.data+i)/disp_max,0.0);
-	}
+	//float disp_max = 0;
+	//for (int32_t i=0; i<left.cols*left.rows; i++) {
+		//if (*((float*)dispL.data+i)>disp_max) disp_max = *((float*)dispL.data+i);
+		//if (*((float*)dispR.data+i)>disp_max) disp_max = *((float*)dispR.data+i);
+	//}
 
-	std::cerr<<bvs.getFPS()<<std::endl;
-	cv::putText(showL, bvs.getFPS(), cv::Point(10, 30),
-			CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(255, 255, 255), 2);
+	//cv::Mat showL = cv::Mat(left.size(), CV_8UC1);
+	//cv::Mat showR = cv::Mat(left.size(), CV_8UC1);
+	//for (int32_t i=0; i<left.cols*left.rows; i++) {
+		//*(showL.data+i) = (uint8_t)std::max(255.0* *((float*)dispL.data+i)/disp_max,0.0);
+		//*(showR.data+i) = (uint8_t)std::max(255.0* *((float*)dispR.data+i)/disp_max,0.0);
+	//}
 
-	cv::imshow("iL", left);
-	cv::imshow("iR", right);
-	cv::imshow("dL", showL);
-	cv::imshow("dR", showR);
-	cv::waitKey(1);
+	//LOG(3, "fps: " << bvs.getFPS());
+	//cv::putText(showL, bvs.getFPS(), cv::Point(10, 30),
+			//CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(255, 255, 255), 2);
+	//cv::imshow("iL", left);
+	//cv::imshow("iR", right);
+	//cv::imshow("dL", showL);
+	//cv::imshow("dR", showR);
+	//cv::waitKey(1);
 
 	return BVS::Status::OK;
 }
