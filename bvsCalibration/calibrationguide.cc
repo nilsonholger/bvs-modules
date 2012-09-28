@@ -25,7 +25,7 @@ void CalibrationGuide::addTargetOverlay(cv::Mat& img)
 	{
 		cv::putText(img, "ERROR!!!",
 				cv::Point(10, img.rows/2), CV_FONT_HERSHEY_DUPLEX, 1.0f, color, 2);
-		cv::putText(img, "numDetections != 9 * sectorDetections!",
+		cv::putText(img, "numImages != 9 * sectorDetections!",
 				cv::Point(10, img.rows/2+30), CV_FONT_HERSHEY_DUPLEX, 1.0f, color);
 		return;
 	}

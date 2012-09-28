@@ -11,6 +11,7 @@ numNodes = 0
 numImages = 45
 
 # size of squares or circle center distance in calibration pattern
+# (this is the distance of circle centers in e.g. cm)
 blobSize = 1.0
 
 # use auto shot mode (if OFF, use SPACE to take picture)
@@ -57,7 +58,7 @@ addGridOverlay = ON
 # use calibration guide
 # This is a system to improve calibration quality.
 # It will show some usage hints on screen.
-# IMPORTANT: numImages == centerDetections + 8 * sectorDetections must be guaranteed
+# IMPORTANT: numImages == 9 * sectorDetections must be guaranteed
 useCalibrationGuide = ON
 
 # number of per sector detections
