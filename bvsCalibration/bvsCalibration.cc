@@ -65,6 +65,8 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 	if (loadCalibration) calibrated = loadCalibrationFrom(directory, calibrationFile);
 	if (!calibrated)
 	{
+		for (auto& node: nodes) cv::namedWindow(std::to_string(node->id));
+		cv::startWindowThread();
 		detectionThread = std::thread(&bvsCalibration::detectCalibrationPoints, this);
 		detectionThread.detach();
 	}
