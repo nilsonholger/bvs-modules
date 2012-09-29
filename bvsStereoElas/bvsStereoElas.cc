@@ -18,6 +18,7 @@ bvsStereoElas::bvsStereoElas(const std::string id, const BVS::Info& bvs)
 	sliceCount(config.getValue<int>(id+".sliceCount", 1)),
 	sliceOverlap(config.getValue<int>(id+".sliceOverlap", 10)),
 	sliceExit(false),
+	runningThreads(0),
 	masterMutex(),
 	sliceMutex(),
 	masterLock(masterMutex),
