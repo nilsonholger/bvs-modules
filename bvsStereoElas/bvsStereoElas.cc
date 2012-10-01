@@ -132,6 +132,7 @@ BVS::Status bvsStereoElas::execute()
 
 void bvsStereoElas::sliceThread(int id)
 {
+	BVS::nameThisThread("elas.slice");
 	std::unique_lock<std::mutex> lock(sliceMutex);
 
 	while (!sliceExit)

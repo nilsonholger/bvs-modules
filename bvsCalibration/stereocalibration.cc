@@ -1,6 +1,7 @@
 #include "stereocalibration.h"
+#include "bvs/archutils.h"
 #include "opencv2/opencv.hpp"
-#include<iostream>
+#include <iostream>
 
 
 
@@ -108,15 +109,17 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 	for (auto& node: nodes)
 	{
 		threads.push_back(std::thread([&]{
-					LOG(1, "reprojection error for node " << node->id << ": " << 
-						cv::calibrateCamera(objectPoints, node->pointStore, imageSize,
-							node->cameraMatrix, node->distCoeffs, rvecs, tvecs,
-							CV_CALIB_FIX_PRINCIPAL_POINT + CV_CALIB_FIX_ASPECT_RATIO +
-							CV_CALIB_ZERO_TANGENT_DIST + CV_CALIB_SAME_FOCAL_LENGTH +
-							CV_CALIB_RATIONAL_MODEL +
-							CV_CALIB_FIX_K3 + CV_CALIB_FIX_K4 + CV_CALIB_FIX_K5,
-							cv::TermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5)
-							));}));
+					BVS::nameThisThread("calib.intrinsic");
+					double calError = cv::calibrateCamera(objectPoints, node->pointStore,
+						imageSize, node->cameraMatrix, node->distCoeffs, rvecs, tvecs,
+						CV_CALIB_FIX_PRINCIPAL_POINT + CV_CALIB_FIX_ASPECT_RATIO +
+						CV_CALIB_ZERO_TANGENT_DIST + CV_CALIB_SAME_FOCAL_LENGTH +
+						CV_CALIB_RATIONAL_MODEL +
+						CV_CALIB_FIX_K3 + CV_CALIB_FIX_K4 + CV_CALIB_FIX_K5,
+						cv::TermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5)
+						);
+					LOG(1, "reprojection error for node " << node->id << ": " << calError);
+					}));
 	}
 	for (auto& t: threads) t.join();
 

@@ -322,6 +322,7 @@ void bvsCalibration::notifyDetectionThread()
 
 void bvsCalibration::detectCalibrationPoints()
 {
+	BVS::nameThisThread("calib.detector");
 	bool foundPattern;
 	int numPositives;
 
