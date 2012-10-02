@@ -118,6 +118,7 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 						CV_CALIB_FIX_K3 + CV_CALIB_FIX_K4 + CV_CALIB_FIX_K5,
 						cv::TermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5)
 						);
+					(void) calError;
 					LOG(1, "reprojection error for node " << node->id << ": " << calError);
 					}));
 	}

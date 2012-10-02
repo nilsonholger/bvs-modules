@@ -53,8 +53,8 @@ void CalibrationGuide::addTargetOverlay(cv::Mat& img)
 bool CalibrationGuide::checkDetectionQuality(cv::Mat& img, std::vector<cv::Point2f>& points)
 {
 	// calculate pattern position
-	double diag = std::sqrt(std::pow(points.back().x-points.front().x, 2)
-			+ std::pow(points.back().y-points.front().y, 2));
+	//double diag = std::sqrt(std::pow(points.back().x-points.front().x, 2)
+			//+ std::pow(points.back().y-points.front().y, 2));
 	detCenter.x = (points.front().x+points.back().x)/2;
 	detCenter.y = (points.front().y+points.back().y)/2;
 
