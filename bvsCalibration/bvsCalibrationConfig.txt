@@ -51,7 +51,7 @@ calibrationFile = "stereoCalibration.yml"
 createRectifiedOutput = ON
 
 # add grid overlay to output (if calibration available)
-addGridOverlay = ON
+addGridOverlay = OFF
 
 
 
