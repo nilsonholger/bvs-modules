@@ -135,9 +135,10 @@ void bvsStereoElas::sliceThread(int id)
 	BVS::nameThisThread("elas.slice");
 	std::unique_lock<std::mutex> lock(sliceMutex);
 
-	while (!sliceExit)
+	while (true)
 	{
 		threadMonitor.wait(lock, [&](){ return flags[id]; });
+		if (sliceExit) break;
 
 		int offset = (discardTopLines+id*dimensions[1]) * dimensions[0]; //TODO - sliceOverlap; //except for id==0
 		elas.process(left.data+offset, right.data+offset, (float*)dispL.data+offset, (float*)dispR.data+offset, dimensions);
