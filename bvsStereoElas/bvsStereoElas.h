@@ -3,7 +3,7 @@
 
 #include "bvs/module.h"
 #include "opencv2/opencv.hpp"
-#include "elas/elas.h"
+#include "elas.h"
 #include <atomic>
 #include <condition_variable>
 #include <thread>
