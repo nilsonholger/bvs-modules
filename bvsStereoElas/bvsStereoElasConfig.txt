@@ -9,10 +9,10 @@ discardTopLines = 0
 discardBottomLines = 0
 
 # scaling factor
-scalingFactor = 2
+scalingFactor = 4
 
 # number of slices/threads used to do work on the image
-sliceCount = 2
+sliceCount = 1
 
 # size of slice overlap to reduce artifacts due to missing information
 sliceOverlap = 10

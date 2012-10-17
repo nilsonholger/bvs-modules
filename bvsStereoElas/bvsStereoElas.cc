@@ -41,6 +41,11 @@ bvsStereoElas::bvsStereoElas(const std::string id, const BVS::Info& bvs)
 		LOG(0, "ERROR: sliceCount <= 0! Aborting...");
 		exit(1);
 	}
+	if (sliceCount!=1)
+	{
+		LOG(0, "ERROR: sliceCount MUST be 1, it seems that due to SSE instructions this cannot be parallelized (yet)!");
+		exit(1);
+	}
 
 	param.postprocess_only_left = false;
 	elas = Elas(param);
