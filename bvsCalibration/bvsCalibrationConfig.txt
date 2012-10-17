@@ -5,14 +5,14 @@
 [uniqueID]
 
 # number of nodes (cameras) to calibrate
-numNodes = 0
+numNodes = 2
 
 # number of images to use for calibration
 numImages = 45
 
 # size of squares or circle center distance in calibration pattern
 # (this is the distance of circle centers in e.g. cm)
-blobSize = 1.0
+blobSize = 5.2
 
 # use auto shot mode (if OFF, use SPACE to take picture)
 autoShotMode = ON
