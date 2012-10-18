@@ -1,13 +1,13 @@
-#ifndef BVSSTEREOCUDA_H
-#define BVSSTEREOCUDA_H
+#ifndef CAPTURECV_H
+#define CAPTURECV_H
 
 #include "bvs/module.h"
 #include "opencv2/opencv.hpp"
-#include "opencv2/gpu/gpu.hpp"
+#include <vector>
 
 
 
-/** This is the bvsStereoCUDA class.
+/** This is the CaptureCV class.
  * Please add sufficient documentation to enable others to use it.
  * Include information about:
  * - Dependencies
@@ -15,7 +15,7 @@
  * - Outputs
  * - Configuration Options
  */
-class bvsStereoCUDA : public BVS::Module
+class CaptureCV : public BVS::Module
 {
 	public:
 		/** Your module constructor.
@@ -25,10 +25,10 @@ class bvsStereoCUDA : public BVS::Module
 		 * @param[in] id Your modules unique identifier, will be set by framework.
 		 * @param[in] bvs Reference to framework info for e.g. config option retrieval.
 		 */
-		bvsStereoCUDA(const std::string id, const BVS::Info& bvs);
+		CaptureCV(const std::string id, const BVS::Info& bvs);
 
 		/** Your module destructor. */
-		~bvsStereoCUDA();
+		~CaptureCV();
 
 		/** Execute function doing all the work.
 		 * This function is executed exactly once and only once upon each started
@@ -36,8 +36,6 @@ class bvsStereoCUDA : public BVS::Module
 		 * of your module.
 		 */
 		BVS::Status execute();
-
-		void handleInput(char c);
 
 		/** UNUSED
 		 * @return Module's status.
@@ -52,12 +50,7 @@ class bvsStereoCUDA : public BVS::Module
 		 */
 		BVS::Logger logger;
 
-		/** Your config system.
-		 * @see Config
-		 */
-		BVS::Config config;
-
-		/** Your Info recerence;
+		/** Your Info reference;
 		 * @see Info
 		 */
 		const BVS::Info& bvs;
@@ -65,30 +58,14 @@ class bvsStereoCUDA : public BVS::Module
 		/** Example Connector used to retrieve/send data from/to other modules.
 		 * @see Connector
 		 */
-		BVS::Connector<cv::Mat> input0;
-		BVS::Connector<cv::Mat> input1;
-		BVS::Connector<cv::Mat> depthImage;
+		std::vector<BVS::Connector<cv::Mat>*> outputs;
 
-		cv::Mat in0;
-		cv::Mat in1;
-		cv::Mat grey0;
-		cv::Mat grey1;
+		std::vector<cv::VideoCapture> captures;
+		int numInputs;
 
-		cv::gpu::GpuMat gpuMat0;
-		cv::gpu::GpuMat gpuMat1;
-		cv::gpu::GpuMat disparity;
-
-		bool switchInputs;
-		int stereoAlgo;
-		cv::gpu::StereoBM_GPU bmGPU;
-		cv::gpu::StereoBeliefPropagation bpGPU;
-		cv::gpu::StereoConstantSpaceBP csGPU;
-
-		bool estimate;
-
-		bvsStereoCUDA(const bvsStereoCUDA&) = delete; /**< -Weffc++ */
-		bvsStereoCUDA& operator=(const bvsStereoCUDA&) = delete; /**< -Weffc++ */
+		CaptureCV(const CaptureCV&) = delete; /**< -Weffc++ */
+		CaptureCV& operator=(const CaptureCV&) = delete; /**< -Weffc++ */
 };
 
-#endif //BVSSTEREOCUDA_H
+#endif //CAPTURECV_H
 

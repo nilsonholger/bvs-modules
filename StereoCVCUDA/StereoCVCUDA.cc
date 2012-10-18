@@ -1,4 +1,4 @@
-#include "bvsStereoCUDA.h"
+#include "StereoCVCUDA.h"
 
 
 
@@ -7,12 +7,12 @@
 // framework actually creates your module) and the framework assigns the unique
 // identifier and gives you access to its config.
 // However, you should use it to create your data structures etc.
-bvsStereoCUDA::bvsStereoCUDA(const std::string id, const BVS::Info& bvs)
+StereoCVCUDA::StereoCVCUDA(const std::string id, const BVS::Info& bvs)
 	: BVS::Module(),
 	id(id),
 	logger(id),
-	config("bvsStereoCUDA", 0, nullptr), // "bvsStereoCUDAConfig.txt"),
-	// at this point config has already loaded 'bvsStereoCUDAConfig.txt", so
+	config("StereoCVCUDA", 0, nullptr), // "StereoCVCUDAConfig.txt"),
+	// at this point config has already loaded 'StereoCVCUDAConfig.txt", so
 	// you can use config to retrieve settings in the initialization list, e.g.
 	// yourSwitch(config.getValue<bool>(id + ".yourSwitch, false));
 	bvs(bvs),
@@ -53,7 +53,7 @@ bvsStereoCUDA::bvsStereoCUDA(const std::string id, const BVS::Info& bvs)
 
 // This is your module's destructor.
 // See the constructor for more info.
-bvsStereoCUDA::~bvsStereoCUDA()
+StereoCVCUDA::~StereoCVCUDA()
 {
 
 }
@@ -61,7 +61,7 @@ bvsStereoCUDA::~bvsStereoCUDA()
 
 
 // Put all your work here.
-BVS::Status bvsStereoCUDA::execute()
+BVS::Status StereoCVCUDA::execute()
 {
 	if (switchInputs)
 	{
@@ -137,7 +137,7 @@ BVS::Status bvsStereoCUDA::execute()
 
 
 
-void bvsStereoCUDA::handleInput(char c)
+void StereoCVCUDA::handleInput(char c)
 {
 	switch (c)
 	{
@@ -241,7 +241,7 @@ CS:\n\
 
 
 // UNUSED
-BVS::Status bvsStereoCUDA::debugDisplay()
+BVS::Status StereoCVCUDA::debugDisplay()
 {
 	return BVS::Status::OK;
 }
@@ -254,7 +254,7 @@ BVS::Status bvsStereoCUDA::debugDisplay()
 extern "C" {
 	int bvsRegisterModule(std::string id, BVS::Info& bvs)
 	{
-		registerModule(id, new bvsStereoCUDA(id, bvs));
+		registerModule(id, new StereoCVCUDA(id, bvs));
 
 		return 0;
 	}

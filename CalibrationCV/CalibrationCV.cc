@@ -1,14 +1,14 @@
-#include "bvsCalibration.h"
+#include "CalibrationCV.h"
 #include "sys/stat.h"
 
 
 
-bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
+CalibrationCV::CalibrationCV(const std::string id, const BVS::Info& bvs)
 	: BVS::Module(),
 	id(id),
 	logger(id),
 	bvs(bvs),
-	config("bvsCalibration", 0, nullptr, "bvsCalibrationConfig.txt"),
+	config("CalibrationCV", 0, nullptr, "CalibrationCVConfig.txt"),
 	numNodes(config.getValue<int>(id + ".numNodes", 0)),
 	numImages(config.getValue<int>(id + ".numImages", 100)),
 	blobSize(config.getValue<float>(id + ".blobSize", 1.0f)),
@@ -67,14 +67,14 @@ bvsCalibration::bvsCalibration(const std::string id, const BVS::Info& bvs)
 	{
 		for (auto& node: nodes) cv::namedWindow(std::to_string(node->id));
 		cv::startWindowThread();
-		detectionThread = std::thread(&bvsCalibration::detectCalibrationPoints, this);
+		detectionThread = std::thread(&CalibrationCV::detectCalibrationPoints, this);
 		detectionThread.detach();
 	}
 }
 
 
 
-bvsCalibration::~bvsCalibration()
+CalibrationCV::~CalibrationCV()
 {
 	for (auto& it: nodes)
 	{
@@ -84,7 +84,7 @@ bvsCalibration::~bvsCalibration()
 
 
 
-BVS::Status bvsCalibration::execute()
+BVS::Status CalibrationCV::execute()
 {
 	if (useSavedImages)
 	{
@@ -155,7 +155,7 @@ BVS::Status bvsCalibration::execute()
 
 
 // UNUSED
-BVS::Status bvsCalibration::debugDisplay()
+BVS::Status CalibrationCV::debugDisplay()
 {
 	return BVS::Status::OK;
 }
@@ -165,7 +165,7 @@ BVS::Status bvsCalibration::debugDisplay()
 extern "C" {
 	int bvsRegisterModule(std::string id, const BVS::Info& bvs)
 	{
-		registerModule(id, new bvsCalibration(id, bvs));
+		registerModule(id, new CalibrationCV(id, bvs));
 
 		return 0;
 	}
@@ -173,7 +173,7 @@ extern "C" {
 
 
 
-bool bvsCalibration::loadCalibrationFrom(const std::string& directory, const std::string& file)
+bool CalibrationCV::loadCalibrationFrom(const std::string& directory, const std::string& file)
 {
 	switch (numNodes)
 	{
@@ -191,7 +191,7 @@ bool bvsCalibration::loadCalibrationFrom(const std::string& directory, const std
 
 
 
-bool bvsCalibration::saveCalibrationTo(const std::string& directory, const std::string& file)
+bool CalibrationCV::saveCalibrationTo(const std::string& directory, const std::string& file)
 {
 	switch (numNodes)
 	{
@@ -209,7 +209,7 @@ bool bvsCalibration::saveCalibrationTo(const std::string& directory, const std::
 
 
 
-void bvsCalibration::generateReflectionMap()
+void CalibrationCV::generateReflectionMap()
 {
 	cv::Mat mapX;
 	cv::Mat mapY;
@@ -226,7 +226,7 @@ void bvsCalibration::generateReflectionMap()
 
 
 
-void bvsCalibration::calibrate()
+void CalibrationCV::calibrate()
 {
 	switch (numNodes)
 	{
@@ -245,7 +245,7 @@ void bvsCalibration::calibrate()
 
 
 
-void bvsCalibration::rectifyOutput()
+void CalibrationCV::rectifyOutput()
 {
 	switch (numNodes)
 	{
@@ -260,7 +260,7 @@ void bvsCalibration::rectifyOutput()
 
 
 
-void bvsCalibration::collectCalibrationImages()
+void CalibrationCV::collectCalibrationImages()
 {
 	bool foundPattern = false;
 	int numPositives = 0;
@@ -300,7 +300,7 @@ void bvsCalibration::collectCalibrationImages()
 
 
 
-void bvsCalibration::notifyDetectionThread()
+void CalibrationCV::notifyDetectionThread()
 {
 	if (detectionRunning) return;
 
@@ -320,7 +320,7 @@ void bvsCalibration::notifyDetectionThread()
 
 
 
-void bvsCalibration::detectCalibrationPoints()
+void CalibrationCV::detectCalibrationPoints()
 {
 	BVS::nameThisThread("calib.detector");
 	bool foundPattern;
@@ -361,7 +361,7 @@ void bvsCalibration::detectCalibrationPoints()
 
 
 
-void bvsCalibration::clearCalibrationData()
+void CalibrationCV::clearCalibrationData()
 {
 	for (auto& node: nodes)
 	{
@@ -378,7 +378,7 @@ void bvsCalibration::clearCalibrationData()
 
 
 
-void bvsCalibration::rectifyCalibrationImages()
+void CalibrationCV::rectifyCalibrationImages()
 {
 	static int i = 1;
 	LOG(1, "rectifying image " << i);

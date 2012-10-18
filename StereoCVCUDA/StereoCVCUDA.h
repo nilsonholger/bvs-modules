@@ -1,17 +1,13 @@
-#ifndef BVSSTEREOELAS_H
-#define BVSSTEREOELAS_H
+#ifndef STEREOCVCUDA_H
+#define STEREOCVCUDA_H
 
 #include "bvs/module.h"
 #include "opencv2/opencv.hpp"
-#include "elas.h"
-#include <atomic>
-#include <condition_variable>
-#include <thread>
-#include <vector>
+#include "opencv2/gpu/gpu.hpp"
 
 
 
-/** This is the bvsStereoElas class.
+/** This is the StereoCVCUDA class.
  * Please add sufficient documentation to enable others to use it.
  * Include information about:
  * - Dependencies
@@ -19,7 +15,7 @@
  * - Outputs
  * - Configuration Options
  */
-class bvsStereoElas : public BVS::Module
+class StereoCVCUDA : public BVS::Module
 {
 	public:
 		/** Your module constructor.
@@ -29,10 +25,10 @@ class bvsStereoElas : public BVS::Module
 		 * @param[in] id Your modules unique identifier, will be set by framework.
 		 * @param[in] bvs Reference to framework info for e.g. config option retrieval.
 		 */
-		bvsStereoElas(const std::string id, const BVS::Info& bvs);
+		StereoCVCUDA(const std::string id, const BVS::Info& bvs);
 
 		/** Your module destructor. */
-		~bvsStereoElas();
+		~StereoCVCUDA();
 
 		/** Execute function doing all the work.
 		 * This function is executed exactly once and only once upon each started
@@ -40,6 +36,8 @@ class bvsStereoElas : public BVS::Module
 		 * of your module.
 		 */
 		BVS::Status execute();
+
+		void handleInput(char c);
 
 		/** UNUSED
 		 * @return Module's status.
@@ -59,7 +57,7 @@ class bvsStereoElas : public BVS::Module
 		 */
 		BVS::Config config;
 
-		/** Your Info reference;
+		/** Your Info recerence;
 		 * @see Info
 		 */
 		const BVS::Info& bvs;
@@ -67,42 +65,30 @@ class bvsStereoElas : public BVS::Module
 		/** Example Connector used to retrieve/send data from/to other modules.
 		 * @see Connector
 		 */
-		BVS::Connector<cv::Mat> inL;
-		BVS::Connector<cv::Mat> inR;
-		BVS::Connector<cv::Mat> outL;
-		BVS::Connector<cv::Mat> outR;
+		BVS::Connector<cv::Mat> input0;
+		BVS::Connector<cv::Mat> input1;
+		BVS::Connector<cv::Mat> depthImage;
 
-		int discardTopLines;
-		int discardBottomLines;
-		float scalingFactor;
-		int sliceCount;
-		int sliceOverlap;
-		bool sliceExit;
+		cv::Mat in0;
+		cv::Mat in1;
+		cv::Mat grey0;
+		cv::Mat grey1;
 
-		std::atomic<int> runningThreads;
-		std::mutex masterMutex;
-		std::mutex sliceMutex;
-		std::unique_lock<std::mutex> masterLock;
-		std::condition_variable monitor;
-		std::condition_variable threadMonitor;
-		std::vector<std::thread> threads;
-		std::vector<bool> flags;
+		cv::gpu::GpuMat gpuMat0;
+		cv::gpu::GpuMat gpuMat1;
+		cv::gpu::GpuMat disparity;
 
-		cv::Mat tmpL;
-		cv::Mat tmpR;
-		cv::Mat left;
-		cv::Mat right;
-		cv::Mat dispL;
-		cv::Mat dispR;
-		int dimensions[3];
-		Elas::parameters param;
-		Elas elas;
+		bool switchInputs;
+		int stereoAlgo;
+		cv::gpu::StereoBM_GPU bmGPU;
+		cv::gpu::StereoBeliefPropagation bpGPU;
+		cv::gpu::StereoConstantSpaceBP csGPU;
 
-		void sliceThread(int id);
+		bool estimate;
 
-		bvsStereoElas(const bvsStereoElas&) = delete; /**< -Weffc++ */
-		bvsStereoElas& operator=(const bvsStereoElas&) = delete; /**< -Weffc++ */
+		StereoCVCUDA(const StereoCVCUDA&) = delete; /**< -Weffc++ */
+		StereoCVCUDA& operator=(const StereoCVCUDA&) = delete; /**< -Weffc++ */
 };
 
-#endif //BVSSTEREOELAS_H
+#endif //STEREOCVCUDA_H
 

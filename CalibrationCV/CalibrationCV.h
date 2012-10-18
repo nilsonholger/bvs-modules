@@ -1,5 +1,5 @@
-#ifndef BVSCALIBRATION_H
-#define BVSCALIBRATION_H
+#ifndef CALIBRATIONCV_H
+#define CALIBRATIONCV_H
 
 #include<chrono>
 #include<condition_variable>
@@ -15,7 +15,7 @@
 
 
 
-/** This is the bvsCalibration class.
+/** This is the CalibrationCV class.
  * This method will calibrate a variable number of cameras, called nodes
  * within this class. So far, only stereo (2 nodes) is supported.
  * For each node, 2 BVS::Connector objects will be created automatically,
@@ -26,7 +26,7 @@
  *
  * Please see the config file for more options.
  */
-class bvsCalibration : public BVS::Module
+class CalibrationCV : public BVS::Module
 {
 	public:
 		/** Your module constructor.
@@ -36,10 +36,10 @@ class bvsCalibration : public BVS::Module
 		 * @param[in] id Your modules unique identifier, will be set by framework.
 		 * @param[in] bvs Reference to info for e.g. option retrieval.
 		 */
-		bvsCalibration(const std::string id, const BVS::Info& bvs);
+		CalibrationCV(const std::string id, const BVS::Info& bvs);
 
 		/** Your module destructor. */
-		~bvsCalibration();
+		~CalibrationCV();
 
 		/** Execute function doing all the work.
 		 * This function is executed exactly once and only once upon each started
@@ -163,11 +163,11 @@ class bvsCalibration : public BVS::Module
 		StereoCalibration stereo; /**< Stereo calibration */
 		CalibrationGuide guide; /** Calibration guidance system. */
 
-		bvsCalibration(const bvsCalibration&) = delete; /**< -Weffc++ */
-		bvsCalibration& operator=(const bvsCalibration&) = delete; /**< -Weffc++ */
+		CalibrationCV(const CalibrationCV&) = delete; /**< -Weffc++ */
+		CalibrationCV& operator=(const CalibrationCV&) = delete; /**< -Weffc++ */
 };
 
 
 
-#endif //BVSCALIBRATION_H
+#endif //CALIBRATIONCV_H
 

@@ -1,8 +1,27 @@
-# This is bvsCalibration's sample config.
-# Copy it to your 'bin' directory so the system can find it.
+# This is an example config file for CalibrationCV. It will be linked to
+# [build/]bin/CalibrationCVConfig.txt so you can get started right away.
+#
+# short syntax:
+#
+# [section]
+# option = value
+#
+# Spaces and tabs are ignored (except inside '' and "") and everything is case
+# insensitive. For more information on syntax as well as further capabilities,
+# please see 'libbvs/include/bvs/config.h' or 'DOXYGEN:Classes->BVS::Config'.
 
-# replace this id with your used id
-[uniqueID]
+# This is a section/configuration header.
+# It can be used to create 'configurations' of your module, simply by creating
+# various sections with different options belonging to them. These are selected
+# by using them as a uniqueID in BVSConfig.txt when adding modules to the
+# system (if you use 'id + ".option"' to retrieve them), e.g.
+# modules += uniqueID(CalibrationCV)...
+#
+# [uniqueID]
+# # please comment your settings
+# option = value
+
+[calibration]
 
 # number of nodes (cameras) to calibrate
 numNodes = 2

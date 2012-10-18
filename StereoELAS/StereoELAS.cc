@@ -1,12 +1,12 @@
-#include "bvsStereoElas.h"
+#include "StereoELAS.h"
 
 
 
-bvsStereoElas::bvsStereoElas(const std::string id, const BVS::Info& bvs)
+StereoELAS::StereoELAS(const std::string id, const BVS::Info& bvs)
 	: BVS::Module(),
 	id(id),
 	logger(id),
-	config("bvsStereoElas", 0, nullptr, "bvsStereoElasConfig.txt"),
+	config("StereoELAS", 0, nullptr, "StereoELASConfig.txt"),
 	bvs(bvs),
 	inL("inL", BVS::ConnectorType::INPUT),
 	inR("inR", BVS::ConnectorType::INPUT),
@@ -54,7 +54,7 @@ bvsStereoElas::bvsStereoElas(const std::string id, const BVS::Info& bvs)
 	{
 		runningThreads.store(0, std::memory_order_release);
 		for (int i=0; i<sliceCount; i++)
-			threads.push_back(std::thread(&bvsStereoElas::sliceThread, this, i));
+			threads.push_back(std::thread(&StereoELAS::sliceThread, this, i));
 		flags.resize(sliceCount);
 		for (auto f: flags) f = false;
 	}
@@ -62,7 +62,7 @@ bvsStereoElas::bvsStereoElas(const std::string id, const BVS::Info& bvs)
 
 
 
-bvsStereoElas::~bvsStereoElas()
+StereoELAS::~StereoELAS()
 {
 	if (sliceCount!=1)
 	{
@@ -76,7 +76,7 @@ bvsStereoElas::~bvsStereoElas()
 
 
 
-BVS::Status bvsStereoElas::execute()
+BVS::Status StereoELAS::execute()
 {
 	if (!inL.receive(tmpL) || !inR.receive(tmpR)) return BVS::Status::NOINPUT;
 	if (tmpL.empty() || tmpR.empty()) return BVS::Status::NOINPUT;
@@ -135,7 +135,7 @@ BVS::Status bvsStereoElas::execute()
 
 
 
-void bvsStereoElas::sliceThread(int id)
+void StereoELAS::sliceThread(int id)
 {
 	BVS::nameThisThread("elas.slice");
 	std::unique_lock<std::mutex> lock(sliceMutex);
@@ -157,7 +157,7 @@ void bvsStereoElas::sliceThread(int id)
 
 
 
-BVS::Status bvsStereoElas::debugDisplay()
+BVS::Status StereoELAS::debugDisplay()
 {
 	return BVS::Status::OK;
 }
@@ -167,7 +167,7 @@ BVS::Status bvsStereoElas::debugDisplay()
 extern "C" {
 	int bvsRegisterModule(std::string id, BVS::Info& bvs)
 	{
-		registerModule(id, new bvsStereoElas(id, bvs));
+		registerModule(id, new StereoELAS(id, bvs));
 
 		return 0;
 	}

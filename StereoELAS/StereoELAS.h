@@ -1,13 +1,17 @@
-#ifndef BVSCAPTURE_H
-#define BVSCAPTURE_H
+#ifndef STEREOELAS_H
+#define STEREOELAS_H
 
 #include "bvs/module.h"
 #include "opencv2/opencv.hpp"
+#include "elas.h"
+#include <atomic>
+#include <condition_variable>
+#include <thread>
 #include <vector>
 
 
 
-/** This is the bvsCapture class.
+/** This is the StereoELAS class.
  * Please add sufficient documentation to enable others to use it.
  * Include information about:
  * - Dependencies
@@ -15,7 +19,7 @@
  * - Outputs
  * - Configuration Options
  */
-class bvsCapture : public BVS::Module
+class StereoELAS : public BVS::Module
 {
 	public:
 		/** Your module constructor.
@@ -25,10 +29,10 @@ class bvsCapture : public BVS::Module
 		 * @param[in] id Your modules unique identifier, will be set by framework.
 		 * @param[in] bvs Reference to framework info for e.g. config option retrieval.
 		 */
-		bvsCapture(const std::string id, const BVS::Info& bvs);
+		StereoELAS(const std::string id, const BVS::Info& bvs);
 
 		/** Your module destructor. */
-		~bvsCapture();
+		~StereoELAS();
 
 		/** Execute function doing all the work.
 		 * This function is executed exactly once and only once upon each started
@@ -50,6 +54,11 @@ class bvsCapture : public BVS::Module
 		 */
 		BVS::Logger logger;
 
+		/** Your config system.
+		 * @see Config
+		 */
+		BVS::Config config;
+
 		/** Your Info reference;
 		 * @see Info
 		 */
@@ -58,14 +67,42 @@ class bvsCapture : public BVS::Module
 		/** Example Connector used to retrieve/send data from/to other modules.
 		 * @see Connector
 		 */
-		std::vector<BVS::Connector<cv::Mat>*> outputs;
+		BVS::Connector<cv::Mat> inL;
+		BVS::Connector<cv::Mat> inR;
+		BVS::Connector<cv::Mat> outL;
+		BVS::Connector<cv::Mat> outR;
 
-		std::vector<cv::VideoCapture> captures;
-		int numInputs;
+		int discardTopLines;
+		int discardBottomLines;
+		float scalingFactor;
+		int sliceCount;
+		int sliceOverlap;
+		bool sliceExit;
 
-		bvsCapture(const bvsCapture&) = delete; /**< -Weffc++ */
-		bvsCapture& operator=(const bvsCapture&) = delete; /**< -Weffc++ */
+		std::atomic<int> runningThreads;
+		std::mutex masterMutex;
+		std::mutex sliceMutex;
+		std::unique_lock<std::mutex> masterLock;
+		std::condition_variable monitor;
+		std::condition_variable threadMonitor;
+		std::vector<std::thread> threads;
+		std::vector<bool> flags;
+
+		cv::Mat tmpL;
+		cv::Mat tmpR;
+		cv::Mat left;
+		cv::Mat right;
+		cv::Mat dispL;
+		cv::Mat dispR;
+		int dimensions[3];
+		Elas::parameters param;
+		Elas elas;
+
+		void sliceThread(int id);
+
+		StereoELAS(const StereoELAS&) = delete; /**< -Weffc++ */
+		StereoELAS& operator=(const StereoELAS&) = delete; /**< -Weffc++ */
 };
 
-#endif //BVSCAPTURE_H
+#endif //STEREOELAS_H
 

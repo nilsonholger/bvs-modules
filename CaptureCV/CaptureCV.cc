@@ -1,8 +1,8 @@
-#include "bvsCapture.h"
+#include "CaptureCV.h"
 
 
 
-bvsCapture::bvsCapture(const std::string id, const BVS::Info& bvs)
+CaptureCV::CaptureCV(const std::string id, const BVS::Info& bvs)
 	: BVS::Module(),
 	id(id),
 	logger(id),
@@ -39,7 +39,7 @@ bvsCapture::bvsCapture(const std::string id, const BVS::Info& bvs)
 
 
 
-bvsCapture::~bvsCapture()
+CaptureCV::~CaptureCV()
 {
 	for (auto cap: captures) cap.release();
 	for (auto out: outputs) delete out;
@@ -47,7 +47,7 @@ bvsCapture::~bvsCapture()
 
 
 
-BVS::Status bvsCapture::execute()
+BVS::Status CaptureCV::execute()
 {
 	for (auto out: outputs) out->lockConnection();
 	for (auto cap: captures) cap.grab();
@@ -60,7 +60,7 @@ BVS::Status bvsCapture::execute()
 
 
 // UNUSED
-BVS::Status bvsCapture::debugDisplay()
+BVS::Status CaptureCV::debugDisplay()
 {
 	return BVS::Status::OK;
 }
@@ -70,7 +70,7 @@ BVS::Status bvsCapture::debugDisplay()
 extern "C" {
 	int bvsRegisterModule(std::string id, const BVS::Info& bvs)
 	{
-		registerModule(id, new bvsCapture(id, bvs));
+		registerModule(id, new CaptureCV(id, bvs));
 
 		return 0;
 	}
