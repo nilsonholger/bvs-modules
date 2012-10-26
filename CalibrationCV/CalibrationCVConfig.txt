@@ -43,7 +43,7 @@ autoShotDelay = 1
 directory = "calibrationData"
 
 # save images taken for calibration
-saveImages = OFF
+saveImages = ON
 
 # use saved images taken beforehand
 useSavedImages = OFF

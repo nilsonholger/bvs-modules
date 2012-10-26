@@ -118,7 +118,6 @@ class CalibrationCV : public BVS::Module
 		const std::string id; /**< Your unique module id, set by framework. */
 		BVS::Logger logger; /**< Logger instance. */
 		const BVS::Info& bvs; /**< BVS information reference. */
-		BVS::Config config; /**< Private config object. */
 
 		// config options
 		int numNodes; /**< Number of calibration nodes. */
