@@ -60,8 +60,25 @@ class CaptureCV : public BVS::Module
 		 */
 		std::vector<BVS::Connector<cv::Mat>*> outputs;
 
+		std::vector<BVS::Connector<cv::Mat>*> inputs;
+
 		std::vector<cv::VideoCapture> captures;
-		int numInputs;
+		std::vector<cv::VideoWriter> writers;
+
+		int numNodes;
+		std::vector<std::string> fileList;
+		bool useFile;
+		int captureMode;
+		double captureFPS;
+
+		bool recordVideo;
+		std::string recordFOURCC;
+		double recordFPS;
+		int recordWidth;
+		int recordHeight;
+		bool recordColor;
+		int fourcc;
+
 
 		CaptureCV(const CaptureCV&) = delete; /**< -Weffc++ */
 		CaptureCV& operator=(const CaptureCV&) = delete; /**< -Weffc++ */

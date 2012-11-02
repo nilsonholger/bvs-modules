@@ -1,0 +1,73 @@
+# This is an example config file for CaptureCV. It will be linked to
+# [build/]bin/CaptureCVConfig.txt so you can get started right away.
+#
+# short syntax:
+#
+# [section]
+# option = value
+#
+# Spaces and tabs are ignored (except inside '' and "") and everything is case
+# insensitive. For more information on syntax as well as further capabilities,
+# please see 'libbvs/include/bvs/config.h' or 'DOXYGEN:Classes->BVS::Config'.
+
+# This is a section/configuration header.
+# It can be used to create 'configurations' of your module, simply by creating
+# various sections with different options belonging to them. These are selected
+# by using them as a uniqueID in BVSConfig.txt when adding modules to the
+# system (if you use 'id + ".option"' to retrieve them), e.g.
+# modules += uniqueID(CaptureCV)...
+#
+# [uniqueID]
+# # please comment your settings
+# option = value
+
+[capture]
+
+# number of (capture/video inputs/outputs)
+numNodes = 2
+
+# list of files to use recording or capturing from
+fileList = video_0.avi, video_1.avi
+
+# if true, use files from 'fileList' as capture sources instead of cameras
+useFile = OFF
+
+# capture mode, set to -1 to disable explicitely setting it
+# for grasshopper: 0-1: color, 2: black and white, 3: weiiiiiird...
+captureMode = 2
+
+# fps to capture from source (must be supported by camera), set to -1 to disable
+captureFPS = -1
+
+# if true, record video from inputs (number selected by numNodes) and disable captures
+recordVideo = false
+
+# recording codec to use, must be supported by system (opencv uses ffmpeg)
+recordFOURCC = "MJPG"
+
+# video fps to set in video metadata, MUST BE SET
+recordFPS = 0.0
+
+# video width to set in video metadata, 0 for auto
+recordWidth = 0
+
+# video height to set in video metadata, 0 for auto
+recordHeight = 0
+
+# record with color or black and white
+recordColor = true
+
+
+
+# alternative configuration to use as video writer
+[video-writer]
+numNodes = 2
+fileList = video_0.avi, video_1.avi
+recordVideo = ON
+recordFOURCC = "MJPG"
+recordFPS = 15
+recordWidth = 0
+recordHeight = 0
+recordColor = OFF
+
+# This line tells vim something about the file type. -- vim:ft=config:
