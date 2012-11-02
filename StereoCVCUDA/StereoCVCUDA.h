@@ -90,5 +90,12 @@ class StereoCVCUDA : public BVS::Module
 		StereoCVCUDA& operator=(const StereoCVCUDA&) = delete; /**< -Weffc++ */
 };
 
+
+
+/** This calls a macro to create needed module utilities. */
+BVS_MODULE_UTILITIES(StereoCVCUDA)
+
+
+
 #endif //STEREOCVCUDA_H
 

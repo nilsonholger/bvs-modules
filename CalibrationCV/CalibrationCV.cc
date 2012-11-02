@@ -163,17 +163,6 @@ BVS::Status CalibrationCV::debugDisplay()
 
 
 
-extern "C" {
-	int bvsRegisterModule(std::string id, const BVS::Info& bvs)
-	{
-		registerModule(id, new CalibrationCV(id, bvs));
-
-		return 0;
-	}
-}
-
-
-
 bool CalibrationCV::loadCalibrationFrom(const std::string& directory, const std::string& file)
 {
 	switch (numNodes)

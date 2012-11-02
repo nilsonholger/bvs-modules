@@ -168,5 +168,10 @@ class CalibrationCV : public BVS::Module
 
 
 
+/** This calls a macro to create needed module utilities. */
+BVS_MODULE_UTILITIES(CalibrationCV)
+
+
+
 #endif //CALIBRATIONCV_H
 

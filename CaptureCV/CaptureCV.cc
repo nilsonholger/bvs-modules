@@ -65,14 +65,3 @@ BVS::Status CaptureCV::debugDisplay()
 	return BVS::Status::OK;
 }
 
-
-
-extern "C" {
-	int bvsRegisterModule(std::string id, const BVS::Info& bvs)
-	{
-		registerModule(id, new CaptureCV(id, bvs));
-
-		return 0;
-	}
-}
-

@@ -67,5 +67,12 @@ class CaptureCV : public BVS::Module
 		CaptureCV& operator=(const CaptureCV&) = delete; /**< -Weffc++ */
 };
 
+
+
+/** This calls a macro to create needed module utilities. */
+BVS_MODULE_UTILITIES(CaptureCV)
+
+
+
 #endif //CAPTURECV_H
 

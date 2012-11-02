@@ -161,14 +161,3 @@ BVS::Status StereoELAS::debugDisplay()
 	return BVS::Status::OK;
 }
 
-
-
-extern "C" {
-	int bvsRegisterModule(std::string id, BVS::Info& bvs)
-	{
-		registerModule(id, new StereoELAS(id, bvs));
-
-		return 0;
-	}
-}
-
