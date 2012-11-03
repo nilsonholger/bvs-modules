@@ -87,6 +87,7 @@ BVS::Status CaptureCV::execute()
 		for (auto in: inputs) if ((*in)->empty()) empty = true;
 		if (!empty)
 		{
+			LOG(2, "Writing frame(s) to " << numNodes << " file(s)!");
 			for (int i=0; i<numNodes; i++)
 			{
 				if (!writers[i].isOpened())
