@@ -49,8 +49,8 @@ CalibrationCV::CalibrationCV(const std::string id, const BVS::Info& bvs)
 	{
 		nodes.emplace_back(new CalibrationNode(
 				i,
-				BVS::Connector<cv::Mat>(std::string("input") + std::to_string(i), BVS::ConnectorType::INPUT),
-				BVS::Connector<cv::Mat>(std::string("output") + std::to_string(i), BVS::ConnectorType::OUTPUT),
+				BVS::Connector<cv::Mat>(std::string("in") + std::to_string(i+1), BVS::ConnectorType::INPUT),
+				BVS::Connector<cv::Mat>(std::string("out") + std::to_string(i+1), BVS::ConnectorType::OUTPUT),
 				cv::Mat(), cv::Mat(), std::vector<cv::Point2f>(), cv::Mat(),
 				std::vector<cv::Point2f>(), std::vector<std::vector<cv::Point2f>>(),
 				cv::Mat::eye(3, 3, CV_64F), cv::Mat(), cv::Mat(), cv::Mat(), cv::Rect()));
@@ -172,7 +172,6 @@ bool CalibrationCV::loadCalibrationFrom(const std::string& directory, const std:
 			return false;
 			break;
 		case 2:
-			// stereo
 			return stereo.loadFromFile(directory, file);
 			break;
 	}
@@ -190,7 +189,6 @@ bool CalibrationCV::saveCalibrationTo(const std::string& directory, const std::s
 			return false;
 			break;
 		case 2:
-			// stereo
 			return stereo.saveToFile(directory, file);
 			break;
 	}

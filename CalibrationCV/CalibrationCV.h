@@ -15,16 +15,16 @@
 
 
 
-/** This is the CalibrationCV class.
- * This method will calibrate a variable number of cameras, called nodes
- * within this class. So far, only stereo (2 nodes) is supported.
- * For each node, 2 BVS::Connector objects will be created automatically,
- * input0 and output0, with 0 being replaced by the node id (0, 1, 2, ...).
- * The number of nodes can be set in the supplied config file.
+/** This is the CalibrationCV module.
+ * This module will calibrate a variable number of cameras, called nodes
+ * within this module.
  *
- * To compile this module, opencv(2) headers and libs are needed.
+ * IMPORTANT: So far, only stereo (2 nodes) is supported.
  *
- * Please see the config file for more options.
+ * Dependencies: opencv
+ * Inputs: in<N>, where <N> is a node id starting with 1
+ * Outputs: out<N>, where <N> is a node id starting with 1
+ * Configuration Options: please see CalibrationCVConfig.txt
  */
 class CalibrationCV : public BVS::Module
 {
