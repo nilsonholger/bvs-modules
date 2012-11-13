@@ -1,29 +1,12 @@
 # This is an example config file for CaptureCV. It will be linked to
 # [build/]bin/CaptureCVConfig.txt so you can get started right away.
 #
-# short syntax:
-#
-# [section]
-# option = value
-#
-# Spaces and tabs are ignored (except inside '' and "") and everything is case
-# insensitive. For more information on syntax as well as further capabilities,
-# please see 'libbvs/include/bvs/config.h' or 'DOXYGEN:Classes->BVS::Config'.
-
-# This is a section/configuration header.
-# It can be used to create 'configurations' of your module, simply by creating
-# various sections with different options belonging to them. These are selected
-# by using them as a uniqueID in BVSConfig.txt when adding modules to the
-# system (if you use 'id + ".option"' to retrieve them), e.g.
-# modules += uniqueID(CaptureCV)...
-#
-# [uniqueID]
-# # please comment your settings
-# option = value
+# For more information on syntax as well as further capabilities, please see
+# 'libbvs/include/bvs/config.h' or 'DOXYGEN:Classes->BVS::Config'.
 
 [capture]
 
-# number of (capture/video inputs/outputs)
+# number of (capture/video/file inputs/outputs)
 numNodes = 2
 
 # if true, use files from 'fileList' as capture sources instead of cameras
@@ -33,7 +16,7 @@ useVideo = OFF
 videoList = video_1.avi, video_2.avi
 
 # if true, parse imagesNameScheme and use as sources
-useImages = ON
+useImages = OFF
 
 # image naming scheme, can contain path elements
 # use '{FRAME}' as a placeholder for the frame number, and '{NODE}' as a
@@ -67,7 +50,7 @@ recordColor = true
 
 
 
-# alternative configuration to use as video writer
+# alternative configuration to use module as a video writer
 [video-writer]
 numNodes = 2
 videoList = video_1.avi, video_2.avi

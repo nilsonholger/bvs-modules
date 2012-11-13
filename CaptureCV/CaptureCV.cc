@@ -139,8 +139,8 @@ BVS::Status CaptureCV::execute()
 			if (tmp.empty())
 			{
 				LOG(0, "cannot open file: " << filename);
-				// TODO what to do? signal? exit?
-				exit(0);
+				// TODO what to do? signal shutdown or end of input? exit?
+				exit(0); // THIS IS NOT THE CORRECT WAY, MODULES SHOULD NOT DO THIS
 			}
 			**outputs[i] = tmp;
 		}
@@ -160,7 +160,6 @@ BVS::Status CaptureCV::execute()
 
 
 
-// UNUSED
 BVS::Status CaptureCV::debugDisplay()
 {
 	return BVS::Status::OK;
@@ -170,7 +169,7 @@ BVS::Status CaptureCV::debugDisplay()
 
 std::string CaptureCV::getFileNameFromParts(int frame, int nodeID)
 {
-	std::string tmp{};
+	std::string tmp;
 	for (auto& part: nameParts)
 	{
 		if (part == "FRAME") tmp += std::to_string(frame);

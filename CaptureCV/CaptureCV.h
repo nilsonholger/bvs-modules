@@ -8,13 +8,14 @@
 
 
 
-/** This is the CaptureCV class.
- * Please add sufficient documentation to enable others to use it.
- * Include information about:
- * - Dependencies
- * - Inputs
- * - Outputs
- * - Configuration Options
+/** This is the CaptureCV module.  It can capture input from a given amount of
+ * cameras, videos or image files, as well as write video from its inputs to
+ * individual video files.
+ *
+ * Dependencies: opencv
+ * Inputs: in<N>, where <N> is a node id starting with 1
+ * Outputs: out<N>, where <N> is a node id starting with 1
+ * Configuration Options: please see CaptureCVConfig.txt
  */
 class CaptureCV : public BVS::Module
 {
@@ -45,45 +46,33 @@ class CaptureCV : public BVS::Module
 
 	private:
 		const std::string id; /**< Your unique module id, set by framework. */
+		BVS::Logger logger; /**< Logger. */
+		const BVS::Info& bvs; /**< Framework info. */
+		std::vector<BVS::Connector<cv::Mat>*> outputs; /**< Output connectors. */
+		std::vector<BVS::Connector<cv::Mat>*> inputs; /**< Input connectors. */
+		std::vector<cv::VideoCapture> captures; /**< Captures vector for camera usage. */
+		std::vector<cv::VideoWriter> writers; /**< Writers vector for video output. */
+		int numNodes; /**< Number of nodes to use. */
+		bool useVideo; /**< Use videos as input sources. */
+		std::vector<std::string> videoList; /**< List of video names to use. */
+		bool useImages; /**< Use images as input sources. */
+		std::string imageNameScheme; /**< Image naming scheme. */
+		std::vector<std::string> nameParts; /**< Individual name scheme parts. */
+		int imageCounter; /**< Image counter, used when reading from images. */
+		int captureMode; /**< Capture mode, not always supported by capture devices. */
+		double captureFPS; /**< Capture frames per second, not always supported. */
+		bool recordVideo; /**< Record videos from inputs. */
+		std::string recordFOURCC; /**< FOURCC to set in recorded videos. */
+		double recordFPS; /**< FPS to set in recorded videos. */
+		int recordWidth; /**< Recorded video width. */
+		int recordHeight; /**< Recorded video height. */
+		bool recordColor; /**< Record videos with color, or not. */
+		int fourcc; /**< FOURCC value as integer representation. */
 
-		/** Your logger instance.
-		 * @see Logger
+		/** Get filename using image name scheme.
+		 * @param[in] frame Frame number to use.
+		 * @param[in] nodeID Node id to use.
 		 */
-		BVS::Logger logger;
-
-		/** Your Info reference;
-		 * @see Info
-		 */
-		const BVS::Info& bvs;
-
-		/** Example Connector used to retrieve/send data from/to other modules.
-		 * @see Connector
-		 */
-		std::vector<BVS::Connector<cv::Mat>*> outputs;
-
-		std::vector<BVS::Connector<cv::Mat>*> inputs;
-
-		std::vector<cv::VideoCapture> captures;
-		std::vector<cv::VideoWriter> writers;
-
-		int numNodes;
-		bool useVideo;
-		std::vector<std::string> videoList;
-		bool useImages;
-		std::string imageNameScheme;
-		std::vector<std::string> nameParts;
-		int imageCounter;
-		int captureMode;
-		double captureFPS;
-
-		bool recordVideo;
-		std::string recordFOURCC;
-		double recordFPS;
-		int recordWidth;
-		int recordHeight;
-		bool recordColor;
-		int fourcc;
-
 		std::string getFileNameFromParts(int frame, int nodeID);
 
 		CaptureCV(const CaptureCV&) = delete; /**< -Weffc++ */
