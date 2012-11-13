@@ -3,6 +3,7 @@
 
 #include "bvs/module.h"
 #include "opencv2/opencv.hpp"
+#include <string>
 #include <vector>
 
 
@@ -66,8 +67,12 @@ class CaptureCV : public BVS::Module
 		std::vector<cv::VideoWriter> writers;
 
 		int numNodes;
-		std::vector<std::string> fileList;
-		bool useFile;
+		bool useVideo;
+		std::vector<std::string> videoList;
+		bool useImages;
+		std::string imageNameScheme;
+		std::vector<std::string> nameParts;
+		int imageCounter;
 		int captureMode;
 		double captureFPS;
 
@@ -79,6 +84,7 @@ class CaptureCV : public BVS::Module
 		bool recordColor;
 		int fourcc;
 
+		std::string getFileNameFromParts(int frame, int nodeID);
 
 		CaptureCV(const CaptureCV&) = delete; /**< -Weffc++ */
 		CaptureCV& operator=(const CaptureCV&) = delete; /**< -Weffc++ */

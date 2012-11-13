@@ -26,11 +26,19 @@
 # number of (capture/video inputs/outputs)
 numNodes = 2
 
-# list of files to use recording or capturing from
-fileList = video_0.avi, video_1.avi
-
 # if true, use files from 'fileList' as capture sources instead of cameras
-useFile = OFF
+useVideo = OFF
+
+# list of files to use for recording or capturing from
+videoList = video_1.avi, video_2.avi
+
+# if true, parse imagesNameScheme and use as sources
+useImages = ON
+
+# image naming scheme, can contain path elements
+# use '{FRAME}' as a placeholder for the frame number, and '{NODE}' as a
+# placeholder for the node id
+imageNameScheme = images/frame_{FRAME}_{NODE}.jpg
 
 # capture mode, set to -1 to disable explicitely setting it
 # for grasshopper: 0-1: color, 2: black and white, 3: weiiiiiird...
@@ -62,7 +70,7 @@ recordColor = true
 # alternative configuration to use as video writer
 [video-writer]
 numNodes = 2
-fileList = video_0.avi, video_1.avi
+videoList = video_1.avi, video_2.avi
 recordVideo = ON
 recordFOURCC = "MJPG"
 recordFPS = 15
