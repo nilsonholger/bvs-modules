@@ -46,7 +46,10 @@ StereoELAS::StereoELAS(const std::string id, const BVS::Info& bvs)
 		exit(1);
 	}
 
+	param.support_threshold = 0.95;
 	param.postprocess_only_left = false;
+	param.add_corners = true;
+	param.ipol_gap_width = 10;
 	elas = Elas(param);
 
 	if (sliceCount!=1)
