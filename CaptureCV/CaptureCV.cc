@@ -105,6 +105,7 @@ CaptureCV::~CaptureCV()
 
 BVS::Status CaptureCV::execute()
 {
+	//TODO this is getting too big and too confusing, when adding image writing functionality, separate camera input and video/image input/output into individual functions...
 	if (recordVideo)
 	{
 		for (auto in: inputs) in->lockConnection();
