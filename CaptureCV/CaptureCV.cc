@@ -50,18 +50,19 @@ CaptureCV::CaptureCV(const std::string id, const BVS::Info& bvs)
 	{
 		for (int i=0; i<numNodes; i++)
 		{
+			captures.emplace_back(cv::VideoCapture(i));
+			outputs.emplace_back(new BVS::Connector<cv::Mat>("out"+std::to_string(i+1), BVS::ConnectorType::OUTPUT));
 			if (useVideo)
 			{
-				captures[i].open(videoList.at(i));
+				LOG(2, "Use file '" << videoList.at(i) << "' as source for node: " << i+1);
+				captures.at(i).open(videoList.at(i));
 			}
 			else if (!useImages)
 			{
-				captures.emplace_back(cv::VideoCapture(i));
-				if (captureMode>=0) captures[i].set(CV_CAP_PROP_MODE, captureMode);
-				if (captureFPS>=0) captures[i].set(CV_CAP_PROP_FPS, captureFPS);
-				if (!captures[i].isOpened()) LOG(0, "Could not open camera: " << i << "!");
+				if (captureMode>=0) captures.at(i).set(CV_CAP_PROP_MODE, captureMode);
+				if (captureFPS>=0) captures.at(i).set(CV_CAP_PROP_FPS, captureFPS);
+				if (!captures.at(i).isOpened()) LOG(0, "Could not open camera: " << i << "!");
 			}
-			outputs.emplace_back(new BVS::Connector<cv::Mat>("out"+std::to_string(i+1), BVS::ConnectorType::OUTPUT));
 		}
 	}
 
@@ -125,6 +126,13 @@ BVS::Status CaptureCV::execute()
 			}
 		}
 		for (auto in: inputs) in->unlockConnection();
+	}
+	else if (useVideo)
+	{
+		for (auto out: outputs) out->lockConnection();
+		for (int i=0; i<numNodes; i++)
+			if (!captures[i].read(**outputs[i])) exit(0); // SEE NOTE BELOW ABOUT EXIT...
+		for (auto out: outputs) out->unlockConnection();
 	}
 	else if (useImages)
 	{
