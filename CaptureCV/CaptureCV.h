@@ -53,27 +53,29 @@ class CaptureCV : public BVS::Module
 		std::vector<cv::VideoCapture> captures; /**< Captures vector for camera usage. */
 		std::vector<cv::VideoWriter> writers; /**< Writers vector for video output. */
 		int numNodes; /**< Number of nodes to use. */
-		bool useVideo; /**< Use videos as input sources. */
-		std::vector<std::string> videoList; /**< List of video names to use. */
-		bool useImages; /**< Use images as input sources. */
-		std::string imageNameScheme; /**< Image naming scheme. */
-		std::vector<std::string> nameParts; /**< Individual name scheme parts. */
+		char mode; /**< Capture mode to use (camera, video, image, none). */
+		std::vector<std::string> videoFiles; /**< List of video names to use. */
+		std::string imageFiles; /**< Image files naming scheme. */
+		std::vector<std::string> fileNamePieces; /**< Individual image name scheme parts. */
 		int imageCounter; /**< Image counter, used when reading from images. */
-		int captureMode; /**< Capture mode, not always supported by capture devices. */
-		double captureFPS; /**< Capture frames per second, not always supported. */
-		bool recordVideo; /**< Record videos from inputs. */
+		int cameraMode; /**< Capture mode, not always supported by capture devices. */
+		double cameraFPS; /**< Capture frames per second, not always supported. */
 		std::string recordFOURCC; /**< FOURCC to set in recorded videos. */
+		int fourcc; /**< FOURCC value as integer representation. */
 		double recordFPS; /**< FPS to set in recorded videos. */
 		int recordWidth; /**< Recorded video width. */
 		int recordHeight; /**< Recorded video height. */
 		bool recordColor; /**< Record videos with color, or not. */
-		int fourcc; /**< FOURCC value as integer representation. */
+		bool requestShutdown; /**< Whether there have been incorrect settings. */
+
+		/** Separate image file scheme into pieces. */
+		void parseImageFileName();
 
 		/** Get filename using image name scheme.
 		 * @param[in] frame Frame number to use.
 		 * @param[in] nodeID Node id to use.
 		 */
-		std::string getFileNameFromParts(int frame, int nodeID);
+		std::string getImageFileName(int frame, int nodeID);
 
 		CaptureCV(const CaptureCV&) = delete; /**< -Weffc++ */
 		CaptureCV& operator=(const CaptureCV&) = delete; /**< -Weffc++ */

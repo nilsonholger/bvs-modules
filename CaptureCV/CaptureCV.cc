@@ -11,77 +11,83 @@ CaptureCV::CaptureCV(const std::string id, const BVS::Info& bvs)
 	inputs(),
 	captures(),
 	writers(),
-	numNodes(bvs.config.getValue<int>(id+".numNodes", 1)),
-	useVideo(bvs.config.getValue<bool>(id+".useVideo", false)),
-	videoList(),
-	useImages(bvs.config.getValue<bool>(id+".useImages", false)),
-	imageNameScheme(bvs.config.getValue<std::string>(id+".imageNameScheme", "images/frame_{FRAME}_{NODE}.jpg")),
-	nameParts(),
+	numNodes(bvs.config.getValue<int>(id+".numNodes", 0)),
+	mode(bvs.config.getValue<std::string>(id+".mode", "C").at(0)),
+	videoFiles(),
+	imageFiles(bvs.config.getValue<std::string>(id+".imageFiles", "images/frame_{FRAME}_{NODE}.jpg")),
+	fileNamePieces(),
 	imageCounter(1),
-	captureMode(bvs.config.getValue<int>(id+".captureMode", -1)),
-	captureFPS(bvs.config.getValue<double>(id+".captureFPS", -1.0)),
-	recordVideo(bvs.config.getValue<bool>(id+".recordVideo", false)),
+	cameraMode(bvs.config.getValue<int>(id+".captureMode", -1)),
+	cameraFPS(bvs.config.getValue<double>(id+".captureFPS", -1.0)),
 	recordFOURCC(bvs.config.getValue<std::string>(id+".recordFOURCC", "MJPG")),
+	fourcc(),
 	recordFPS(bvs.config.getValue<double>(id+".recordFPS", 0.0)),
 	recordWidth(bvs.config.getValue<int>(id+".recordWidth", 0)),
 	recordHeight(bvs.config.getValue<int>(id+".recordHeight", 0)),
 	recordColor(bvs.config.getValue<int>(id+".recordColor", true)),
-	fourcc()
+	requestShutdown(false)
 {
-	if (useVideo && useImages) LOG(0, "Cannot read from video and images, using video!");
-
-	if (useVideo || recordVideo || useImages)
+	if (numNodes==0)
 	{
-		bvs.config.getValue<std::string>(id+".videoList", videoList);
-		if ((int)videoList.size()<numNodes) LOG(0, "Not enough files given to read/write from/to!");
+		LOG(0, "Number of nodes not set!");
+		requestShutdown = true;
 	}
 
-	if (recordVideo)
+	switch (mode)
 	{
-		if (recordFOURCC.length()!=4) LOG(0, "RecordFOURCC length must be 4!");
-		fourcc = CV_FOURCC(recordFOURCC[0], recordFOURCC[1], recordFOURCC[2], recordFOURCC[3]);
-		for (int i=0; i<numNodes; i++)
+		case 'C': case 'V': case 'I':
+			for (int i=0; i<numNodes; i++)
+				outputs.emplace_back(new BVS::Connector<cv::Mat>("out"+std::to_string(i+1), BVS::ConnectorType::OUTPUT));
+			break;
+		case 'R': case 'S':
+			for (int i=0; i<numNodes; i++)
+				inputs.emplace_back(new BVS::Connector<cv::Mat>("in"+std::to_string(i+1), BVS::ConnectorType::INPUT));
+			break;
+	}
+
+	if (mode=='V' || mode=='R')
+	{
+		bvs.config.getValue<std::string>(id+".videoFiles", videoFiles);
+		if ((int)videoFiles.size()<numNodes)
 		{
-			writers.emplace_back(cv::VideoWriter());
-			inputs.emplace_back(new BVS::Connector<cv::Mat>("in"+std::to_string(i+1), BVS::ConnectorType::INPUT));
+			LOG(0, "Insufficient number of video files!");
+			requestShutdown = true;
 		}
 	}
-	else
+
+	switch (mode)
 	{
-		for (int i=0; i<numNodes; i++)
-		{
-			captures.emplace_back(cv::VideoCapture(i));
-			outputs.emplace_back(new BVS::Connector<cv::Mat>("out"+std::to_string(i+1), BVS::ConnectorType::OUTPUT));
-			if (useVideo)
+		case 'C':
+			for (int i=0; i<numNodes; i++)
 			{
-				LOG(2, "Use file '" << videoList.at(i) << "' as source for node: " << i+1);
-				captures.at(i).open(videoList.at(i));
+				captures.emplace_back(cv::VideoCapture(i));
+				if (cameraMode>=0) captures.at(i).set(CV_CAP_PROP_MODE, cameraMode);
+				if (cameraFPS>=0) captures.at(i).set(CV_CAP_PROP_FPS, cameraFPS);
+				if (!captures.at(i).isOpened())
+				{
+					LOG(0, "Could not open camera: " << i << "!");
+					requestShutdown = true;
+				}
 			}
-			else if (!useImages)
+			break;
+		case 'V':
+			for (int i=0; i<numNodes; i++)
 			{
-				if (captureMode>=0) captures.at(i).set(CV_CAP_PROP_MODE, captureMode);
-				if (captureFPS>=0) captures.at(i).set(CV_CAP_PROP_FPS, captureFPS);
-				if (!captures.at(i).isOpened()) LOG(0, "Could not open camera: " << i << "!");
+				captures.emplace_back(cv::VideoCapture(videoFiles.at(i)));
+				LOG(2, "Use file '" << videoFiles.at(i) << "' as source for node: " << i+1);
 			}
-		}
-	}
-
-	if (useImages)
-	{
-		std::string tmp = imageNameScheme;
-		while (!tmp.empty())
-		{
-			LOG(0, tmp);
-			size_t begin = tmp.find_first_of('{');
-			size_t end = tmp.find_first_of('}');
-
-			if (begin != 0 && begin != end) nameParts.push_back(tmp.substr(0, begin));
-			if (begin<end) nameParts.push_back(tmp.substr(begin+1, end-begin-1));
-			if (begin == std::string::npos || end == std::string::npos) nameParts.push_back(tmp);
-
-			if (end == std::string::npos) tmp.clear();
-			else tmp.erase(0, end+1);
-		}
+			break;
+		case 'I': parseImageFileName(); break;
+		case 'R':
+			if (recordFOURCC.length()!=4) { LOG(0, "RecordFOURCC length must be 4!"); }
+			else { fourcc = CV_FOURCC(recordFOURCC[0], recordFOURCC[1], recordFOURCC[2], recordFOURCC[3]); }
+			for (int i=0; i<numNodes; i++) writers.emplace_back(cv::VideoWriter());
+			break;
+		case 'S': parseImageFileName(); break;
+		default:
+			LOG(0, "Incorrect mode: '" << mode << "', aborting!");
+			requestShutdown = true;
+			break;
 	}
 }
 
@@ -89,81 +95,95 @@ CaptureCV::CaptureCV(const std::string id, const BVS::Info& bvs)
 
 CaptureCV::~CaptureCV()
 {
-	if (recordVideo)
+	switch (mode)
 	{
-		for (auto wr: writers) wr.release();
-		for (auto in: inputs) delete in;
+		case 'C': case 'V':
+			for (auto cap: captures) if (cap.isOpened()) cap.release();
+			break;
+		case 'I': break;
+		case 'R': for (auto wr: writers) if (wr.isOpened()) wr.release();
+			break;
+		case 'S': break;
+		default: break;
 	}
-	else if (!useImages)
-	{
-		for (auto cap: captures) cap.release();
-		for (auto out: outputs) delete out;
-	}
+
+	for (auto& in: inputs) delete in;
+	for (auto& out: outputs) delete out;
 }
 
 
 
 BVS::Status CaptureCV::execute()
 {
-	//TODO this is getting too big and too confusing, when adding image writing functionality, separate camera input and video/image input/output into individual functions...
-	if (recordVideo)
+	if (requestShutdown) return BVS::Status::SHUTDOWN;
+
+	for (auto out: outputs) out->lockConnection();
+	for (auto in: inputs) in->lockConnection();
+	switch (mode)
 	{
-		for (auto in: inputs) in->lockConnection();
-		bool empty = false;
-		for (auto in: inputs) if ((*in)->empty()) empty = true;
-		if (!empty)
-		{
-			LOG(2, "Writing frame(s) to " << numNodes << " file(s)!");
+		case 'C':
+			for (auto cap: captures) cap.grab();
+			for (int i=0; i<numNodes; i++) captures.at(i).retrieve(**outputs.at(i));
+			break;
+		case 'V':
+			for (int i=0; i<numNodes; i++) if (!captures.at(i).read(**outputs.at(i))) requestShutdown = true;
+			break;
+		case 'I':
 			for (int i=0; i<numNodes; i++)
 			{
-				if (!writers[i].isOpened())
+				std::string filename = getImageFileName(imageCounter, i);
+				LOG(3, "loading: " << filename);
+				cv::Mat tmp = cv::imread(filename);
+				if (tmp.empty())
 				{
-					if (recordWidth==0) recordWidth = (**inputs[i]).cols;
-					if (recordHeight==0) recordHeight = (**inputs[i]).rows;
-					writers[i].open(videoList[i], fourcc, recordFPS, cv::Size(recordWidth, recordHeight), recordColor);
-					if (!writers[i].isOpened()) LOG(0, "Could not open writer for '" << videoList[i]);
+					LOG(0, "cannot open file: " << filename);
+					requestShutdown = true;
 				}
-				writers[i].write(**inputs[i]);
+				**outputs.at(i) = tmp;
 			}
-		}
-		for (auto in: inputs) in->unlockConnection();
-	}
-	else if (useVideo)
-	{
-		for (auto out: outputs) out->lockConnection();
-		for (int i=0; i<numNodes; i++)
-			if (!captures[i].read(**outputs[i])) exit(0); // SEE NOTE BELOW ABOUT EXIT...
-		for (auto out: outputs) out->unlockConnection();
-	}
-	else if (useImages)
-	{
-		cv::Mat tmp;
-		std::string filename;
-		for (auto out: outputs) out->lockConnection();
-		for (int i=0; i<numNodes; i++)
-		{
-			filename = getFileNameFromParts(imageCounter, i+1);
-			LOG(3, "loading: " << filename);
-			tmp = cv::imread(filename);
-			if (tmp.empty())
+			imageCounter++;
+			break;
+		case 'R':
+			for (auto in: inputs)
 			{
-				LOG(0, "cannot open file: " << filename);
-				// TODO what to do? signal shutdown or end of input? exit?
-				exit(0); // THIS IS NOT THE CORRECT WAY, MODULES SHOULD NOT DO THIS
+				cv::Mat tmp;
+				if (!in->receive(tmp)) requestShutdown = true;
 			}
-			**outputs[i] = tmp;
-		}
-		for (auto out: outputs) out->unlockConnection();
-		imageCounter++;
+			if (!requestShutdown)
+			{
+				LOG(2, "Writing frame(s) to " << numNodes << " file(s)!");
+				for (int i=0; i<numNodes; i++)
+				{
+					if (!writers.at(i).isOpened())
+					{
+						if (recordWidth==0) recordWidth = (**inputs.at(i)).cols;
+						if (recordHeight==0) recordHeight = (**inputs.at(i)).rows;
+						writers.at(i).open(videoFiles.at(i), fourcc, recordFPS, cv::Size(recordWidth, recordHeight), recordColor);
+						if (!writers.at(i).isOpened()) LOG(0, "Could not open writer for '" << videoFiles.at(i));
+					}
+					if (!(**inputs.at(i)).empty()) writers.at(i).write(**inputs.at(i));
+				}
+			}
+			break;
+		case 'S':
+			for (int i=0; i<numNodes; i++)
+			{
+				std::string filename = getImageFileName(imageCounter, i);
+				bool written = cv::imwrite(filename, **inputs.at(i));
+				if (!written)
+				{
+					LOG(0, "Could not wirte to file '" << filename << "'!");
+					requestShutdown = true;
+				}
+			}
+			imageCounter++;
+			break;
+		default: break;
 	}
-	else
-	{
-		for (auto out: outputs) out->lockConnection();
-		for (auto cap: captures) cap.grab();
-		for (int i=0; i<numNodes; i++) captures[i].retrieve(**outputs[i]);
-		for (auto out: outputs) out->unlockConnection();
-	}
+	for (auto in: inputs) in->unlockConnection();
+	for (auto out: outputs) out->unlockConnection();
 
+	if (requestShutdown) return BVS::Status::SHUTDOWN;
 	return BVS::Status::OK;
 }
 
@@ -176,14 +196,33 @@ BVS::Status CaptureCV::debugDisplay()
 
 
 
-std::string CaptureCV::getFileNameFromParts(int frame, int nodeID)
+void CaptureCV::parseImageFileName()
+{
+	std::string tmp = imageFiles;
+	while (!tmp.empty())
+	{
+		size_t begin = tmp.find_first_of('{');
+		size_t end = tmp.find_first_of('}');
+
+		if (begin != 0 && begin != end) fileNamePieces.push_back(tmp.substr(0, begin));
+		if (begin<end) fileNamePieces.push_back(tmp.substr(begin+1, end-begin-1));
+		if (begin == std::string::npos || end == std::string::npos) fileNamePieces.push_back(tmp);
+
+		if (end == std::string::npos) tmp.clear();
+		else tmp.erase(0, end+1);
+	}
+}
+
+
+
+std::string CaptureCV::getImageFileName(int frame, int nodeID)
 {
 	std::string tmp;
-	for (auto& part: nameParts)
+	for (auto& piece: fileNamePieces)
 	{
-		if (part == "FRAME") tmp += std::to_string(frame);
-		else if (part == "NODE") tmp += std::to_string(nodeID);
-		else tmp += part;
+		if (piece == "FRAME") tmp += std::to_string(frame);
+		else if (piece == "NODE") tmp += std::to_string(nodeID+1);
+		else tmp += piece;
 	}
 
 	return tmp;
