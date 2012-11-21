@@ -172,7 +172,7 @@ BVS::Status CaptureCV::execute()
 				bool written = cv::imwrite(filename, **inputs.at(i));
 				if (!written)
 				{
-					LOG(0, "Could not wirte to file '" << filename << "'!");
+					LOG(0, "Could not write to file '" << filename << "'!");
 					requestShutdown = true;
 				}
 			}
