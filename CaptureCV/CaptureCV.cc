@@ -2,7 +2,7 @@
 
 
 
-CaptureCV::CaptureCV(const std::string id, const BVS::Info& bvs)
+CaptureCV::CaptureCV(const std::string id, const std::string conf, const BVS::Info& bvs)
 	: BVS::Module(),
 	id(id),
 	logger(id),
@@ -11,20 +11,20 @@ CaptureCV::CaptureCV(const std::string id, const BVS::Info& bvs)
 	inputs(),
 	captures(),
 	writers(),
-	numNodes(bvs.config.getValue<int>(id+".numNodes", 0)),
-	mode(bvs.config.getValue<std::string>(id+".mode", "C").at(0)),
+	numNodes(bvs.config.getValue<int>(conf+".numNodes", 0)),
+	mode(bvs.config.getValue<std::string>(conf+".mode", "C").at(0)),
 	videoFiles(),
-	imageFiles(bvs.config.getValue<std::string>(id+".imageFiles", "images/frame_{FRAME}_{NODE}.jpg")),
+	imageFiles(bvs.config.getValue<std::string>(conf+".imageFiles", "images/frame_{FRAME}_{NODE}.jpg")),
 	fileNamePieces(),
 	imageCounter(1),
-	cameraMode(bvs.config.getValue<int>(id+".captureMode", -1)),
-	cameraFPS(bvs.config.getValue<double>(id+".captureFPS", -1.0)),
-	recordFOURCC(bvs.config.getValue<std::string>(id+".recordFOURCC", "MJPG")),
+	cameraMode(bvs.config.getValue<int>(conf+".captureMode", -1)),
+	cameraFPS(bvs.config.getValue<double>(conf+".captureFPS", -1.0)),
+	recordFOURCC(bvs.config.getValue<std::string>(conf+".recordFOURCC", "MJPG")),
 	fourcc(),
-	recordFPS(bvs.config.getValue<double>(id+".recordFPS", 0.0)),
-	recordWidth(bvs.config.getValue<int>(id+".recordWidth", 0)),
-	recordHeight(bvs.config.getValue<int>(id+".recordHeight", 0)),
-	recordColor(bvs.config.getValue<int>(id+".recordColor", true)),
+	recordFPS(bvs.config.getValue<double>(conf+".recordFPS", 0.0)),
+	recordWidth(bvs.config.getValue<int>(conf+".recordWidth", 0)),
+	recordHeight(bvs.config.getValue<int>(conf+".recordHeight", 0)),
+	recordColor(bvs.config.getValue<int>(conf+".recordColor", true)),
 	requestShutdown(false)
 {
 	if (numNodes==0)

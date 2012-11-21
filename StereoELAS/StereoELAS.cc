@@ -2,7 +2,7 @@
 
 
 
-StereoELAS::StereoELAS(const std::string id, const BVS::Info& bvs)
+StereoELAS::StereoELAS(const std::string id, const std::string conf, const BVS::Info& bvs)
 	: BVS::Module(),
 	id(id),
 	logger(id),
@@ -11,11 +11,11 @@ StereoELAS::StereoELAS(const std::string id, const BVS::Info& bvs)
 	inR("inR", BVS::ConnectorType::INPUT),
 	outL("outL", BVS::ConnectorType::OUTPUT),
 	outR("outR", BVS::ConnectorType::OUTPUT),
-	discardTopLines(bvs.config.getValue<int>(id+".discardTopLines", 0)),
-	discardBottomLines(bvs.config.getValue<int>(id+".discardBottomLines", 0)),
-	scalingFactor(bvs.config.getValue<float>(id+".scalingFactor", 1)),
-	sliceCount(bvs.config.getValue<int>(id+".sliceCount", 1)),
-	sliceOverlap(bvs.config.getValue<int>(id+".sliceOverlap", 10)),
+	discardTopLines(bvs.config.getValue<int>(conf+".discardTopLines", 0)),
+	discardBottomLines(bvs.config.getValue<int>(conf+".discardBottomLines", 0)),
+	scalingFactor(bvs.config.getValue<float>(conf+".scalingFactor", 1)),
+	sliceCount(bvs.config.getValue<int>(conf+".sliceCount", 1)),
+	sliceOverlap(bvs.config.getValue<int>(conf+".sliceOverlap", 10)),
 	sliceExit(false),
 	runningThreads(0),
 	masterMutex(),

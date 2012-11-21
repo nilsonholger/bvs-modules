@@ -7,7 +7,7 @@
 // framework actually creates your module) and the framework assigns the unique
 // identifier and gives you access to its config.
 // However, you should use it to create your data structures etc.
-StereoCVCUDA::StereoCVCUDA(const std::string id, const BVS::Info& bvs)
+StereoCVCUDA::StereoCVCUDA(const std::string id, const std::string conf, const BVS::Info& bvs)
 	: BVS::Module(),
 	id(id),
 	logger(id),
@@ -33,6 +33,7 @@ StereoCVCUDA::StereoCVCUDA(const std::string id, const BVS::Info& bvs)
 	csGPU(),
 	estimate(true)
 {
+	(void) conf;
 	bmGPU.preset = 0;
 	bmGPU.ndisp = 64;
 	bmGPU.winSize = 19;

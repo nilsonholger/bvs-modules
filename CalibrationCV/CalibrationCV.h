@@ -34,9 +34,10 @@ class CalibrationCV : public BVS::Module
 		 * framework.
 		 * You can use the constructor/destructor pair to create/destroy your data.
 		 * @param[in] id Your modules unique identifier, will be set by framework.
+		 * @param[in] conf Your modules configuration.
 		 * @param[in] bvs Reference to info for e.g. option retrieval.
 		 */
-		CalibrationCV(const std::string id, const BVS::Info& bvs);
+		CalibrationCV(const std::string id, const std::string conf, const BVS::Info& bvs);
 
 		/** Your module destructor. */
 		~CalibrationCV();
