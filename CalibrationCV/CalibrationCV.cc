@@ -3,29 +3,29 @@
 
 
 
-CalibrationCV::CalibrationCV(const std::string id, const std::string conf, const BVS::Info& bvs)
+CalibrationCV::CalibrationCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	: BVS::Module(),
-	id(id),
-	logger(id),
+	info(info),
+	logger(info.id),
 	bvs(bvs),
-	numNodes(bvs.config.getValue<int>(conf + ".numNodes", 0)),
-	numImages(bvs.config.getValue<int>(conf + ".numImages", 100)),
-	blobSize(bvs.config.getValue<float>(conf + ".blobSize", 1.0f)),
-	autoShotMode(bvs.config.getValue<bool>(conf + ".autoShotMode", true)),
-	autoShotDelay(bvs.config.getValue<int>(conf + ".autoShotDelay", 1)),
-	directory(bvs.config.getValue<std::string>(conf + ".directory", "calibrationData")),
-	saveImages(bvs.config.getValue<bool>(conf + ".saveImages", false)),
-	useSavedImages(bvs.config.getValue<bool>(conf + ".useSavedImages", false)),
-	rectifyCalImages(bvs.config.getValue<bool>(conf + ".rectifyCalImages", false)),
-	imageDirectory(bvs.config.getValue<std::string>(conf + ".imageDirectory", "calibrationImages")),
-	outputDirectory(bvs.config.getValue<std::string>(conf + ".outputDirectory", "rectifiedImages")),
-	loadCalibration(bvs.config.getValue<bool>(conf + ".loadCalibration", true)),
-	saveCalibration(bvs.config.getValue<bool>(conf + ".saveCalibration", true)),
-	calibrationFile(bvs.config.getValue<std::string>(conf + ".calibrationFile", "calibration.xml")),
-	createRectifiedOutput(bvs.config.getValue<bool>(conf + ".createRectifiedOutput", true)),
-	addGridOverlay(bvs.config.getValue<bool>(conf + ".addGridOverlay", false)),
-	useCalibrationGuide(bvs.config.getValue<bool>(conf + ".useCalibrationGuide", false)),
-	sectorDetections(bvs.config.getValue<int>(conf + ".sectorDetections", 5)),
+	numNodes(bvs.config.getValue<int>(info.conf + ".numNodes", 0)),
+	numImages(bvs.config.getValue<int>(info.conf + ".numImages", 100)),
+	blobSize(bvs.config.getValue<float>(info.conf + ".blobSize", 1.0f)),
+	autoShotMode(bvs.config.getValue<bool>(info.conf + ".autoShotMode", true)),
+	autoShotDelay(bvs.config.getValue<int>(info.conf + ".autoShotDelay", 1)),
+	directory(bvs.config.getValue<std::string>(info.conf + ".directory", "calibrationData")),
+	saveImages(bvs.config.getValue<bool>(info.conf + ".saveImages", false)),
+	useSavedImages(bvs.config.getValue<bool>(info.conf + ".useSavedImages", false)),
+	rectifyCalImages(bvs.config.getValue<bool>(info.conf + ".rectifyCalImages", false)),
+	imageDirectory(bvs.config.getValue<std::string>(info.conf + ".imageDirectory", "calibrationImages")),
+	outputDirectory(bvs.config.getValue<std::string>(info.conf + ".outputDirectory", "rectifiedImages")),
+	loadCalibration(bvs.config.getValue<bool>(info.conf + ".loadCalibration", true)),
+	saveCalibration(bvs.config.getValue<bool>(info.conf + ".saveCalibration", true)),
+	calibrationFile(bvs.config.getValue<std::string>(info.conf + ".calibrationFile", "calibration.xml")),
+	createRectifiedOutput(bvs.config.getValue<bool>(info.conf + ".createRectifiedOutput", true)),
+	addGridOverlay(bvs.config.getValue<bool>(info.conf + ".addGridOverlay", false)),
+	useCalibrationGuide(bvs.config.getValue<bool>(info.conf + ".useCalibrationGuide", false)),
+	sectorDetections(bvs.config.getValue<int>(info.conf + ".sectorDetections", 5)),
 	calibrated(false),
 	detectionRunning(false),
 	numDetections(0),
@@ -255,7 +255,7 @@ void CalibrationCV::collectCalibrationImages()
 
 	for (auto& node: nodes)
 	{
-		//TODO paralellize with threads to decrease latency?
+		/** @todo paralellize with threads to decrease latency? */
 		cv::pyrDown(node->frame, node->scaledFrame, cv::Size(imageSize.width/2, imageSize.height/2));
 		foundPattern = cv::findCirclesGrid(node->scaledFrame, boardSize,
 				node->framePoints, cv::CALIB_CB_ASYMMETRIC_GRID);

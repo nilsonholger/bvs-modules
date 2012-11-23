@@ -26,11 +26,10 @@ class StereoELAS : public BVS::Module
 		 * Please do not change the signature, as it will be called by the
 		 * framework.
 		 * You can use the constructor/destructor pair to create/destroy your data.
-		 * @param[in] id Your modules unique identifier, will be set by framework.
-		 * @param[in] conf Your module configuration.
+		 * @param[in] info Your modules information, will be set by framework.
 		 * @param[in] bvs Reference to framework info for e.g. config option retrieval.
 		 */
-		StereoELAS(const std::string id, const std::string conf, const BVS::Info& bvs);
+		StereoELAS(BVS::ModuleInfo info, const BVS::Info& bvs);
 
 		/** Your module destructor. */
 		~StereoELAS();
@@ -48,7 +47,7 @@ class StereoELAS : public BVS::Module
 		BVS::Status debugDisplay();
 
 	private:
-		const std::string id; /**< Your unique module id, set by framework. */
+		const BVS::ModuleInfo info; /**< Your module metadata, set by framework. */
 
 		/** Your logger instance.
 		 * @see Logger

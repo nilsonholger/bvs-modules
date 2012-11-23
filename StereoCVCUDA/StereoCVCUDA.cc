@@ -7,14 +7,14 @@
 // framework actually creates your module) and the framework assigns the unique
 // identifier and gives you access to its config.
 // However, you should use it to create your data structures etc.
-StereoCVCUDA::StereoCVCUDA(const std::string id, const std::string conf, const BVS::Info& bvs)
+StereoCVCUDA::StereoCVCUDA(BVS::ModuleInfo info, const BVS::Info& bvs)
 	: BVS::Module(),
-	id(id),
-	logger(id),
+	info(info),
+	logger(info.id),
 	config("StereoCVCUDA", 0, nullptr), // "StereoCVCUDAConfig.txt"),
 	// at this point config has already loaded 'StereoCVCUDAConfig.txt", so
 	// you can use config to retrieve settings in the initialization list, e.g.
-	// yourSwitch(config.getValue<bool>(id + ".yourSwitch, false));
+	// yourSwitch(config.getValue<bool>(info.conf + ".yourSwitch, false));
 	bvs(bvs),
 	input0("input0", BVS::ConnectorType::INPUT),
 	input1("input1", BVS::ConnectorType::INPUT),
@@ -33,7 +33,6 @@ StereoCVCUDA::StereoCVCUDA(const std::string id, const std::string conf, const B
 	csGPU(),
 	estimate(true)
 {
-	(void) conf;
 	bmGPU.preset = 0;
 	bmGPU.ndisp = 64;
 	bmGPU.winSize = 19;

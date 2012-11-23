@@ -2,29 +2,29 @@
 
 
 
-CaptureCV::CaptureCV(const std::string id, const std::string conf, const BVS::Info& bvs)
+CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	: BVS::Module(),
-	id(id),
-	logger(id),
+	info(info),
+	logger(info.id),
 	bvs(bvs),
 	outputs(),
 	inputs(),
 	captures(),
 	writers(),
-	numNodes(bvs.config.getValue<int>(conf+".numNodes", 0)),
-	mode(bvs.config.getValue<std::string>(conf+".mode", "C").at(0)),
+	numNodes(bvs.config.getValue<int>(info.conf+".numNodes", 0)),
+	mode(bvs.config.getValue<std::string>(info.conf+".mode", "C").at(0)),
 	videoFiles(),
-	imageFiles(bvs.config.getValue<std::string>(conf+".imageFiles", "images/frame_{FRAME}_{NODE}.jpg")),
+	imageFiles(bvs.config.getValue<std::string>(info.conf+".imageFiles", "images/frame_{FRAME}_{NODE}.jpg")),
 	fileNamePieces(),
 	imageCounter(1),
-	cameraMode(bvs.config.getValue<int>(conf+".captureMode", -1)),
-	cameraFPS(bvs.config.getValue<double>(conf+".captureFPS", -1.0)),
-	recordFOURCC(bvs.config.getValue<std::string>(conf+".recordFOURCC", "MJPG")),
+	cameraMode(bvs.config.getValue<int>(info.conf+".captureMode", -1)),
+	cameraFPS(bvs.config.getValue<double>(info.conf+".captureFPS", -1.0)),
+	recordFOURCC(bvs.config.getValue<std::string>(info.conf+".recordFOURCC", "MJPG")),
 	fourcc(),
-	recordFPS(bvs.config.getValue<double>(conf+".recordFPS", 0.0)),
-	recordWidth(bvs.config.getValue<int>(conf+".recordWidth", 0)),
-	recordHeight(bvs.config.getValue<int>(conf+".recordHeight", 0)),
-	recordColor(bvs.config.getValue<int>(conf+".recordColor", true)),
+	recordFPS(bvs.config.getValue<double>(info.conf+".recordFPS", 0.0)),
+	recordWidth(bvs.config.getValue<int>(info.conf+".recordWidth", 0)),
+	recordHeight(bvs.config.getValue<int>(info.conf+".recordHeight", 0)),
+	recordColor(bvs.config.getValue<int>(info.conf+".recordColor", true)),
 	requestShutdown(false)
 {
 	if (numNodes==0)
@@ -47,7 +47,7 @@ CaptureCV::CaptureCV(const std::string id, const std::string conf, const BVS::In
 
 	if (mode=='V' || mode=='R')
 	{
-		bvs.config.getValue<std::string>(id+".videoFiles", videoFiles);
+		bvs.config.getValue<std::string>(info.conf+".videoFiles", videoFiles);
 		if ((int)videoFiles.size()<numNodes)
 		{
 			LOG(0, "Insufficient number of video files!");
