@@ -117,8 +117,16 @@ BVS::Status CaptureCV::execute()
 {
 	if (requestShutdown) return BVS::Status::SHUTDOWN;
 
+	for (auto in: inputs)
+	{
+		cv::Mat tmp;
+		if (!in->receive(tmp)) return BVS::Status::NOINPUT;
+		if((**in).empty()) return BVS::Status::NOINPUT;
+	}
+
 	for (auto out: outputs) out->lockConnection();
 	for (auto in: inputs) in->lockConnection();
+
 	switch (mode)
 	{
 		case 'C':
@@ -144,25 +152,17 @@ BVS::Status CaptureCV::execute()
 			imageCounter++;
 			break;
 		case 'R':
-			for (auto in: inputs)
+			LOG(2, "Writing frame(s) to " << numNodes << " file(s)!");
+			for (int i=0; i<numNodes; i++)
 			{
-				cv::Mat tmp;
-				if (!in->receive(tmp)) requestShutdown = true;
-			}
-			if (!requestShutdown)
-			{
-				LOG(2, "Writing frame(s) to " << numNodes << " file(s)!");
-				for (int i=0; i<numNodes; i++)
+				if (!writers.at(i).isOpened())
 				{
-					if (!writers.at(i).isOpened())
-					{
-						if (recordWidth==0) recordWidth = (**inputs.at(i)).cols;
-						if (recordHeight==0) recordHeight = (**inputs.at(i)).rows;
-						writers.at(i).open(videoFiles.at(i), fourcc, recordFPS, cv::Size(recordWidth, recordHeight), recordColor);
-						if (!writers.at(i).isOpened()) LOG(0, "Could not open writer for '" << videoFiles.at(i));
-					}
-					if (!(**inputs.at(i)).empty()) writers.at(i).write(**inputs.at(i));
+					if (recordWidth==0) recordWidth = (**inputs.at(i)).cols;
+					if (recordHeight==0) recordHeight = (**inputs.at(i)).rows;
+					writers.at(i).open(videoFiles.at(i), fourcc, recordFPS, cv::Size(recordWidth, recordHeight), recordColor);
+					if (!writers.at(i).isOpened()) LOG(0, "Could not open writer for '" << videoFiles.at(i));
 				}
+				if (!(**inputs.at(i)).empty()) writers.at(i).write(**inputs.at(i));
 			}
 			break;
 		case 'S':
