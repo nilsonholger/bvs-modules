@@ -246,3 +246,8 @@ BVS::Status StereoCVCUDA::debugDisplay()
 	return BVS::Status::OK;
 }
 
+
+
+/** This calls a macro to create needed module utilities. */
+BVS_MODULE_UTILITIES(StereoCVCUDA)
+

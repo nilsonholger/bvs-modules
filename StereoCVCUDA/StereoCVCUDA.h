@@ -92,10 +92,5 @@ class StereoCVCUDA : public BVS::Module
 
 
 
-/** This calls a macro to create needed module utilities. */
-BVS_MODULE_UTILITIES(StereoCVCUDA)
-
-
-
 #endif //STEREOCVCUDA_H
 

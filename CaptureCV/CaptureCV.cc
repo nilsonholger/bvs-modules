@@ -230,3 +230,8 @@ std::string CaptureCV::getImageFileName(int frame, int nodeID)
 	return tmp;
 }
 
+
+
+/** This calls a macro to create needed module utilities. */
+BVS_MODULE_UTILITIES(CaptureCV)
+

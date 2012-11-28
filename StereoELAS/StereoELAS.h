@@ -101,10 +101,5 @@ class StereoELAS : public BVS::Module
 
 
 
-/** This calls a macro to create needed module utilities. */
-BVS_MODULE_UTILITIES(StereoELAS)
-
-
-
 #endif //STEREOELAS_H
 
