@@ -99,7 +99,7 @@ BVS::Status CalibrationCV::execute()
 				{
 					LOG(0, "NOT FOUND: " << directory + "/img" + std::to_string(numDetections+1)
 							+ "-" + std::to_string(node->id) + ".pbm");
-					exit(1);
+					return BVS::Status::SHUTDOWN;
 				}
 			}
 			if (imageSize == cv::Size())
@@ -109,7 +109,7 @@ BVS::Status CalibrationCV::execute()
 			notifyDetectionThread();
 		}
 		if (numDetections==numImages && !detectionRunning) calibrate();
-		if (calibrated && rectifyCalImages) rectifyCalibrationImages();
+		if (calibrated && rectifyCalImages) if (!rectifyCalibrationImages()) return BVS::Status::SHUTDOWN;
 	}
 	else
 	{
@@ -143,7 +143,7 @@ BVS::Status CalibrationCV::execute()
 				if (calibrated) cv::destroyWindow(std::to_string(node->id));
 			}
 			char c = cv::waitKey(1);
-			if (c==27) exit(0);
+			if (c==27) return BVS::Status::SHUTDOWN;
 			if (!autoShotMode && c==' ') notifyDetectionThread();
 		}
 		else if (createRectifiedOutput) rectifyOutput();
