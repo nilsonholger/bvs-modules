@@ -111,7 +111,7 @@ class CalibrationCV : public BVS::Module
 		void rectifyOutput();
 
 		/** Rectify calibration images. */
-		void rectifyCalibrationImages();
+		bool rectifyCalibrationImages();
 
 
 

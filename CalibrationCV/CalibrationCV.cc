@@ -366,7 +366,7 @@ void CalibrationCV::clearCalibrationData()
 
 
 
-void CalibrationCV::rectifyCalibrationImages()
+bool CalibrationCV::rectifyCalibrationImages()
 {
 	static int i = 1;
 	LOG(1, "rectifying image " << i);
@@ -378,10 +378,12 @@ void CalibrationCV::rectifyCalibrationImages()
 		if (node->frame.empty())
 		{
 			LOG(0, "NOT FOUND: " << file);
+			return false;
 		}
 	}
 	rectifyOutput();
 	for (auto& node: nodes) cv::imwrite(directory + "/" + outputDirectory + "/rect" + std::to_string(i) + "-" + std::to_string(node->id) + ".jpg", *node->output);
 	i++;
+	return true;
 }
 
