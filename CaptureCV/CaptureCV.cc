@@ -152,18 +152,19 @@ BVS::Status CaptureCV::execute()
 			imageCounter++;
 			break;
 		case 'R':
-			LOG(2, "Writing frame(s) to " << numNodes << " file(s)!");
 			for (int i=0; i<numNodes; i++)
 			{
 				if (!writers.at(i).isOpened())
 				{
 					if (recordWidth==0) recordWidth = (**inputs.at(i)).cols;
 					if (recordHeight==0) recordHeight = (**inputs.at(i)).rows;
+					LOG(2, videoFiles.at(i) << ": " << recordWidth << "x" << recordHeight << "@" << recordFPS << " Codec: " << recordFOURCC << " Color: " << recordColor);
 					writers.at(i).open(videoFiles.at(i), fourcc, recordFPS, cv::Size(recordWidth, recordHeight), recordColor);
 					if (!writers.at(i).isOpened()) LOG(0, "Could not open writer for '" << videoFiles.at(i));
 				}
-				if (!(**inputs.at(i)).empty()) writers.at(i).write(**inputs.at(i));
+				writers.at(i).write(**inputs.at(i));
 			}
+			LOG(2, "Writing frame(s) to " << numNodes << " file(s)!");
 			break;
 		case 'S':
 			for (int i=0; i<numNodes; i++)
@@ -176,6 +177,7 @@ BVS::Status CaptureCV::execute()
 					requestShutdown = true;
 				}
 			}
+			LOG(2, "Writing frame(s) to " << numNodes << " file(s)!");
 			imageCounter++;
 			break;
 		default: break;
