@@ -371,13 +371,17 @@ void CalibrationCV::rectifyCalibrationImages()
 	static int i = 1;
 	LOG(1, "rectifying image " << i);
 
-	nodes[0]->frame = cv::imread(directory + "/" + imageDirectory + "/img" + std::to_string(i) + "-0.pbm");
-	nodes[1]->frame = cv::imread(directory + "/" + imageDirectory + "/img" + std::to_string(i) + "-1.pbm");
-	if (nodes[0]->frame.empty() || nodes[1]->frame.empty()) exit(0);
-
+	for (auto& node: nodes)
+	{
+		std::string file = directory + "/" + imageDirectory + "/img" + std::to_string(i) + "-" + std::to_string(node->id) + ".pbm";
+		node->frame = cv::imread(file);
+		if (node->frame.empty())
+		{
+			LOG(0, "NOT FOUND: " << file);
+		}
+	}
 	rectifyOutput();
-	cv::imwrite(directory + "/" + outputDirectory + "/rect" + std::to_string(i) + "-0.jpg", *nodes[0]->output);
-	cv::imwrite(directory + "/" + outputDirectory + "/rect" + std::to_string(i) + "-1.jpg", *nodes[1]->output);
+	for (auto& node: nodes) cv::imwrite(directory + "/" + outputDirectory + "/rect" + std::to_string(i) + "-" + std::to_string(node->id) + ".jpg", *node->output);
 	i++;
 }
 
