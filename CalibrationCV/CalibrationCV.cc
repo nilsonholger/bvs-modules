@@ -48,7 +48,7 @@ CalibrationCV::CalibrationCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	for (int i=0; i<numNodes; i++)
 	{
 		nodes.emplace_back(new CalibrationNode(
-				i,
+				i+1,
 				BVS::Connector<cv::Mat>(std::string("in") + std::to_string(i+1), BVS::ConnectorType::INPUT),
 				BVS::Connector<cv::Mat>(std::string("out") + std::to_string(i+1), BVS::ConnectorType::OUTPUT),
 				cv::Mat(), cv::Mat(), std::vector<cv::Point2f>(), cv::Mat(),
