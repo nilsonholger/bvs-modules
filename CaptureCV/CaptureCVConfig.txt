@@ -35,7 +35,8 @@ cameraMode = 2
 cameraFPS = -1
 
 # video recording codec to use, must be supported by system (opencv uses ffmpeg)
-recordFOURCC = "MJPG"
+# for example: MJPG - Motion JGEP, Y800 - Raw Y8
+recordFOURCC = "Y800"
 
 # video fps to set in video metadata, MUST BE SET
 recordFPS = 0.0
@@ -47,7 +48,7 @@ recordWidth = 0
 recordHeight = 0
 
 # record with color or black and white (must match your input)
-recordColor = false
+recordColor = OFF
 
 
 
@@ -61,11 +62,11 @@ videoFiles = video_1.avi, video_2.avi
 numNodes = 2
 mode = RECORD_VIDEO
 videoFiles = video_1.avi, video_2.avi
-recordFOURCC = "MJPG"
+recordFOURCC = "Y800"
 recordFPS = 15
 recordWidth = 0
 recordHeight = 0
-recordColor = false
+recordColor = OFF
 
 [image]
 numNodes = 2
