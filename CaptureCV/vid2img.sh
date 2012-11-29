@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 #
-# convert a motion jpg to individual jpgs
+# convert a video to individual images
 #
 # Copyright (C) 2012 nilsonholger@hyve.org
 #
@@ -36,9 +36,14 @@ options:
    -h|--help         this help message
    -i|--ignore       ignore existing directory (overwrite files inside)
    -n|--name   <arg> output file name scheme (see *output name*)
+   -t|--type   <arg> use type conversion (see *types*)
    -v|--verbose      verbose output
 
-output name (default 'frame_\${FRAME}_\${COUNT}.jpg'):
+types (default 'auto'):
+      auto         let ffmpeg decide (might not always work)
+      mjpg         Motion JPEG to JPEG
+
+output name (default 'frame_\${FRAME}_\${COUNT}.png'):
       a string that indicates the output file names, the following sequences
       are supported (please surround the string with \"\")
       \${FRAME}    the frame number
@@ -60,7 +65,8 @@ hash ffmpeg 2>/dev/null || message "ABORT" "NO FFMPEG FOUND!"
 # set options
 _QUIET='&> /dev/null'
 _IGNORE=''
-_FILE_NAME_FORMAT='frame_${FRAME}_${COUNT}.jpg'
+_FILE_NAME_FORMAT='frame_${FRAME}_${COUNT}.png'
+_TYPE=''
 FRAME='%d'
 COUNT=1
 for i in $@
@@ -78,6 +84,15 @@ do
 			shift
 			_FILE_NAME_FORMAT="$1"
 			message "USING FILE NAME FORMAT: $_FILE_NAME_FORMAT"
+			shift
+			;;
+		'-t'|'--type')
+			shift
+			case $1 in
+				'auto') ;;
+				'mjpg') _TYPE='MJPG2JPG';;
+				*) message "ABORT" "INVALID TYPE SPECIFIED: $1";;
+			esac
 			shift
 			;;
 		'-v'|'--verbose') _QUIET=''; shift;;
@@ -109,8 +124,11 @@ eval mkdir "$_DIR_NAME" $_QUIET
 for i in $@
 do
 	_FILE=`eval echo $_FILE_NAME_FORMAT`
-	message "CONVERTING $i -> $_DIR_NAME/$_FILE}"
-	eval ffmpeg -i $i -vcodec copy -vbsf mjpeg2jpeg $_DIR_NAME/$_FILE $_QUIET
+	message "CONVERTING $i -> $_DIR_NAME/$_FILE USING $_TYPE DECODER"
+	case $_TYPE in
+		'MJPG2JPG') eval ffmpeg -i $i -vcodec copy -vbsf mjpeg2jpeg $_DIR_NAME/$_FILE.jpg $_QUIET;;
+		*) eval ffmpeg -i $i $_DIR_NAME/$_FILE $_QUIET;;
+	esac
 	((COUNT++))
 done
 message "DONE"
