@@ -24,7 +24,7 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	recordFPS(bvs.config.getValue<double>(info.conf+".recordFPS", 0.0)),
 	recordWidth(bvs.config.getValue<int>(info.conf+".recordWidth", 0)),
 	recordHeight(bvs.config.getValue<int>(info.conf+".recordHeight", 0)),
-	recordColor(bvs.config.getValue<int>(info.conf+".recordColor", true)),
+	recordColor(bvs.config.getValue<bool>(info.conf+".recordColor", true)),
 	requestShutdown(false)
 {
 	if (numNodes==0)
@@ -74,7 +74,12 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 			for (int i=0; i<numNodes; i++)
 			{
 				captures.emplace_back(cv::VideoCapture(videoFiles.at(i)));
-				LOG(2, "Use file '" << videoFiles.at(i) << "' as source for node: " << i+1);
+				if (captures.at(i).isOpened()) { LOG(2, "Use file '" << videoFiles.at(i) << "' as source for node: " << i+1); }
+				else
+				{
+					LOG(0, "Could not open '" << videoFiles.at(i) << "'!");
+					requestShutdown = true;
+				}
 			}
 			break;
 		case 'I': parseImageFileName(); break;
@@ -134,7 +139,12 @@ BVS::Status CaptureCV::execute()
 			for (int i=0; i<numNodes; i++) captures.at(i).retrieve(**outputs.at(i));
 			break;
 		case 'V':
-			for (int i=0; i<numNodes; i++) if (!captures.at(i).read(**outputs.at(i))) requestShutdown = true;
+			for (int i=0; i<numNodes; i++)
+				if (!captures.at(i).read(**outputs.at(i)))
+				{
+					LOG(0, "Could not read from '" << videoFiles.at(i) << "'!");
+					requestShutdown = true;
+				}
 			break;
 		case 'I':
 			for (int i=0; i<numNodes; i++)
