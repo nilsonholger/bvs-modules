@@ -14,12 +14,12 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	numNodes(bvs.config.getValue<int>(info.conf+".numNodes", 0)),
 	mode(bvs.config.getValue<std::string>(info.conf+".mode", "C").at(0)),
 	videoFiles(),
-	imageFiles(bvs.config.getValue<std::string>(info.conf+".imageFiles", "images/frame_{FRAME}_{NODE}.jpg")),
+	imageFiles(bvs.config.getValue<std::string>(info.conf+".imageFiles", "images/frame_{FRAME}_{NODE}.png")),
 	fileNamePieces(),
 	imageCounter(1),
 	cameraMode(bvs.config.getValue<int>(info.conf+".cameraMode", -1)),
 	cameraFPS(bvs.config.getValue<double>(info.conf+".cameraFPS", -1.0)),
-	recordFOURCC(bvs.config.getValue<std::string>(info.conf+".recordFOURCC", "MJPG")),
+	recordFOURCC(bvs.config.getValue<std::string>(info.conf+".recordFOURCC", "Y800")),
 	fourcc(),
 	recordFPS(bvs.config.getValue<double>(info.conf+".recordFPS", 0.0)),
 	recordWidth(bvs.config.getValue<int>(info.conf+".recordWidth", 0)),
@@ -151,7 +151,7 @@ BVS::Status CaptureCV::execute()
 			{
 				std::string filename = getImageFileName(imageCounter, i);
 				LOG(3, "loading: " << filename);
-				cv::Mat tmp = cv::imread(filename);
+				cv::Mat tmp = cv::imread(filename, -1);
 				if (tmp.empty())
 				{
 					LOG(0, "cannot open file: " << filename);
