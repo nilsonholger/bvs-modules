@@ -1,68 +1,82 @@
-# This is an example config file for BVSExampleModule.
-#
-# For more information on syntax as well as further capabilities, please see
-# 'libbvs/include/bvs/config.h' or 'DOXYGEN:Classes->BVS::Config'.
+# CalibrationCV config file (defaults: <...>)
 
-[calibration]
+# numNodes = <0> | ...
+# Number of nodes (cameras) to calibrate.
 
-# number of nodes (cameras) to calibrate
-numNodes = 2
+# numImages = <45>
+# Number of images to use for calibration.
 
-# number of images to use for calibration
-numImages = 45
+# blobSize = <1.0> | ...
+# Size of squares or circle center distance in calibration pattern
+# (this is the distance of circle centers in e.g. cm).
 
-# size of squares or circle center distance in calibration pattern
-# (this is the distance of circle centers in e.g. cm)
-blobSize = 5.2
+# autoShotMode = <ON> | OFF
+# Use auto shot mode (if OFF, use SPACE to take picture).
 
-# use auto shot mode (if OFF, use SPACE to take picture)
-autoShotMode = ON
+# autoShotDelay = <1> | ...
+# Minimum delay in seconds between auto mode shots.
 
-# minimum delay in seconds between auto mode shots
-autoShotDelay = 1
+# directory = <"calibrationData">
+# Base directory of calibration data.
 
-# base directory of calibration data
-directory = "calibrationData"
+# saveImages = <OFF> | ON
+# Save images taken for calibration.
 
-# save images taken for calibration
-saveImages = ON
+# useSavedImages = <OFF> | ON
+# Use saved images taken beforehand.
 
-# use saved images taken beforehand
-useSavedImages = OFF
+# rectifyCalImages = <OFF> | ON
+# Rectify and save calibration images. This will load the images saved during
+# calibration, rectify and save them.
 
-# rectify and save calibration images
-rectifyCalImages = OFF
+# imageDirectory = <"calibrationImages">
+# Directory to store/load calibration images to/from.
 
-# directory to store/load calibration images to/from
-imageDirectory = "calibrationImages"
+# outputDirectory = <"rectifiedImages">
+# Directory to save rectified calibration images.
 
-# directory to save rectified calibration images
-outputDirectory = "rectifiedImages"
+# loadCalibration = <ON> | OFF
+# Load calibration from file (if found).
 
-# load calibration from file (if found)
-loadCalibration = ON
+# saveCalibration = <ON> | OFF
+# Save calibration to file (after successfull calibration).
 
-# save calibration to file (after successfull calibration)
-saveCalibration = ON
+# calibrationFile = <"stereoCalibration.yml">
+# Calibration file name (possible extensions: .yml, .xml).
 
-# calibration file name (possible extensions: .yml, .xml)
-calibrationFile = "stereoCalibration.yml"
+# createRectifiedOutput = <ON> | OFF
+# Rectify module output (if calibration available).
 
-# rectify module output (if calibration available)
-createRectifiedOutput = ON
+# addGridOverlay = OFF
+# Add grid overlay to output (if calibration available).
 
-# add grid overlay to output (if calibration available)
-addGridOverlay = OFF
-
-
-
-# use calibration guide
-# This is a system to improve calibration quality.
+# useCalibrationGuide = <OFF> | ON
+# Use the calibration guide. This is a system to improve calibration quality.
 # It will show some usage hints on screen.
 # IMPORTANT: numImages == 9 * sectorDetections must be guaranteed
+
+# sectorDetections = 5
+# Number of per sector detections.
+
+# configurations
+
+[CalibrationCV]
+[calibration]
+numNodes = 2
+numImages = 45
+blobSize = 5.2
+autoShotMode = ON
+autoShotDelay = 1
+directory = "calibrationData"
+saveImages = ON
+useSavedImages = OFF
+rectifyCalImages = OFF
+imageDirectory = "calibrationImages"
+outputDirectory = "rectifiedImages"
+loadCalibration = ON
+saveCalibration = ON
+calibrationFile = "stereoCalibration.yml"
+createRectifiedOutput = ON
+addGridOverlay = OFF
 useCalibrationGuide = ON
-
-# number of per sector detections
 sectorDetections = 5
-
-# This line tells vim something about the file type. -- vim:ft=config:

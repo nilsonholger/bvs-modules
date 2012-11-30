@@ -9,7 +9,7 @@ CalibrationCV::CalibrationCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	logger(info.id),
 	bvs(bvs),
 	numNodes(bvs.config.getValue<int>(info.conf + ".numNodes", 0)),
-	numImages(bvs.config.getValue<int>(info.conf + ".numImages", 100)),
+	numImages(bvs.config.getValue<int>(info.conf + ".numImages", 45)),
 	blobSize(bvs.config.getValue<float>(info.conf + ".blobSize", 1.0f)),
 	autoShotMode(bvs.config.getValue<bool>(info.conf + ".autoShotMode", true)),
 	autoShotDelay(bvs.config.getValue<int>(info.conf + ".autoShotDelay", 1)),
