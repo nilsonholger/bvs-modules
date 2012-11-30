@@ -83,6 +83,15 @@ BVS::Status StereoELAS::execute()
 	if (!inL.receive(tmpL) || !inR.receive(tmpR)) return BVS::Status::NOINPUT;
 	if (tmpL.empty() || tmpR.empty()) return BVS::Status::NOINPUT;
 
+	if (tmpL.type()!=CV_8UC1 || tmpR.type()!=CV_8UC1)
+	{
+		cv::Mat greyL, greyR;
+		cv::cvtColor(tmpL, greyL, CV_RGB2GRAY);
+		cv::cvtColor(tmpR, greyR, CV_RGB2GRAY);
+		tmpL = greyL;
+		tmpR = greyR;
+	}
+
 	cv::resize(tmpL, left, cv::Size(tmpL.cols/scalingFactor, tmpL.rows/scalingFactor), 0, 0, cv::INTER_AREA);
 	cv::resize(tmpR, right, cv::Size(tmpR.cols/scalingFactor, tmpR.rows/scalingFactor), 0, 0, cv::INTER_AREA);
 
