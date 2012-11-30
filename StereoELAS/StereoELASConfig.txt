@@ -1,41 +1,24 @@
-# This is an example config file for StereoELAS. It will be linked to
-# [build/]bin/StereoELASConfig.txt so you can get started right away.
-#
-# short syntax:
-#
-# [section]
-# option = value
-#
-# Spaces and tabs are ignored (except inside '' and "") and everything is case
-# insensitive. For more information on syntax as well as further capabilities,
-# please see 'libbvs/include/bvs/config.h' or 'DOXYGEN:Classes->BVS::Config'.
+# StereoELAS configuration file (defaults: <...>).
 
-# This is a section/configuration header.
-# It can be used to create 'configurations' of your module, simply by creating
-# various sections with different options belonging to them. These are selected
-# by using them as a uniqueID in BVSConfig.txt when adding modules to the
-# system (if you use 'id + ".option"' to retrieve them), e.g.
-# modules += uniqueID(StereoELAS)...
-#
-# [uniqueID]
-# # please comment your settings
-# option = value
+# discardTopLines = <0> | ...
+# Size of border on top of image (neglected space).
 
+# discardBottomLines = <0> | ...
+# Size of border on bottom of image (neglected space).
+
+# scalingFactor = <1> | ...
+# Scaling factor to use. Posivite values mean scaling down, negatives up.
+# Should be used to make the processed input rather small, otherwise it will be
+# slow.
+
+# sliceCount = <1> | ...
+# Number of slices/threads used to do work on the image. DOES NOT WORK YET!!!
+
+# sliceOverlap = 10
+# Size of slice overlap to reduce artifacts due to missing information.
+
+# configuration
+
+[StereoELAS]
 [elas]
-# size of border on top of image (neglected space)
-discardTopLines = 0
-
-# size of border on bottom of image (neglected space)
-discardBottomLines = 0
-
-# scaling factor
 scalingFactor = 4
-
-# number of slices/threads used to do work on the image
-sliceCount = 1
-
-# size of slice overlap to reduce artifacts due to missing information
-sliceOverlap = 10
-
-
-# This line tells vim something about the file type. -- vim:ft=config:
