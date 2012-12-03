@@ -24,7 +24,7 @@
  * Dependencies: opencv
  * Inputs: in<N>, where <N> is a node id starting with 1
  * Outputs: out<N>, where <N> is a node id starting with 1
- * Configuration Options: please see CalibrationCVConfig.txt
+ * Configuration Options: please see CalibrationCV.conf
  */
 class CalibrationCV : public BVS::Module
 {

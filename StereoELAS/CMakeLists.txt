@@ -1,6 +1,6 @@
 project(STEREOELAS)
 
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/StereoELASConfig.txt ${CMAKE_BINARY_DIR}/bin/StereoELASConfig.txt)
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/StereoELAS.conf ${CMAKE_BINARY_DIR}/bin/StereoELAS.conf)
 
 include_directories(SYSTEM elas)
 add_library(StereoELAS MODULE StereoELAS.cc elas/descriptor.cpp elas/elas.cpp elas/filter.cpp elas/matrix.cpp elas/triangle.cpp)

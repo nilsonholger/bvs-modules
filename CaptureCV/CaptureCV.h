@@ -15,7 +15,7 @@
  * Dependencies: opencv
  * Inputs: in<N>, where <N> is a node id starting with 1
  * Outputs: out<N>, where <N> is a node id starting with 1
- * Configuration Options: please see CaptureCVConfig.txt
+ * Configuration Options: please see CaptureCV.conf
  */
 class CaptureCV : public BVS::Module
 {

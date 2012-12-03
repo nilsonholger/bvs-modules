@@ -11,10 +11,7 @@ StereoCVCUDA::StereoCVCUDA(BVS::ModuleInfo info, const BVS::Info& bvs)
 	: BVS::Module(),
 	info(info),
 	logger(info.id),
-	config("StereoCVCUDA", 0, nullptr), // "StereoCVCUDAConfig.txt"),
-	// at this point config has already loaded 'StereoCVCUDAConfig.txt", so
-	// you can use config to retrieve settings in the initialization list, e.g.
-	// yourSwitch(config.getValue<bool>(info.conf + ".yourSwitch, false));
+	config("StereoCVCUDA", 0),
 	bvs(bvs),
 	input0("input0", BVS::ConnectorType::INPUT),
 	input1("input1", BVS::ConnectorType::INPUT),
