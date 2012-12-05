@@ -29,6 +29,7 @@ CalibrationCV::CalibrationCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	calibrated(false),
 	detectionRunning(false),
 	numDetections(0),
+	rectifyCounter(1),
 	objectPoints(),
 	imageSize(),
 	boardSize(4, 11),
@@ -368,12 +369,11 @@ void CalibrationCV::clearCalibrationData()
 
 bool CalibrationCV::rectifyCalibrationImages()
 {
-	static int i = 1;
-	LOG(1, "rectifying image " << i);
+	LOG(1, "rectifying image " << rectifyCounter);
 
 	for (auto& node: nodes)
 	{
-		std::string file = directory + "/" + imageDirectory + "/img" + std::to_string(i) + "-" + std::to_string(node->id) + ".pbm";
+		std::string file = directory + "/" + imageDirectory + "/img" + std::to_string(rectifyCounter) + "-" + std::to_string(node->id) + ".pbm";
 		node->frame = cv::imread(file);
 		if (node->frame.empty())
 		{
@@ -382,8 +382,8 @@ bool CalibrationCV::rectifyCalibrationImages()
 		}
 	}
 	rectifyOutput();
-	for (auto& node: nodes) cv::imwrite(directory + "/" + outputDirectory + "/rect" + std::to_string(i) + "-" + std::to_string(node->id) + ".jpg", *node->output);
-	i++;
+	for (auto& node: nodes) cv::imwrite(directory + "/" + outputDirectory + "/rect" + std::to_string(rectifyCounter) + "-" + std::to_string(node->id) + ".jpg", *node->output);
+	rectifyCounter++;
 	return true;
 }
 

@@ -142,6 +142,7 @@ class CalibrationCV : public BVS::Module
 		bool calibrated; /** Calibration status. */
 		bool detectionRunning; /** Detection thread running in background. */
 		int numDetections; /**< Number of detected patterns. */
+		int rectifyCounter; /**< Number of rectified images. */
 
 		std::vector<std::vector<cv::Point3f>> objectPoints; /**< Vector of pattern object points. */
 		cv::Size imageSize; /**< Input image size. */
