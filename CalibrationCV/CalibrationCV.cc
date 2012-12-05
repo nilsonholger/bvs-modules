@@ -67,7 +67,7 @@ CalibrationCV::CalibrationCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	if (loadCalibration) calibrated = loadCalibrationFrom(directory, calibrationFile);
 	if (!calibrated)
 	{
-		for (auto& node: nodes) cv::namedWindow(std::to_string(node->id));
+		for (auto& node: nodes) cv::namedWindow(info.id+"_"+std::to_string(node->id));
 		cv::startWindowThread();
 		detectionThread = std::thread(&CalibrationCV::detectCalibrationPoints, this);
 		detectionThread.detach();
@@ -140,7 +140,7 @@ BVS::Status CalibrationCV::execute()
 						CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 0, 255), 2);
 				cv::putText(*node->output, std::to_string(numDetections) + "/" + std::to_string(numImages),
 						cv::Point(100, 30), CV_FONT_HERSHEY_SIMPLEX, 1.0f, cv::Scalar(0, 255, 0), 2, 8);
-				cv::imshow(std::to_string(node->id), *node->output);
+				cv::imshow(info.id+"_"+std::to_string(node->id), *node->output);
 				if (calibrated) cv::destroyWindow(std::to_string(node->id));
 			}
 			char c = cv::waitKey(1);
