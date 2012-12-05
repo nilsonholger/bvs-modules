@@ -10,6 +10,7 @@ StereoCalibration::StereoCalibration(CalNodeVec& nodes)
 	nodes(nodes),
 	imageSize(),
 	rms(0),
+	initRectifyMap(true),
 	objectPoints(),
 	stereoRotation(),
 	stereoTranslation(),
@@ -152,7 +153,6 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 void StereoCalibration::rectify(cv::Size imageSize, bool addGridOverlay)
 {
 	this->imageSize = imageSize;
-	static bool initRectifyMap = true;
 
 	if (initRectifyMap)
 	{

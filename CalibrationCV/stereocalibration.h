@@ -55,6 +55,7 @@ class StereoCalibration
 		CalNodeVec& nodes; /**< Vector of calibration nodes. */
 		cv::Size imageSize; /**< Image size. */
 		double rms; /** Reprojection error. */
+		bool initRectifyMap; /**< If rectifyMap needs initialization. */
 		/** Pattern object points (in 3-dimensional coordinates). */
 		std::vector<std::vector<cv::Point3f>> objectPoints;
 		cv::Mat stereoRotation; /**< Rotation between principal planes. */
