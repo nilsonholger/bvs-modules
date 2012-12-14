@@ -1,4 +1,4 @@
-#! /usr/bin/env bash
+#! /usr/bin/env zsh
 #
 # convert a video to individual images
 #
@@ -38,6 +38,7 @@ options:
    -n|--name   <arg> output file name scheme (see *output name*)
    -t|--type   <arg> use type conversion (see *types*)
    -v|--verbose      verbose output
+   -z|--zero   <arg> number of padding zeros (default: 5)
 
 types (default 'auto'):
       auto         let ffmpeg decide (might not always work)
@@ -66,8 +67,9 @@ hash ffmpeg 2>/dev/null || message "ABORT" "NO FFMPEG FOUND!"
 _QUIET='&> /dev/null'
 _IGNORE=''
 _FILE_NAME_FORMAT='frame_${FRAME}_${COUNT}.png'
-_TYPE=''
-FRAME='%d'
+_TYPE='AUTO'
+_PADDING='5'
+FRAME="%0${_PADDING}d"
 COUNT=1
 for i in $@
 do
@@ -96,6 +98,12 @@ do
 			shift
 			;;
 		'-v'|'--verbose') _QUIET=''; shift;;
+		'-z'|'--zero')
+			shift
+			_PADDING=$1
+			FRAME="%0${_PADDING}d"
+			shift
+			;;
 	esac
 done
 
@@ -111,10 +119,11 @@ done
 
 
 # create target directory
-_DIR_NAME="`stat --printf='%y' $1`"
+_DIR_NAME="`stat --printf='%y' $1 2>/dev/null`"
+[ -z "$_DIR_NAME" ] && _DIR_NAME="`date -j -f "%s" \`stat -f %c $1\` "+%Y-%m-%d_%T"`"
 _DIR_NAME="${_DIR_NAME/\.*}"
 _DIR_NAME="${_DIR_NAME/ /_}"
-[ -d $_DIR_NAME -a -z "$_IGNORE" ] && message "ABORT" "DIRECTORY ALREADY EXISTS: $_DIR_NAME"
+[ -d "$_DIR_NAME" -a -z "$_IGNORE" ] && message "ABORT" "DIRECTORY ALREADY EXISTS: $_DIR_NAME"
 message "CREATING OUTPUT DIRECTORY: $_DIR_NAME"
 eval mkdir "$_DIR_NAME" $_QUIET
 
