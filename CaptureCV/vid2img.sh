@@ -36,6 +36,7 @@ options:
    -h|--help         this help message
    -i|--ignore       ignore existing directory (overwrite files inside)
    -n|--name   <arg> output file name scheme (see *output name*)
+   -s|--seq          enable sequential processing (instead of parallel)
    -t|--type   <arg> use type conversion (see *types*)
    -v|--verbose      verbose output
    -z|--zero   <arg> number of padding zeros (default: 5)
@@ -69,6 +70,7 @@ _IGNORE=''
 _FILE_NAME_FORMAT='frame_${FRAME}_${COUNT}.png'
 _TYPE='AUTO'
 _PADDING='5'
+_SEQ='&'
 FRAME="%0${_PADDING}d"
 COUNT=1
 for i in $@
@@ -88,6 +90,7 @@ do
 			message "USING FILE NAME FORMAT: $_FILE_NAME_FORMAT"
 			shift
 			;;
+		'-s'|'--seq') _SEQ=''; shift;;
 		'-t'|'--type')
 			shift
 			case $1 in
@@ -135,9 +138,12 @@ do
 	_FILE=`eval echo $_FILE_NAME_FORMAT`
 	message "CONVERTING $i -> $_DIR_NAME/$_FILE USING $_TYPE DECODER"
 	case $_TYPE in
-		'MJPG2JPG') eval ffmpeg -i $i -vcodec copy -vbsf mjpeg2jpeg $_DIR_NAME/$_FILE.jpg $_QUIET;;
-		*) eval ffmpeg -i $i $_DIR_NAME/$_FILE $_QUIET;;
+		'MJPG2JPG') eval ffmpeg -i $i -vcodec copy -vbsf mjpeg2jpeg $_DIR_NAME/$_FILE.jpg $_QUIET $_SEQ;;
+		*) eval ffmpeg -i $i $_DIR_NAME/$_FILE $_QUIET $_SEQ;;
 	esac
 	((COUNT++))
 done
+
+[ -n "$_SEQ" ] && wait
+
 message "DONE"
