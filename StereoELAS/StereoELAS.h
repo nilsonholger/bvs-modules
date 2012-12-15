@@ -72,6 +72,7 @@ class StereoELAS : public BVS::Module
 		float scalingFactor;
 		int sliceCount;
 		int sliceOverlap;
+		bool showDisparities;
 		bool sliceExit;
 
 		std::atomic<int> runningThreads;
