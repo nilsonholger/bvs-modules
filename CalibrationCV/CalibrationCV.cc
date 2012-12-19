@@ -65,11 +65,7 @@ CalibrationCV::CalibrationCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	if (stat(tmp.c_str(), buf)) mkdir(tmp.c_str(), 0755);
 
 	if (loadCalibration) calibrated = loadCalibrationFrom(directory, calibrationFile);
-	if (!calibrated)
-	{
-		detectionThread = std::thread(&CalibrationCV::detectCalibrationPoints, this);
-		detectionThread.detach();
-	}
+	if (!calibrated) detectionThread = std::thread(&CalibrationCV::detectCalibrationPoints, this);
 	if (!useSavedImages)
 	{
 		for (auto& node: nodes) cv::namedWindow(info.id+"_"+std::to_string(node->id));
@@ -81,6 +77,14 @@ CalibrationCV::CalibrationCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 
 CalibrationCV::~CalibrationCV()
 {
+	if (detectionThread.joinable())
+	{
+		numDetections = numImages;
+		detectionRunning = true;
+		detectionCond.notify_all();
+		detectionThread.join();
+	}
+
 	for (auto& it: nodes)
 	{
 		delete it;
@@ -324,6 +328,7 @@ void CalibrationCV::detectCalibrationPoints()
 	while (numDetections<numImages)
 	{
 		detectionCond.wait(detectionLock, [&](){ return detectionRunning; });
+		if (numDetections>=numImages) break;
 		numPositives = 0;
 		for (auto& node: nodes)
 		{
