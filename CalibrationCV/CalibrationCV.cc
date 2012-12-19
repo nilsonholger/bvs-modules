@@ -105,7 +105,7 @@ BVS::Status CalibrationCV::execute()
 						+ std::to_string(numDetections+1) + "-" + std::to_string(node->id) + ".pbm");
 				if (node->frame.empty())
 				{
-					LOG(0, "NOT FOUND: " << directory + "/img" + std::to_string(numDetections+1)
+					LOG(0, "NOT FOUND: " << directory << "/" << imageDirectory + "/img" + std::to_string(numDetections+1)
 							+ "-" + std::to_string(node->id) + ".pbm");
 					return BVS::Status::SHUTDOWN;
 				}
