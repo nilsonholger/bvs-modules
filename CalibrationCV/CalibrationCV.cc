@@ -112,7 +112,7 @@ BVS::Status CalibrationCV::execute()
 			}
 			notifyDetectionThread();
 		}
-		if (numDetections==numImages && !detectionRunning) calibrate();
+		if (numDetections==numImages && !detectionRunning && !calibrated) calibrate();
 		if (calibrated && rectifyCalImages) if (!rectifyCalibrationImages()) return BVS::Status::SHUTDOWN;
 	}
 	else
@@ -314,7 +314,7 @@ void CalibrationCV::notifyDetectionThread()
 
 void CalibrationCV::detectCalibrationPoints()
 {
-	BVS::nameThisThread("calib.detector");
+	BVS::nameThisThread("detectCalib");
 	bool foundPattern;
 	int numPositives;
 
