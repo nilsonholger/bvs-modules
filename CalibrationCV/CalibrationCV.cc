@@ -80,8 +80,7 @@ CalibrationCV::~CalibrationCV()
 	if (detectionThread.joinable())
 	{
 		numDetections = numImages;
-		detectionRunning = true;
-		detectionCond.notify_all();
+		notifyDetectionThread();
 		detectionThread.join();
 	}
 
@@ -328,7 +327,6 @@ void CalibrationCV::detectCalibrationPoints()
 	while (numDetections<numImages)
 	{
 		detectionCond.wait(detectionLock, [&](){ return detectionRunning; });
-		if (numDetections>=numImages) break;
 		numPositives = 0;
 		for (auto& node: nodes)
 		{
