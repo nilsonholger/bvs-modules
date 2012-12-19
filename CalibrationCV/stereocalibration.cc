@@ -110,7 +110,7 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 	for (auto& node: nodes)
 	{
 		threads.push_back(std::thread([&]{
-					BVS::nameThisThread("calib.intrinsic");
+					BVS::nameThisThread("calIntrins");
 					double calError = cv::calibrateCamera(objectPoints, node->pointStore,
 						imageSize, node->cameraMatrix, node->distCoeffs, rvecs, tvecs,
 						CV_CALIB_FIX_PRINCIPAL_POINT + CV_CALIB_FIX_ASPECT_RATIO +
