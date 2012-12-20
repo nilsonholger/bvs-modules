@@ -61,6 +61,15 @@ StereoELAS::StereoELAS(BVS::ModuleInfo info, const BVS::Info& bvs)
 		flags.resize(sliceCount);
 		for (auto f: flags) f = false;
 	}
+
+	if (showDisparities)
+	{
+		cv::namedWindow("iL");
+		cv::namedWindow("iR");
+		cv::namedWindow("dL");
+		cv::namedWindow("dR");
+		cv::startWindowThread();
+	}
 }
 
 
@@ -75,6 +84,7 @@ StereoELAS::~StereoELAS()
 		threadMonitor.notify_all();
 		for (auto& t: threads) if (t.joinable()) t.join();
 	}
+	if (showDisparities) cv::destroyAllWindows();
 }
 
 
