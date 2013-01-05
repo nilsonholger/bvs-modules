@@ -64,10 +64,10 @@ StereoELAS::StereoELAS(BVS::ModuleInfo info, const BVS::Info& bvs)
 
 	if (showDisparities)
 	{
-		cv::namedWindow("iL");
-		cv::namedWindow("iR");
-		cv::namedWindow("dL");
-		cv::namedWindow("dR");
+		cv::namedWindow("bvs-elas-in-left");
+		cv::namedWindow("bvs-elas-in-right");
+		cv::namedWindow("bvs-elas-disp-left");
+		cv::namedWindow("bvs-elas-disp-right");
 		cv::startWindowThread();
 	}
 }
@@ -148,10 +148,10 @@ BVS::Status StereoELAS::execute()
 		LOG(3, "fps: " << bvs.getFPS());
 		cv::putText(showL, bvs.getFPS(), cv::Point(10, 30),
 				CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(255, 255, 255), 2);
-		cv::imshow("iL", left);
-		cv::imshow("iR", right);
-		cv::imshow("dL", showL);
-		cv::imshow("dR", showR);
+		cv::imshow("bvs-elas-in-left", left);
+		cv::imshow("bvs-elas-in-right", right);
+		cv::imshow("bvs-elas-disp-left", showL);
+		cv::imshow("bvs-elas-disp-right", showR);
 		cv::waitKey(1);
 	}
 
