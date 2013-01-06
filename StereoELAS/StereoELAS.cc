@@ -64,10 +64,10 @@ StereoELAS::StereoELAS(BVS::ModuleInfo info, const BVS::Info& bvs)
 
 	if (showDisparities)
 	{
-		cv::namedWindow("bvs-elas-in-left");
-		cv::namedWindow("bvs-elas-in-right");
-		cv::namedWindow("bvs-elas-disp-left");
-		cv::namedWindow("bvs-elas-disp-right");
+		cv::namedWindow("bvs-elas-in-left", 0);
+		cv::namedWindow("bvs-elas-in-right", 0);
+		cv::namedWindow("bvs-elas-disp-left", 0);
+		cv::namedWindow("bvs-elas-disp-right", 0);
 		cv::startWindowThread();
 	}
 }
