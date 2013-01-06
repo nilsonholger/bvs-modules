@@ -15,6 +15,7 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	mode(bvs.config.getValue<std::string>(info.conf+".mode", "C").at(0)),
 	videoFiles(),
 	imageFiles(bvs.config.getValue<std::string>(info.conf+".imageFiles", "images/frame_{FRAME}_{NODE}.png")),
+	frameNumberPadding(bvs.config.getValue<int>(info.conf+".frameNumberPadding", 5)),
 	fileNamePieces(),
 	imageCounter(1),
 	cameraMode(bvs.config.getValue<int>(info.conf+".cameraMode", -1)),
@@ -232,7 +233,12 @@ std::string CaptureCV::getImageFileName(int frame, int nodeID)
 	std::string tmp;
 	for (auto& piece: fileNamePieces)
 	{
-		if (piece == "FRAME") tmp += std::to_string(frame);
+		if (piece == "FRAME")
+		{
+			std::string fr = std::to_string(frame);
+			fr.insert(fr.begin(), frameNumberPadding-fr.size(), '0');
+			tmp += fr;
+		}
 		else if (piece == "NODE") tmp += std::to_string(nodeID+1);
 		else tmp += piece;
 	}

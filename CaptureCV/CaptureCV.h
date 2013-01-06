@@ -56,6 +56,7 @@ class CaptureCV : public BVS::Module
 		char mode; /**< Capture mode to use (camera, video, image, none). */
 		std::vector<std::string> videoFiles; /**< List of video names to use. */
 		std::string imageFiles; /**< Image files naming scheme. */
+		int frameNumberPadding; /**< Width of frame Number (Zero Padding) when used as string. */
 		std::vector<std::string> fileNamePieces; /**< Individual image name scheme parts. */
 		int imageCounter; /**< Image counter, used when reading from images. */
 		int cameraMode; /**< Capture mode, not always supported by capture devices. */
