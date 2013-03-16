@@ -59,10 +59,16 @@ CalibrationCV::CalibrationCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 
 	struct stat *buf = nullptr;
 	if (stat(directory.c_str(), buf)) mkdir(directory.c_str(), 0755);
-	std::string tmp = directory + "/" + imageDirectory;
-	if (stat(tmp.c_str(), buf)) mkdir(tmp.c_str(), 0755);
-	tmp = directory + "/" + outputDirectory;
-	if (stat(tmp.c_str(), buf)) mkdir(tmp.c_str(), 0755);
+	if (saveImages)
+	{
+		std::string tmp = directory + "/" + imageDirectory;
+		if (stat(tmp.c_str(), buf)) mkdir(tmp.c_str(), 0755);
+	}
+	if (rectifyCalImages)
+	{
+		std::string tmp = directory + "/" + outputDirectory;
+		if (stat(tmp.c_str(), buf)) mkdir(tmp.c_str(), 0755);
+	}
 
 	if (loadCalibration) calibrated = loadCalibrationFrom(directory, calibrationFile);
 	if (!calibrated) detectionThread = std::thread(&CalibrationCV::detectCalibrationPoints, this);
