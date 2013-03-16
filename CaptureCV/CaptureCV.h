@@ -58,7 +58,8 @@ class CaptureCV : public BVS::Module
 		std::string imageFiles; /**< Image files naming scheme. */
 		int frameNumberPadding; /**< Width of frame Number (Zero Padding) when used as string. */
 		std::vector<std::string> fileNamePieces; /**< Individual image name scheme parts. */
-		int imageCounter; /**< Image counter, used when reading from images. */
+		int counterStart; /**< Frame counter start value, used when reading from images. */
+		int stepSize; /**< Frame counter step size. */
 		int cameraMode; /**< Capture mode, not always supported by capture devices. */
 		double cameraFPS; /**< Capture frames per second, not always supported. */
 		std::string recordFOURCC; /**< FOURCC to set in recorded videos. */

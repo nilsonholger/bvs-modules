@@ -17,7 +17,8 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	imageFiles(bvs.config.getValue<std::string>(info.conf+".imageFiles", "images/frame_{FRAME}_{NODE}.png")),
 	frameNumberPadding(bvs.config.getValue<int>(info.conf+".frameNumberPadding", 5)),
 	fileNamePieces(),
-	imageCounter(1),
+	counterStart(bvs.config.getValue<int>(info.conf+".counterStart", 1)),
+	stepSize(bvs.config.getValue<int>(info.conf+".stepSize", 1)),
 	cameraMode(bvs.config.getValue<int>(info.conf+".cameraMode", -1)),
 	cameraFPS(bvs.config.getValue<double>(info.conf+".cameraFPS", -1.0)),
 	recordFOURCC(bvs.config.getValue<std::string>(info.conf+".recordFOURCC", "Y800")),
@@ -150,7 +151,7 @@ BVS::Status CaptureCV::execute()
 		case 'I':
 			for (int i=0; i<numNodes; i++)
 			{
-				std::string filename = getImageFileName(imageCounter, i);
+				std::string filename = getImageFileName(counterStart, i);
 				LOG(3, "loading: " << filename);
 				cv::Mat tmp = cv::imread(filename, -1);
 				if (tmp.empty())
@@ -160,7 +161,7 @@ BVS::Status CaptureCV::execute()
 				}
 				**outputs.at(i) = tmp;
 			}
-			imageCounter++;
+			counterStart += stepSize;
 			break;
 		case 'R':
 			for (int i=0; i<numNodes; i++)
@@ -180,7 +181,7 @@ BVS::Status CaptureCV::execute()
 		case 'S':
 			for (int i=0; i<numNodes; i++)
 			{
-				std::string filename = getImageFileName(imageCounter, i);
+				std::string filename = getImageFileName(counterStart, i);
 				bool written = cv::imwrite(filename, **inputs.at(i));
 				if (!written)
 				{
@@ -189,7 +190,7 @@ BVS::Status CaptureCV::execute()
 				}
 			}
 			LOG(2, "Writing frame(s) to " << numNodes << " file(s)!");
-			imageCounter++;
+			counterStart += stepSize;
 			break;
 		default: break;
 	}
