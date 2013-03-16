@@ -36,6 +36,7 @@ options:
    -h|--help         this help message
    -i|--ignore       ignore existing directory (overwrite files inside)
    -n|--name   <arg> output file name scheme (see *output name*)
+   -o|--output <arg> output directory (default: use creation time from first video)
    -s|--seq          enable sequential processing (instead of parallel)
    -t|--type   <arg> use type conversion (see *types*)
    -v|--verbose      verbose output
@@ -70,6 +71,7 @@ _IGNORE=''
 _FILE_NAME_FORMAT='frame_${FRAME}_${COUNT}.png'
 _TYPE='AUTO'
 _PADDING='5'
+_DIR_NAME=''
 _SEQ='&'
 FRAME="%0${_PADDING}d"
 COUNT=1
@@ -88,6 +90,12 @@ do
 			shift
 			_FILE_NAME_FORMAT="$1"
 			message "USING FILE NAME FORMAT: $_FILE_NAME_FORMAT"
+			shift
+			;;
+		'-o'|'--output')
+			shift
+			_DIR_NAME="$1"
+			message "USING OUTPUT DIRECTORY: $_DIR_NAME"
 			shift
 			;;
 		'-s'|'--seq') _SEQ=''; shift;;
@@ -122,10 +130,13 @@ done
 
 
 # create target directory
-_DIR_NAME="`stat --printf='%y' $1 2>/dev/null`"
-[ -z "$_DIR_NAME" ] && _DIR_NAME="`date -j -f "%s" \`stat -f %c $1\` "+%Y-%m-%d_%T"`"
-_DIR_NAME="${_DIR_NAME/\.*}"
-_DIR_NAME="${_DIR_NAME/ /_}"
+if [ -z "$_DIR_NAME" ]
+then
+	_DIR_NAME="`stat --printf='%y' $1 2>/dev/null`"
+	[ -z "$_DIR_NAME" ] && _DIR_NAME="`date -j -f "%s" \`stat -f %c $1\` "+%Y-%m-%d_%T"`"
+	_DIR_NAME="${_DIR_NAME/\.*}"
+	_DIR_NAME="${_DIR_NAME/ /_}"
+fi
 [ -d "$_DIR_NAME" -a -z "$_IGNORE" ] && message "ABORT" "DIRECTORY ALREADY EXISTS: $_DIR_NAME"
 message "CREATING OUTPUT DIRECTORY: $_DIR_NAME"
 eval mkdir "$_DIR_NAME" $_QUIET
