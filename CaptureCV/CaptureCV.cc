@@ -237,7 +237,8 @@ std::string CaptureCV::getImageFileName(int frame, int nodeID)
 		if (piece == "FRAME")
 		{
 			std::string fr = std::to_string(frame);
-			fr.insert(fr.begin(), frameNumberPadding-fr.size(), '0');
+			if (fr.size() < (unsigned int)frameNumberPadding)
+				fr.insert(fr.begin(), frameNumberPadding-fr.size(), '0');
 			tmp += fr;
 		}
 		else if (piece == "NODE") tmp += std::to_string(nodeID+1);
