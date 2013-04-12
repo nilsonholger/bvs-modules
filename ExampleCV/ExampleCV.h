@@ -17,7 +17,7 @@
  * Inputs: input<cv::Mat>
  * Outputs: output<cv::Mat>
  * Configuration Options:
- *    mode -> can be GREY, BLUR, CANNY or SHOW
+ *    mode -> can be CAPTURE, GREY, BLUR, EDGE or SHOW
  */
 class ExampleCV : public BVS::Module
 {
@@ -57,9 +57,10 @@ class ExampleCV : public BVS::Module
 		BVS::Connector<cv::Mat> input;
 		BVS::Connector<cv::Mat> output;
 
-		char mode; /**< Example module mode to use (grey, blur, canny, show). */
+		char mode; /**< Module mode to use. */
 		cv::Mat img; /**< Local storage for input image. */
 		cv::Mat tmpImg; /**< Local temp storage. */
+		cv::VideoCapture capture; /**< Camera access. */
 
 		ExampleCV(const ExampleCV&) = delete; /**< -Weffc++ */
 		ExampleCV& operator=(const ExampleCV&) = delete; /**< -Weffc++ */
