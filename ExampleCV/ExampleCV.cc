@@ -22,6 +22,12 @@ ExampleCV::ExampleCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	//yourSwitch(bvs.config.getValue<bool>(info.conf + ".yourSwitch", false)),
 {
 	if (mode == 'C') capture.open(0);
+
+	if (mode == 'S')
+	{
+		cv::namedWindow("blur", 0);
+		cv::startWindowThread();
+	}
 }
 
 
