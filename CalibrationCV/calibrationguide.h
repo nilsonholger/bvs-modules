@@ -11,7 +11,7 @@
  * to be more precise, the position and size of the detected patterns. The
  * purpose of this is to increase absolute pixel coverage by the detected
  * patterns.
- * TODO add different size enforcements...
+ * TODO redesign: enforce different size detections spread evenly over the image
  */
 class CalibrationGuide
 {
