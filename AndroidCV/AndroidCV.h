@@ -1,25 +1,15 @@
-#ifndef EXAMPLECV_H
-#define EXAMPLECV_H
+#ifndef ANDROIDCV_H
+#define ANDROIDCV_H
 
 #include "bvs/module.h"
-#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include "../../../android/BvsA.h"
 
-
-
-/** This is the ExampleCV module.
- * This is just a simple example module using OpenCV.
- * While it combines the capabilities to do grey conversion, blur, canny edge
- * detection and display of an image, it is inteded to show the usage of module
- * with the BVS framework. See the provided example config for more
- * information.
- *
- * Requires: OpenCV
- * Inputs: input<cv::Mat>
- * Outputs: output<cv::Mat>
- * Configuration Options:
- *    mode -> can be CAPTURE, GREY, BLUR, EDGE or SHOW
+/** This is the AndroidCV module.
+ * Please add sufficient documentation to enable others to use it.
+ * Include information about: Dependencies, Inputs, Outputs, Configuration Options...
  */
-class ExampleCV : public BVS::Module
+class AndroidCV : public BVS::Module
 {
 	public:
 		/** Your module constructor.
@@ -29,10 +19,10 @@ class ExampleCV : public BVS::Module
 		 * @param[in] info Your modules information, will be set by framework.
 		 * @param[in] bvs Reference to framework info for e.g. config option retrieval.
 		 */
-		ExampleCV(BVS::ModuleInfo info, const BVS::Info& bvs);
+		AndroidCV(BVS::ModuleInfo info, const BVS::Info& bvs);
 
 		/** Your module destructor. */
-		~ExampleCV();
+		~AndroidCV();
 
 		/** Execute function doing all the work.
 		 * This function is executed exactly once during each started
@@ -55,18 +45,15 @@ class ExampleCV : public BVS::Module
 		 * @see Connector
 		 */
 		BVS::Connector<cv::Mat> input;
-		BVS::Connector<cv::Mat> output;
+		//BVS::Connector<std::string> output;
 
-		char mode; /**< Module mode to use. */
-		cv::Mat img; /**< Local storage for input image. */
-		cv::Mat tmpImg; /**< Local temp storage. */
-		cv::VideoCapture capture; /**< Camera access. */
-
-		ExampleCV(const ExampleCV&) = delete; /**< -Weffc++ */
-		ExampleCV& operator=(const ExampleCV&) = delete; /**< -Weffc++ */
+		AndroidCV(const AndroidCV&) = delete; /**< -Weffc++ */
+		AndroidCV& operator=(const AndroidCV&) = delete; /**< -Weffc++ */
+		
+		cv::Mat tmpImg;
 };
 
 
 
-#endif //EXAMPLECV_H
+#endif //ANDROIDCV_H
 

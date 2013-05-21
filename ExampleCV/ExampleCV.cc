@@ -1,4 +1,5 @@
 #include "ExampleCV.h"
+#include <opencv2/highgui/highgui.hpp>
 
 
 
@@ -21,13 +22,13 @@ ExampleCV::ExampleCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	// CONFIGURATION RETRIEVAL
 	//yourSwitch(bvs.config.getValue<bool>(info.conf + ".yourSwitch", false)),
 {
-	if (mode == 'C') capture.open(0);
-
-	if (mode == 'S')
+	if (mode == 'C')
 	{
-		cv::namedWindow("blur", 0);
-		cv::startWindowThread();
+		capture.open(0);
+		capture.set( CV_CAP_PROP_FRAME_WIDTH,640  );
+		capture.set( CV_CAP_PROP_FRAME_HEIGHT, 480 );
 	}
+	
 }
 
 
