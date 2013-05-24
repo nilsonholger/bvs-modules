@@ -49,7 +49,7 @@ BVS::Status AndroidCV::execute()
 	//std::string message = "received " + std::to_string(incoming);
 	//output.send(message);
 	
-	LOG(0,"AndroidCV: show image " << (*input).size());
+
 	LOG(1, "BVS FPS:" << bvs.getFPS());
 
 	

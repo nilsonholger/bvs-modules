@@ -3,7 +3,7 @@
 
 #include "bvs/module.h"
 #include <opencv2/core/core.hpp>
-#include "../../../android/BvsA.h"
+#include "jni/BvsA.h"
 
 /** This is the AndroidCV module.
  * Please add sufficient documentation to enable others to use it.
