@@ -21,6 +21,8 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	stepSize(bvs.config.getValue<int>(info.conf+".stepSize", 1)),
 	cameraMode(bvs.config.getValue<int>(info.conf+".cameraMode", -1)),
 	cameraFPS(bvs.config.getValue<double>(info.conf+".cameraFPS", -1.0)),
+	cameraWidth(bvs.config.getValue<double>(info.conf+".cameraWidth", -1.0)),
+	cameraHeight(bvs.config.getValue<double>(info.conf+".cameraHeight", -1.0)),
 	recordFOURCC(bvs.config.getValue<std::string>(info.conf+".recordFOURCC", "Y800")),
 	fourcc(),
 	recordFPS(bvs.config.getValue<double>(info.conf+".recordFPS", 0.0)),
@@ -65,6 +67,8 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 				captures.emplace_back(cv::VideoCapture(i));
 				if (cameraMode>=0) captures.at(i).set(CV_CAP_PROP_MODE, cameraMode);
 				if (cameraFPS>=0) captures.at(i).set(CV_CAP_PROP_FPS, cameraFPS);
+				if (cameraWidth>=0) captures.at(i).set(CV_CAP_PROP_FRAME_WIDTH, cameraWidth);
+				if (cameraHeight>=0) captures.at(i).set(CV_CAP_PROP_FRAME_HEIGHT, cameraHeight);
 				if (!captures.at(i).isOpened())
 				{
 					LOG(0, "Could not open camera: " << i << "!");

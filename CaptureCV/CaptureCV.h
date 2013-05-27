@@ -62,6 +62,8 @@ class CaptureCV : public BVS::Module
 		int stepSize; /**< Frame counter step size. */
 		int cameraMode; /**< Capture mode, not always supported by capture devices. */
 		double cameraFPS; /**< Capture frames per second, not always supported. */
+		int cameraWidth; /**< Capture width, not always supported. */
+		int cameraHeight; /**< Capture height, not always supported. */
 		std::string recordFOURCC; /**< FOURCC to set in recorded videos. */
 		int fourcc; /**< FOURCC value as integer representation. */
 		double recordFPS; /**< FPS to set in recorded videos. */
