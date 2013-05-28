@@ -1,4 +1,5 @@
 #include "ExampleCV.h"
+#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
 
@@ -14,21 +15,21 @@ ExampleCV::ExampleCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	bvs(bvs),
 	input("input", BVS::ConnectorType::INPUT),
 	output("output", BVS::ConnectorType::OUTPUT),
-	mode(bvs.config.getValue<std::string>(info.conf+".mode", "S").at(0)),
+	convertToGrey(bvs.config.getValue<bool>(info.conf+".convertToGrey", true)),
+	blurSize(bvs.config.getValue<int>(info.conf+".blurSize", 7)),
+	cannyThreshold(bvs.config.getValue<int>(info.conf+".cannyThreshold", 30)),
+	showResult(bvs.config.getValue<bool>(info.conf+".showResult", true)),
 	img(),
-	tmpImg(),
-	capture()
+	tmpImg()
 
 	// CONFIGURATION RETRIEVAL
 	//yourSwitch(bvs.config.getValue<bool>(info.conf + ".yourSwitch", false)),
 {
-	if (mode == 'C')
+	if (showResult)
 	{
-		capture.open(0);
-		capture.set( CV_CAP_PROP_FRAME_WIDTH,640  );
-		capture.set( CV_CAP_PROP_FRAME_HEIGHT, 480 );
+		cv::namedWindow("result");
+		cv::startWindowThread();
 	}
-	
 }
 
 
@@ -44,38 +45,33 @@ ExampleCV::~ExampleCV()
 // Put all your work here.
 BVS::Status ExampleCV::execute()
 {
-	// CAPTURE
-	if (mode == 'C') {
-		capture >> tmpImg;
-	} else {
-		// CONNECTOR USAGE: it is always a good idea to check input, twice
-		if (!input.receive(img)) return BVS::Status::NOINPUT;
-		if (img.empty()) return BVS::Status::NOINPUT;
+	// get input image
+	// connector usage: it is always a good idea to check input
+	if (!input.receive(img)) return BVS::Status::NOINPUT;
+	if (img.empty()) return BVS::Status::NOINPUT;
 
-		switch (mode) {
-			case 'G':
-				// GREY CONVERSION
-				cv::cvtColor(img, tmpImg, CV_BGR2GRAY);
-				break;
-			case 'B':
-				// BLUR APPLIANCE
-				cv::GaussianBlur(img, tmpImg, cv::Size(7,7), 1.5, 1.5);
-				break;
-			case 'E':
-				// CANNY EDGE DETECTION
-				cv::Canny(img, tmpImg, 0, 30, 3);
-				break;
-			case 'S':
-				// SHOW IMAGE USING OPENCV
-				cv::putText(img, bvs.getFPS(), cv::Point(10, 30),
-						CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(255, 255, 255), 2);
-				cv::imshow("blur", img);
-				cv::waitKey(1);
-				break;
-		}
-	}
+	// grey conversion
+	if (convertToGrey) cv::cvtColor(img, tmpImg, CV_BGR2GRAY);
+	img = tmpImg;
 
+	// blur appliance
+	cv::GaussianBlur(img, tmpImg, cv::Size(blurSize, blurSize), 1.5, 1.5);
+	img = tmpImg;
+
+	// canny edge detection
+	cv::Canny(img, tmpImg, 0, cannyThreshold, 3);
+	img = tmpImg;
+
+	// send to other modules
 	output.send(tmpImg);
+
+	// show image using opencv
+	if (showResult)
+	{
+		cv::putText(img, bvs.getFPS(), cv::Point(10, 30), CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(255, 255, 255), 2);
+		cv::imshow("result", img);
+		cv::waitKey(1);
+	}
 
 	return BVS::Status::OK;
 }

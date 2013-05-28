@@ -2,22 +2,23 @@
 #define EXAMPLECV_H
 
 #include "bvs/module.h"
-#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
 
 
 
 /** This is the ExampleCV module.
- * This is just a simple example module using OpenCV.
- * While it combines the capabilities to do grey conversion, blur, canny edge
- * detection and display of an image, it is inteded to show the usage of module
- * with the BVS framework. See the provided example config for more
- * information.
+ * This is just a simple example module using OpenCV. It receives an input
+ * image and then uses OpenCV's capabilites to do a grey conversion, apply some
+ * blur and a canny edge detector. Finally, it displays the image.
  *
  * Requires: OpenCV
- * Inputs: input<cv::Mat>
- * Outputs: output<cv::Mat>
+ * Input: input<cv::Mat>
+ * Output: output<cv::Mat>
  * Configuration Options:
- *    mode -> can be CAPTURE, GREY, BLUR, EDGE or SHOW
+ *    convertToGrey -> enable/disable grey conversion
+ *    blurSize -> size of blur kernel
+ *    cannyThreshold -> edge detector's upper threshold
+ *    showResult -> show final result
  */
 class ExampleCV : public BVS::Module
 {
@@ -57,10 +58,12 @@ class ExampleCV : public BVS::Module
 		BVS::Connector<cv::Mat> input;
 		BVS::Connector<cv::Mat> output;
 
-		char mode; /**< Module mode to use. */
+		bool convertToGrey; /**< Whether to convert image to grey. */
+		int blurSize; /**< Size of blur kernel. */
+		int cannyThreshold; /**< Upper threshold for canny edge detector. */
+		bool showResult; /** Display final result. */
 		cv::Mat img; /**< Local storage for input image. */
 		cv::Mat tmpImg; /**< Local temp storage. */
-		cv::VideoCapture capture; /**< Camera access. */
 
 		ExampleCV(const ExampleCV&) = delete; /**< -Weffc++ */
 		ExampleCV& operator=(const ExampleCV&) = delete; /**< -Weffc++ */
