@@ -1,16 +1,18 @@
 BVS (BASE) MODULES
 ==================
 
-* **AndroidCV**: Display module for the android client.
-* **CalibrationCV**: Used to calibrate cameras (nodes). Currently, only extrinsic and intrinsic calibration for stereo cameras is supported.
-* **CaptureCV**: General capture module. Can access streams from attached camaras, also read and write from/to images and videos.
-* **ExampleCV**: Example module providing an example of how to use the framework.
-* **StereoCVCUDA**: Wrapper for OpenCV's stereo capabilities.
-* **StereoELAS**: Wrapper for Andreas Geiger's excellent libELAS stereo library.
+* **AndroidCV:** Display module for the android client.
+* **CalibrationCV:** Calibrate cameras (nodes), currently only extrinsic and intrinsic calibration for a stereo camera setup is supported.
+* **CaptureCV:** Common capture/conversion module, provides access to streams from attached cameras as well as image/video conversions.
+* **ExampleCV:** Example of how to use the framework.
+* **KinectXLite:** Manuel Martinez's header only Kinect driver.
+* **StereoCVCUDA:** Wrapper for OpenCV's CUDA stereo capabilities.
+* **StereoELAS:** Wrapper for Andreas Geiger's excellent libELAS stereo library.
 
 **NOTE:**
 
-Modules ending/containing `CV` **require** OpenCV.
+Modules ending in or containing `CV` depend on OpenCV for their core functionality.
+Most, if not all, modules use OpenCV's `cv::Mat` for passing data (images) around.
 
 **NOTE:**
 
