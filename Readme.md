@@ -6,6 +6,7 @@ BVS (BASE) MODULES
 * **CaptureCV:** Common capture/conversion module, provides access to streams from attached cameras as well as image/video conversions.
 * **ExampleCV:** Example of how to use the framework.
 * **KinectXLite:** Manuel Martinez's header only Kinect driver.
+* **OpenNIXLite:** Manuel Martinez's header only OpenNI wrapper.
 * **StereoCVCUDA:** Wrapper for OpenCV's CUDA stereo capabilities.
 * **StereoELAS:** Wrapper for Andreas Geiger's excellent libELAS stereo library.
 
