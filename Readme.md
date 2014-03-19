@@ -8,6 +8,7 @@ BVS (BASE) MODULES
 * **KinectXLite:** Manuel Martinez's header only Kinect driver.
 * **StereoCVCUDA:** Wrapper for OpenCV's CUDA stereo capabilities.
 * **StereoELAS:** Wrapper for Andreas Geiger's excellent libELAS stereo library.
+* **WebStreamer:** Small MJPEG web(socket) stream to view on a browser, built upon Manuel Martinez's awesome uSnippets.
 
 **NOTE:**
 
