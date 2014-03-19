@@ -18,4 +18,4 @@ Most, if not all, modules use OpenCV's `cv::Mat` for passing data (images) aroun
 **NOTE:**
 
 StereoELAS uses Andreas Geiger's libELAS (www.cvlibs.net). It is provided under its own licence, which can be found in `StereoELAS/elas/LICENSE.TXT`.
-KinectXLite and OpenNIXLite are licensed under LGPLv3.
+KinectXLite and OpenNIXLite are licensed under LGPLv3 (https://github.com/uSnippets/uSnippets).
