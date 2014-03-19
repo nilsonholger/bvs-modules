@@ -49,7 +49,8 @@ class OpenNIXLite : public BVS::Module
 		 * @see Connector
 		 */
 		//BVS::Connector<int> input;
-		BVS::Connector<cv::Mat> output;
+		BVS::Connector<cv::Mat> outColor;
+		BVS::Connector<cv::Mat> outDepth;
 
 		OpenNILite opennilite;
 

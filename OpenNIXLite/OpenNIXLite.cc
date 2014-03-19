@@ -12,7 +12,8 @@ OpenNIXLite::OpenNIXLite(BVS::ModuleInfo info, const BVS::Info& bvs)
 	, logger(info.id)
 	, bvs(bvs)
 	//, input("inputName", BVS::ConnectorType::INPUT)
-	, output("outDepth", BVS::ConnectorType::OUTPUT)
+	, outColor("outColor", BVS::ConnectorType::OUTPUT)
+	, outDepth("outDepth", BVS::ConnectorType::OUTPUT)
 
 	// CONFIGURATION RETRIEVAL
 	//, yourSwitch(bvs.config.getValue<bool>(info.conf + ".yourSwitch", false))
@@ -48,7 +49,8 @@ BVS::Status OpenNIXLite::execute()
 	//std::string message = "received " + std::to_string(incoming);
 	//output.send(message);
 
-	opennilite.depthCB([&](cv::Mat1s depth){output.send(depth);});
+	opennilite.colorCB([&](cv::Mat3b color){outColor.send(color);});
+	opennilite.depthCB([&](cv::Mat1s depth){outDepth.send(depth);});
 
 	return BVS::Status::OK;
 }
