@@ -9,6 +9,7 @@ BVS (BASE) MODULES
 * **OpenNIXLite:** Manuel Martinez's header only OpenNI wrapper [requires OpenNI2].
 * **StereoCVCUDA:** Wrapper for OpenCV's CUDA stereo capabilities.
 * **StereoELAS:** Wrapper for Andreas Geiger's excellent libELAS stereo library.
+* **WebStreamer:** Small MJPEG web(socket) stream to view on a browser, built upon Manuel Martinez's awesome uSnippets.
 
 **NOTE:**
 
