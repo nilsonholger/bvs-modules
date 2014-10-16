@@ -1,6 +1,8 @@
 #ifndef OPENNIXLITE_H
 #define OPENNIXLITE_H
 
+#include <mutex>
+
 #include "bvs/module.h"
 #include "opencv2/opencv.hpp"
 
@@ -53,6 +55,10 @@ class OpenNIXLite : public BVS::Module
 		BVS::Connector<cv::Mat> outDepth;
 
 		OpenNILite opennilite;
+		std::mutex mutex;
+		std::unique_lock<std::mutex> lock;
+		cv::Mat color;
+		cv::Mat depth;
 
 		OpenNIXLite(const OpenNIXLite&) = delete; /**< -Weffc++ */
 		OpenNIXLite& operator=(const OpenNIXLite&) = delete; /**< -Weffc++ */
