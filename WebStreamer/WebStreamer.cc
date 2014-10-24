@@ -13,7 +13,8 @@ WebStreamer::WebStreamer(BVS::ModuleInfo info, const BVS::Info& bvs)
 	, bvs(bvs)
 	, input("input", BVS::ConnectorType::INPUT)
 	//, output("outputName", BVS::ConnectorType::OUTPUT)
-	, mjpeg(8080, 95)
+	, mjpeg(80, 95)
+	, tmp()
 
 	// CONFIGURATION RETRIEVAL
 	//, yourSwitch(bvs.config.getValue<bool>(info.conf + ".yourSwitch", false))
@@ -34,23 +35,11 @@ WebStreamer::~WebStreamer()
 // Put all your work here.
 BVS::Status WebStreamer::execute()
 {
-	// LOGGING: use the LOG(...) macro
-	//LOG(3, "Execution of " << info.id << "!");
-
-	// VARIOUS INFORMATION FROM BVS
-	//unsigned long long round = bvs.round;
-	//int lastRoundModuleDuration = bvs.moduleDurations.find(info.id)->second.count();
-	//int lastRoundDuration = bvs.lastRoundDuration.count();
-
-	// CONNECTOR USAGE: it is always a good idea to check input, twice
-	//int incoming;
-	//if (!input.receive(incoming)) return BVS::Status::NOINPUT;
-	//if (incoming==int()) return BVS::Status::NOINPUT;
-	//std::string message = "received " + std::to_string(incoming);
-	//output.send(message);
+	if (!input.receive(tmp)) return BVS::Status::NOINPUT;
+	if (tmp.empty()) return BVS::Status::NOINPUT;
 	
 	input.lockConnection();
-	mjpeg.add(*input);
+	mjpeg.add(tmp);
 	input.unlockConnection();
 
 	return BVS::Status::OK;

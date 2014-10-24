@@ -51,6 +51,7 @@ class WebStreamer : public BVS::Module
 		//BVS::Connector<std::string> output;
 
 		MJPEG mjpeg;
+		cv::Mat tmp;
 
 		WebStreamer(const WebStreamer&) = delete; /**< -Weffc++ */
 		WebStreamer& operator=(const WebStreamer&) = delete; /**< -Weffc++ */

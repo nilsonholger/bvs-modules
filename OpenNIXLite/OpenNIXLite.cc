@@ -14,6 +14,10 @@ OpenNIXLite::OpenNIXLite(BVS::ModuleInfo info, const BVS::Info& bvs)
 	//, input("inputName", BVS::ConnectorType::INPUT)
 	, outColor("outColor", BVS::ConnectorType::OUTPUT)
 	, outDepth("outDepth", BVS::ConnectorType::OUTPUT)
+	, mutex()
+	, lock(mutex, std::defer_lock)
+	, color()
+	, depth()
 
 	// CONFIGURATION RETRIEVAL
 	//, yourSwitch(bvs.config.getValue<bool>(info.conf + ".yourSwitch", false))
@@ -34,23 +38,23 @@ OpenNIXLite::~OpenNIXLite()
 // Put all your work here.
 BVS::Status OpenNIXLite::execute()
 {
-	// LOGGING: use the LOG(...) macro
-	//LOG(3, "Execution of " << info.id << "!");
+	opennilite.colorCB([&](cv::Mat3b _color){
+			std::unique_lock<std::mutex> lock(mutex, std::defer_lock);
+			lock.lock();
+			color=_color;
+			lock.unlock();
+			});
+	opennilite.depthCB([&](cv::Mat1s _depth){
+			std::unique_lock<std::mutex> lock(mutex, std::defer_lock);
+			lock.lock();
+			depth=_depth;
+			lock.unlock();
+			});
 
-	// VARIOUS INFORMATION FROM BVS
-	//unsigned long long round = bvs.round;
-	//int lastRoundModuleDuration = bvs.moduleDurations.find(info.id)->second.count();
-	//int lastRoundDuration = bvs.lastRoundDuration.count();
-
-	// CONNECTOR USAGE: it is always a good idea to check input, twice
-	//int incoming;
-	//if (!input.receive(incoming)) return BVS::Status::NOINPUT;
-	//if (incoming==int()) return BVS::Status::NOINPUT;
-	//std::string message = "received " + std::to_string(incoming);
-	//output.send(message);
-
-	opennilite.colorCB([&](cv::Mat3b color){outColor.send(color);});
-	opennilite.depthCB([&](cv::Mat1s depth){outDepth.send(depth);});
+	lock.lock();
+	outColor.send(color);
+	outDepth.send(depth);
+	lock.unlock();
 
 	return BVS::Status::OK;
 }
