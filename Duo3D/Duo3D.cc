@@ -21,7 +21,6 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& bvs)
 	, binning(bvs.config.getValue<int>(info.conf + ".binning", -1))
 	, fps(bvs.config.getValue<float>(info.conf + ".fps", -1))
 {
-
 	if (OpenDUO(&duo)) {
 		LOG(1, "Connection to DUO established!");
 
@@ -46,7 +45,7 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& bvs)
 						<< "x" << res[i].height
 						<< "@" << res[i].fps
 						<< "fps [minFPS:" << res[i].minFps
-						<< "-maxFPS:" << res[i].maxFps 
+						<< "-maxFPS:" << res[i].maxFps
 						<< "] - mode: " << res[i].binning);
 		}
 
