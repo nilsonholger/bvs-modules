@@ -9,9 +9,16 @@
 
 
 
-/** This is the Duo3D module.
+/** This is the Duo3D module. It provides support for DUO3D devices.
  * Please add sufficient documentation to enable others to use it.
- * Include information about: Dependencies, Inputs, Outputs, Configuration Options...
+ *
+ * Dependencies: opencv
+ * Inputs: none
+ * Outputs: outL and outR (cv::Mat with left and right image)
+ * Configuration Options: please see Duo3D.conf
+ *
+ * TODO: output all available duo data: timeStamp, accel, gyro, mag and temp
+ * TODO: SetDUOLedPWMSeq(duo, val, size)
  */
 class Duo3D : public BVS::Module
 {
@@ -45,27 +52,33 @@ class Duo3D : public BVS::Module
 		BVS::Logger logger; /**< Your logger instance. @see Logger */
 		const BVS::Info& bvs; /**< Your Info reference. @see Info */
 
-		/** Example Connector used to retrieve/send data from/to other modules.
-		 * @see Connector
+		BVS::Connector<cv::Mat> outL; /**< Left image output. */
+		BVS::Connector<cv::Mat> outR; /**< Right image output. */
+
+		DUOInstance duo = NULL; /**< DUO device instance. */
+		DUOResolutionInfo duo_res; /**< DUO resolution info object. */
+		static PDUOFrame duo_frame; /**< Frame with current image data. */
+		static void DUOCallback(const PDUOFrame pFrameData, void* pUserData); /**< Callback to update PDUOFrame. */
+
+		bool showDuoInfo; /**< Show DUO device info at startup. */
+		bool showDuoParams; /**< Show DUO parameters used by device. */
+
+		int width; /**< Selected image width. */
+		int height; /**< Selected image height. */
+		int binning; /**< Selected binning mode. */
+		float fps; /**< Selected frames per second. */
+
+		/** Checks DUO function success and prints error otherwise.
+		 * @param[in] success Whether the DUO function was successfull.
+		 * @param[in] parameterName Name of parameter for error message.
 		 */
-		//BVS::Connector<int> input;
-		BVS::Connector<cv::Mat> outL;
-		BVS::Connector<cv::Mat> outR;
-
-		DUOInstance duo = NULL;
-		DUOResolutionInfo duo_res;
-		static PDUOFrame duo_frame;
-		static void DUOCallback(const PDUOFrame pFrameData, void* pUserData);
-
-		bool showDuoInfo;
-		bool showDuoParams;
-
-		int width;
-		int height;
-		int binning;
-		float fps;
-
 		void setParam(bool success, std::string parameterName);
+
+		/** Checks DUO function success and prints retrieved parameter.
+		 * @param[in] success Whether the DUO function was successfull.
+		 * @param[in] t Retrieved parameter value.
+		 * @param[in] message Message to display when showing parameter.
+		 */
 		template<typename T> void printParam(bool success, T& t, std::string message);
 
 		Duo3D(const Duo3D&) = delete; /**< -Weffc++ */

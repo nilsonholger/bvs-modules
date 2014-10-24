@@ -11,8 +11,6 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& bvs)
 	, info(info)
 	, logger(info.id)
 	, bvs(bvs)
-	//, input("inputName", BVS::ConnectorType::INPUT)
-	//, output("outputName", BVS::ConnectorType::OUTPUT)
 	, outL("outL", BVS::ConnectorType::OUTPUT)
 	, outR("outR", BVS::ConnectorType::OUTPUT)
 	, duo_res()
@@ -65,7 +63,6 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& bvs)
 		setParam(SetDUOVFlip(duo, bvs.config.getValue(info.conf + ".vFlip", false)), "Vertical Flip");
 		setParam(SetDUOCameraSwap(duo, bvs.config.getValue(info.conf + ".cameraSwap", false)), "Camera Swap");
 		setParam(SetDUOLedPWM(duo, bvs.config.getValue(info.conf + ".led", 0.0f)), "LED PWM");
-		//TODO: SetDUOLedPWMSeq(duo, val, size)
 
 		if(showDuoParams) {
 			LOG(1, "DUO3D PARAMETERS:");
@@ -88,7 +85,7 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& bvs)
 	if (StartDUO(duo, DUOCallback, NULL)) {
 		LOG(1, "Starting frame capture on DUO!");
 	} else {
-		LOG(0, "Could not start frame capture DUO!");
+		LOG(0, "Could not start frame capture on DUO!");
 	}
 }
 
@@ -106,7 +103,7 @@ Duo3D::~Duo3D()
 BVS::Status Duo3D::execute()
 {
 	// TODO remove next line
-	return BVS::Status::SHUTDOWN;
+	//return BVS::Status::SHUTDOWN;
 	if (duo == NULL) return BVS::Status::SHUTDOWN;
 	if (duo_frame == NULL) return BVS::Status::WAIT;
 
