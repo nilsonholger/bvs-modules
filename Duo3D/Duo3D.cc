@@ -107,8 +107,6 @@ Duo3D::~Duo3D()
 
 BVS::Status Duo3D::execute()
 {
-	// TODO remove next line
-	//return BVS::Status::SHUTDOWN;
 	if (duo == NULL) return BVS::Status::SHUTDOWN;
 	if (duo_frame == NULL) return BVS::Status::WAIT;
 
