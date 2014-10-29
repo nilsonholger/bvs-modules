@@ -1,6 +1,7 @@
 #ifndef DUO3D_H
 #define DUO3D_H
 
+#include <array>
 #include <functional>
 
 #include "bvs/module.h"
@@ -10,14 +11,18 @@
 
 
 /** This is the Duo3D module. It provides support for DUO3D devices.
- * Please add sufficient documentation to enable others to use it.
- *
  * Dependencies: opencv
  * Inputs: none
- * Outputs: outL and outR (cv::Mat with left and right image)
+ * Outputs:
+ *  - outL and outR (cv::Mat with left and right image)
+ *  - outTime (unsigned __int32)
+ *  - outAccel (float[3])
+ *  - outGyro (float[3])
+ *  - outMag (float[3])
+ *  - outTemp (float)
+ *  - outDUOFrame (struct DUOFrame from DUO API, includes all of the above)
  * Configuration Options: please see Duo3D.conf
  *
- * TODO: output all available duo data: timeStamp, accel, gyro, mag and temp
  * TODO: SetDUOLedPWMSeq(duo, val, size)
  */
 class Duo3D : public BVS::Module
@@ -54,6 +59,12 @@ class Duo3D : public BVS::Module
 
 		BVS::Connector<cv::Mat> outL; /**< Left image output. */
 		BVS::Connector<cv::Mat> outR; /**< Right image output. */
+		BVS::Connector<uint32_t> outTime; /**< Time stamp information. */
+		BVS::Connector<std::array<float, 3>> outAccel; /** Accelerometer data. */
+		BVS::Connector<std::array<float, 3>> outGyro; /** Gyroscope data. */
+		BVS::Connector<std::array<float, 3>> outMag; /** Magnetometer data. */
+		BVS::Connector<float> outTemp; /** Temperature data. */
+		BVS::Connector<DUOFrame> outDUOFrame; /** All of the above in a single struct. */
 
 		DUOInstance duo = NULL; /**< DUO device instance. */
 		DUOResolutionInfo duo_res; /**< DUO resolution info object. */

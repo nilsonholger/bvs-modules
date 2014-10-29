@@ -13,6 +13,12 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& bvs)
 	, bvs(bvs)
 	, outL("outL", BVS::ConnectorType::OUTPUT)
 	, outR("outR", BVS::ConnectorType::OUTPUT)
+	, outTime("outTime", BVS::ConnectorType::OUTPUT)
+	, outAccel("outAccel", BVS::ConnectorType::OUTPUT)
+	, outGyro("outGyro", BVS::ConnectorType::OUTPUT)
+	, outMag("outMag", BVS::ConnectorType::OUTPUT)
+	, outTemp("outTemp", BVS::ConnectorType::OUTPUT)
+	, outDUOFrame("outDUOFrame", BVS::ConnectorType::OUTPUT)
 	, duo_res()
 	, showDuoInfo(bvs.config.getValue<bool>(info.conf + ".showDuoInfo", false))
 	, showDuoParams(bvs.config.getValue<bool>(info.conf + ".showDuoParams", false))
@@ -113,6 +119,12 @@ BVS::Status Duo3D::execute()
 
 	outL.send(duo_left);
 	outR.send(duo_right);
+	outTime.send(duo_frame->timeStamp);
+	outAccel.send({{duo_frame->accelData[0], duo_frame->accelData[1], duo_frame->accelData[2]}});
+	outGyro.send({{duo_frame->gyroData[0], duo_frame->gyroData[1], duo_frame->gyroData[2]}});
+	outMag.send({{duo_frame->magData[0], duo_frame->magData[1], duo_frame->magData[2]}});
+	outTemp.send(duo_frame->tempData);
+	outDUOFrame.send(*duo_frame);
 
 	return BVS::Status::OK;
 }
