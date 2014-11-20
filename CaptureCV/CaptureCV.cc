@@ -2,11 +2,11 @@
 
 
 
-CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& bvs)
+CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	: BVS::Module(),
 	info(info),
 	logger(info.id),
-	bvs(bvs),
+	bvs(_bvs),
 	outputs(),
 	inputs(),
 	captures(),
