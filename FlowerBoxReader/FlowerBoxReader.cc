@@ -11,17 +11,23 @@ FlowerBoxReader::FlowerBoxReader(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	, info(info)
 	, logger(info.id)
 	, bvs(_bvs)
+	, imgCounter("imgCounter", BVS::ConnectorType::OUTPUT)
+	, videoSequence("videoSequence", BVS::ConnectorType::OUTPUT)
 	, imgL("imgL", BVS::ConnectorType::OUTPUT)
 	, imgR("imgR", BVS::ConnectorType::OUTPUT)
-	, imgName("imgName", BVS::ConnectorType::OUTPUT)
-	, videoSequence("videoSequence", BVS::ConnectorType::OUTPUT)
+	, section("section", BVS::ConnectorType::OUTPUT)
+	, disparity("disparity", BVS::ConnectorType::OUTPUT)
+	, dataDir(bvs.config.getValue<std::string>(info.conf+".directory", {}))
 	, filename()
-	, directory(bvs.config.getValue<std::string>(info.conf+".directory", {}))
 	, videoList{{}}
+	, video{}
+	, counter{30}
 {
-	if (directory.empty()) requestShutdown = true;
+	if (dataDir.empty()) requestShutdown = true;
 	bvs.config.getValue(info.conf+".videoList", videoList);
 	if (videoList.empty()) requestShutdown = true;
+	video = videoList.front();
+	videoList.erase(videoList.begin());
 }
 
 
@@ -39,14 +45,70 @@ BVS::Status FlowerBoxReader::execute()
 {
 	if (requestShutdown) return BVS::Status::SHUTDOWN;
 
-	// for every entry in videoList, check directory, load files:
-	//   filename: directory + 'img/' + video + base + counter (starting at initial offset: 30)
-	//   increase by stepsize: 5
-	//   until file not found -> advance to next video
-	// until all videoList entries processed
-	// request Shutdown
+	std::string path = assembleFileName(counter, video, "img");
+	cv::Mat tmpL = cv::imread(path, -1);
+	if (tmpL.empty()) {
+		if (videoList.empty()) {
+			return BVS::Status::SHUTDOWN;
+		} else {
+			video = videoList.front();
+			videoList.erase(videoList.begin());
+			counter = 30;
+			path = assembleFileName(counter, video, "img");
+			tmpL = cv::imread(path, -1);
+		}
+	}
+	imgCounter.send(counter);
+	videoSequence.send(video);
+	if (tmpL.empty()) {
+		LOG(0, "Error, could not load: " << path);
+		return BVS::Status::SHUTDOWN;
+	}
+	imgL.send(tmpL);
+
+	if (imgR.active()) {
+		path = assembleFileName(counter, video, "img", "R");
+		cv::Mat tmpR = cv::imread(path, -1);
+		if (tmpR.empty()) {
+			LOG(0, "Error, could not load: " << path);
+			return BVS::Status::SHUTDOWN;
+		}
+		imgR.send(tmpR);
+	}
+
+	if (section.active()) {
+		path = assembleFileName(counter, video, "meta/section");
+		cv::Mat tmpSection = cv::imread(path, -1);
+		if (tmpSection.empty()) {
+			LOG(0, "Error, could not load: " << path);
+			return BVS::Status::SHUTDOWN;
+		}
+		section.send(tmpSection);
+	}
+
+	if (disparity.active()) {
+		path = assembleFileName(counter, video, "meta/disparities");
+		cv::Mat tmpDisparity = cv::imread(path, -1);
+		if (tmpDisparity.empty()) {
+			LOG(0, "Error, could not load: " << path);
+			return BVS::Status::SHUTDOWN;
+		}
+		disparity.send(tmpDisparity);
+	}
+
+	counter += 5;
 
 	return BVS::Status::OK;
+}
+
+
+
+std::string FlowerBoxReader::assembleFileName(const int& counter, const std::string& video, const std::string& prefix, const std::string& suffix)
+{
+	std::string tmp = std::to_string(counter);
+	tmp.insert(0, 5-tmp.length(), '0');
+	std::string file = dataDir + '/' + prefix + '/' + video + "/frame_" + tmp + suffix + ".png";
+	return file;
 }
 
 

@@ -7,7 +7,7 @@ add_library(FlowerBoxReader ${BVS_MODULE_TYPE} FlowerBoxReader.cc)
 target_link_libraries(FlowerBoxReader ${BVS_LINK_LIBRARIES})
 
 if(NOT BVS_ANDROID_APP)
-	target_link_libraries(FlowerBoxReader opencv_core)
+	target_link_libraries(FlowerBoxReader opencv_core opencv_highgui)
 else()
 	target_link_libraries(FlowerBoxReader opencv_java log)
 endif()

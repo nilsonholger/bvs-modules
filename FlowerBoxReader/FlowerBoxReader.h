@@ -6,6 +6,7 @@
 
 #include "bvs/module.h"
 #include "opencv2/core/core.hpp"
+#include "opencv2/highgui/highgui.hpp"
 
 
 
@@ -45,16 +46,26 @@ class FlowerBoxReader : public BVS::Module
 		BVS::Logger logger; /**< Your logger instance. @see Logger */
 		const BVS::Info& bvs; /**< Your Info reference. @see Info */
 
+		// outputs
+		BVS::Connector<int> imgCounter;
+		BVS::Connector<std::string> videoSequence;
 		BVS::Connector<cv::Mat> imgL;
 		BVS::Connector<cv::Mat> imgR;
-		BVS::Connector<std::string> imgName;
-		BVS::Connector<std::string> videoSequence;
+		BVS::Connector<cv::Mat> section;
+		BVS::Connector<cv::Mat> disparity;
 
+		// settings
+		std::string dataDir;
 		std::string filename;
-		std::string directory;
 		std::vector<std::string> videoList;
 
+		// variables
+		std::string video;
+		int counter;
 		bool requestShutdown = false;
+
+		// functions
+		std::string assembleFileName(const int& counter, const std::string& video, const std::string& prefix, const std::string& suffix = {});
 
 		FlowerBoxReader(const FlowerBoxReader&) = delete; /**< -Weffc++ */
 		FlowerBoxReader& operator=(const FlowerBoxReader&) = delete; /**< -Weffc++ */
