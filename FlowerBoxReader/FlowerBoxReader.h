@@ -11,8 +11,20 @@
 
 
 /** This is the FlowerBoxReader module.
- * Please add sufficient documentation to enable others to use it.
- * Include information about: Dependencies, Inputs, Outputs, Configuration Options...
+ * It provides streamlined access to the FlowerBox dataset from
+ * https://cvhci.anthropomatik.kit.edu/~dkoester/data/flowerbox/
+ * It will notify of any missing/not found files and only try to load those
+ * parts of the dataset, that are actually accessed through the module's
+ * outputs.
+ *
+ * Dependencies: opencv
+ * Outputs:
+ *  - imgCounter (int)
+ *  - videoSequence (std::string)
+ *  - imgL and imgR (cv::Mat, left and right image)
+ *  - section (cv::Mat, labeled accessible section ground thruth as binary image)
+ *  - disparity (cv::Mat, disparities calculated using A. Geigers libELAS)
+ * Configuration Options: please see FlowerBoxReader.conf
  */
 class FlowerBoxReader : public BVS::Module
 {
@@ -47,25 +59,33 @@ class FlowerBoxReader : public BVS::Module
 		const BVS::Info& bvs; /**< Your Info reference. @see Info */
 
 		// outputs
-		BVS::Connector<int> imgCounter;
-		BVS::Connector<std::string> videoSequence;
-		BVS::Connector<cv::Mat> imgL;
-		BVS::Connector<cv::Mat> imgR;
-		BVS::Connector<cv::Mat> section;
-		BVS::Connector<cv::Mat> disparity;
+		BVS::Connector<int> imgCounter; /**< Sequence counter. */
+		BVS::Connector<std::string> videoSequence; /**< Video sequence name. */
+		BVS::Connector<cv::Mat> imgL; /**< Left image output. */
+		BVS::Connector<cv::Mat> imgR; /**< Right image output. */
+		BVS::Connector<cv::Mat> section; /**< Accessible section as binary image. */
+		BVS::Connector<cv::Mat> disparity; /**< Precalculated disparity map. */
 
 		// settings
-		std::string dataDir;
-		std::string filename;
-		std::vector<std::string> videoList;
+		std::string dataDir; /**< FlowerBox dataset base directory. */
+		std::vector<std::string> videoList; /**< List of sequence to load. */
 
 		// variables
-		std::string video;
-		int counter;
-		bool requestShutdown = false;
+		std::string video; /**< Current video sequence read from. */
+		int counter; /**< Sequence counter, part of filename to load from. */
+		bool requestShutdown = false; /**< Used to signal incorrect settings. */
 
-		// functions
-		std::string assembleFileName(const int& counter, const std::string& video, const std::string& prefix, const std::string& suffix = {});
+		/** Assemble filepath and name.
+		 * Assemble the filename and its path from given input for a dataset
+		 * image, like: data/flowerbox/img/alley/frame_00030.png.
+		 * @param[in] dataDir Dataset base directory.
+		 * @param[in] counter Sequence counter.
+		 * @param[in] video Video sequence name.
+		 * @param[in] prefix Image/resource location prefix.
+		 * @param[in] suffix Image/resource suffix.
+		 * @return Filepath and name.
+		 */
+		std::string assembleFileName(const std::string& dataDir, const int& counter, const std::string& video, const std::string& prefix, const std::string& suffix = {});
 
 		FlowerBoxReader(const FlowerBoxReader&) = delete; /**< -Weffc++ */
 		FlowerBoxReader& operator=(const FlowerBoxReader&) = delete; /**< -Weffc++ */

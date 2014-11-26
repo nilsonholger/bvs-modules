@@ -18,7 +18,6 @@ FlowerBoxReader::FlowerBoxReader(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	, section("section", BVS::ConnectorType::OUTPUT)
 	, disparity("disparity", BVS::ConnectorType::OUTPUT)
 	, dataDir(bvs.config.getValue<std::string>(info.conf+".directory", {}))
-	, filename()
 	, videoList{{}}
 	, video{}
 	, counter{30}
@@ -45,7 +44,8 @@ BVS::Status FlowerBoxReader::execute()
 {
 	if (requestShutdown) return BVS::Status::SHUTDOWN;
 
-	std::string path = assembleFileName(counter, video, "img");
+	// load left image, if necessary, advance to next sequence
+	std::string path = assembleFileName(dataDir, counter, video, "img");
 	cv::Mat tmpL = cv::imread(path, -1);
 	if (tmpL.empty()) {
 		if (videoList.empty()) {
@@ -54,10 +54,12 @@ BVS::Status FlowerBoxReader::execute()
 			video = videoList.front();
 			videoList.erase(videoList.begin());
 			counter = 30;
-			path = assembleFileName(counter, video, "img");
+			path = assembleFileName(dataDir, counter, video, "img");
 			tmpL = cv::imread(path, -1);
 		}
 	}
+
+	// send left image and meta data
 	imgCounter.send(counter);
 	videoSequence.send(video);
 	if (tmpL.empty()) {
@@ -66,8 +68,9 @@ BVS::Status FlowerBoxReader::execute()
 	}
 	imgL.send(tmpL);
 
+	// send right image
 	if (imgR.active()) {
-		path = assembleFileName(counter, video, "img", "R");
+		path = assembleFileName(dataDir, counter, video, "img", "R");
 		cv::Mat tmpR = cv::imread(path, -1);
 		if (tmpR.empty()) {
 			LOG(0, "Error, could not load: " << path);
@@ -76,8 +79,9 @@ BVS::Status FlowerBoxReader::execute()
 		imgR.send(tmpR);
 	}
 
+	// send accessible section ground truth
 	if (section.active()) {
-		path = assembleFileName(counter, video, "meta/section");
+		path = assembleFileName(dataDir, counter, video, "meta/section");
 		cv::Mat tmpSection = cv::imread(path, -1);
 		if (tmpSection.empty()) {
 			LOG(0, "Error, could not load: " << path);
@@ -86,8 +90,9 @@ BVS::Status FlowerBoxReader::execute()
 		section.send(tmpSection);
 	}
 
+	// send precalculated disparity map
 	if (disparity.active()) {
-		path = assembleFileName(counter, video, "meta/disparities");
+		path = assembleFileName(dataDir, counter, video, "meta/disparities");
 		cv::Mat tmpDisparity = cv::imread(path, -1);
 		if (tmpDisparity.empty()) {
 			LOG(0, "Error, could not load: " << path);
@@ -96,6 +101,7 @@ BVS::Status FlowerBoxReader::execute()
 		disparity.send(tmpDisparity);
 	}
 
+	// advance to next image
 	counter += 5;
 
 	return BVS::Status::OK;
@@ -103,7 +109,7 @@ BVS::Status FlowerBoxReader::execute()
 
 
 
-std::string FlowerBoxReader::assembleFileName(const int& counter, const std::string& video, const std::string& prefix, const std::string& suffix)
+std::string FlowerBoxReader::assembleFileName(const std::string& dataDir, const int& counter, const std::string& video, const std::string& prefix, const std::string& suffix)
 {
 	std::string tmp = std::to_string(counter);
 	tmp.insert(0, 5-tmp.length(), '0');
