@@ -1,10 +1,10 @@
 project(ANDROIDCV)
 
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/AndroidCV.conf ${CMAKE_BINARY_DIR}/bin/AndroidCV.conf)
-add_library(AndroidCV ${BVS_MODULE_TYPE} AndroidCV.cc)
+create_symlink(${CMAKE_CURRENT_SOURCE_DIR}/AndroidCV.conf ${CMAKE_BINARY_DIR}/bin/AndroidCV.conf)
+add_bvs_module(AndroidCV AndroidCV.cc)
 
-set(ENV{BVS_STATIC_MODULES} "$ENV{BVS_STATIC_MODULES};AndroidCV")
-if(BVS_ANDROID_APP)
-        set(OpenCV_LIBS opencv_java)
-        target_link_libraries(AndroidCV ${BVS_LINK_LIBRARIES} ${OpenCV_LIBS} log)
+if(NOT BVS_ANDROID_APP)
+	#target_link_libraries(BVSExampleModule ...)
+else()
+	target_link_libraries(AndroidCV opencv_java log)
 endif()

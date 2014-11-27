@@ -1,7 +1,10 @@
 project(KINECTXLITE)
 
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/KinectXLite.conf ${CMAKE_BINARY_DIR}/bin/KinectXLite.conf)
+create_symlink(${CMAKE_CURRENT_SOURCE_DIR}/KinectXLite.conf ${CMAKE_BINARY_DIR}/bin/KinectXLite.conf)
+add_bvs_module(KinectXLite KinectXLite.cc)
 
-set(OpenCV_LIBS opencv_core)
-add_library(KinectXLite MODULE KinectXLite.cc)
-target_link_libraries(KinectXLite bvs ${OpenCV_LIBS} usb-1.0)
+if(NOT BVS_ANDROID_APP)
+	target_link_libraries(KinectXLite usb-1.0 opencv_core)
+else()
+	#target_link_libraries(KinectXLite opencv_java log)
+endif()

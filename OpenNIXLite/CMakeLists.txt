@@ -1,6 +1,10 @@
 project(OPENNIXLITE)
 
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/OpenNIXLite.conf ${CMAKE_BINARY_DIR}/bin/OpenNIXLite.conf)
+create_symlink(${CMAKE_CURRENT_SOURCE_DIR}/OpenNIXLite.conf ${CMAKE_BINARY_DIR}/bin/OpenNIXLite.conf)
+add_bvs_module(OpenNIXLite OpenNIXLite.cc)
 
-add_library(OpenNIXLite MODULE OpenNIXLite.cc)
-target_link_libraries(OpenNIXLite bvs OpenNI2 opencv_core)
+if(NOT BVS_ANDROID_APP)
+	target_link_libraries(OpenNIXLite OpenNI2 opencv_core)
+else()
+	#target_link_libraries(OpenNIXLite opencv_java log)
+endif()
