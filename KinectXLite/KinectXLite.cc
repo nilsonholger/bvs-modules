@@ -6,11 +6,11 @@
 // Please do not change its signature as it is called by the framework (so the
 // framework actually creates your module) and the framework assigns the unique
 // identifier and gives you access to configuration data.
-KinectXLite::KinectXLite(BVS::ModuleInfo info, const BVS::Info& bvs)
+KinectXLite::KinectXLite(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	: BVS::Module(),
 	info(info),
 	logger(info.id),
-	bvs(bvs),
+	bvs(_bvs),
 	//input("inputName", BVS::ConnectorType::INPUT),
 	kinect(),
 	disp2Depth(),
