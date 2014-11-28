@@ -6,11 +6,11 @@ PDUOFrame Duo3D::duo_frame = NULL;
 
 
 
-Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& bvs)
+Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	: BVS::Module()
 	, info(info)
 	, logger(info.id)
-	, bvs(bvs)
+	, bvs(_bvs)
 	, outL("outL", BVS::ConnectorType::OUTPUT)
 	, outR("outR", BVS::ConnectorType::OUTPUT)
 	, outTime("outTime", BVS::ConnectorType::OUTPUT)
