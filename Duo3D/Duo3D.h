@@ -2,7 +2,9 @@
 #define DUO3D_H
 
 #include <array>
+#include <chrono>
 #include <functional>
+#include <thread>
 
 #include "bvs/module.h"
 #include "DUOLib.h"
@@ -73,6 +75,7 @@ class Duo3D : public BVS::Module
 
 		bool showDuoInfo; /**< Show DUO device info at startup. */
 		bool showDuoParams; /**< Show DUO parameters used by device. */
+		bool blockModule; /**< Whether to block the module n ms after sending a frame. */
 
 		int width; /**< Selected image width. */
 		int height; /**< Selected image height. */

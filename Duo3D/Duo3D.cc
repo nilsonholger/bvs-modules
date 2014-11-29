@@ -22,6 +22,7 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	, duo_res()
 	, showDuoInfo(bvs.config.getValue<bool>(info.conf + ".showDuoInfo", false))
 	, showDuoParams(bvs.config.getValue<bool>(info.conf + ".showDuoParams", false))
+	, blockModule(bvs.config.getValue<bool>(info.conf + ".blockModule", true))
 	, width(bvs.config.getValue<int>(info.conf + ".width", 752))
 	, height(bvs.config.getValue<int>(info.conf + ".height", 480))
 	, binning(bvs.config.getValue<int>(info.conf + ".binning", -1))
@@ -107,24 +108,37 @@ Duo3D::~Duo3D()
 
 BVS::Status Duo3D::execute()
 {
-	if (duo == NULL) return BVS::Status::SHUTDOWN;
-	if (duo_frame == NULL) return BVS::Status::WAIT;
+	std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+	if (duo==NULL) return BVS::Status::SHUTDOWN;
 
-	cv::Mat duo_left(cv::Size{(int)duo_frame->width, (int)duo_frame->height}, CV_8UC1);
-	cv::Mat duo_right(cv::Size{(int)duo_frame->width, (int)duo_frame->height}, CV_8UC1);
-	duo_left.data = (unsigned char*)duo_frame->leftData;
-	duo_right.data = (unsigned char*)duo_frame->rightData;
+	if (duo_frame==NULL) {
+		LOG(2, "Waiting max 500ms for first duo frame!");
+		for (int i=0; i<50; i++) {
+			std::this_thread::sleep_for(std::chrono::milliseconds{10});
+			if (duo_frame!=NULL) break;
+		}
+	}
+	if (duo_frame==NULL) return BVS::Status::WAIT;
 
-	// TODO only send active outputs
-	outL.send(duo_left);
-	outR.send(duo_right);
-	outTime.send(duo_frame->timeStamp);
-	outAccel.send({{duo_frame->accelData[0], duo_frame->accelData[1], duo_frame->accelData[2]}});
-	outGyro.send({{duo_frame->gyroData[0], duo_frame->gyroData[1], duo_frame->gyroData[2]}});
-	outMag.send({{duo_frame->magData[0], duo_frame->magData[1], duo_frame->magData[2]}});
-	outTemp.send(duo_frame->tempData);
-	outDUOFrame.send(*duo_frame);
-	// TODO consider optional blocking for 1/FPS seconds
+	if (outL.active()) {
+		cv::Mat duo_left(cv::Size{(int)duo_frame->width, (int)duo_frame->height}, CV_8UC1);
+		outL.send(duo_left);
+		duo_left.data = (unsigned char*)duo_frame->leftData;
+	}
+	if (outR.active()) {
+		cv::Mat duo_right(cv::Size{(int)duo_frame->width, (int)duo_frame->height}, CV_8UC1);
+		duo_right.data = (unsigned char*)duo_frame->rightData;
+		outR.send(duo_right);
+	}
+	if (outTime.active()) outTime.send(duo_frame->timeStamp);
+	if (outAccel.active()) outAccel.send({{duo_frame->accelData[0], duo_frame->accelData[1], duo_frame->accelData[2]}});
+	if (outGyro.active()) outGyro.send({{duo_frame->gyroData[0], duo_frame->gyroData[1], duo_frame->gyroData[2]}});
+	if (outMag.active()) outMag.send({{duo_frame->magData[0], duo_frame->magData[1], duo_frame->magData[2]}});
+	if (outTemp.active()) outTemp.send(duo_frame->tempData);
+	if (outDUOFrame.active()) outDUOFrame.send(*duo_frame);
+	if (blockModule)
+		std::this_thread::sleep_for(std::chrono::milliseconds{
+				(int)(1000/fps-std::chrono::duration_cast<std::chrono::milliseconds>(start - std::chrono::high_resolution_clock::now()).count())});
 
 	return BVS::Status::OK;
 }
