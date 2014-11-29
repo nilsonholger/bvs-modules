@@ -115,6 +115,7 @@ BVS::Status Duo3D::execute()
 	duo_left.data = (unsigned char*)duo_frame->leftData;
 	duo_right.data = (unsigned char*)duo_frame->rightData;
 
+	// TODO only send active outputs
 	outL.send(duo_left);
 	outR.send(duo_right);
 	outTime.send(duo_frame->timeStamp);
@@ -123,6 +124,7 @@ BVS::Status Duo3D::execute()
 	outMag.send({{duo_frame->magData[0], duo_frame->magData[1], duo_frame->magData[2]}});
 	outTemp.send(duo_frame->tempData);
 	outDUOFrame.send(*duo_frame);
+	// TODO consider optional blocking for 1/FPS seconds
 
 	return BVS::Status::OK;
 }
@@ -131,6 +133,7 @@ BVS::Status Duo3D::execute()
 
 void Duo3D::DUOCallback(const PDUOFrame pFrameData, void * pUserData)
 {
+	// TODO requires access lock, might overwrite data while execute() tries to extract it
 	duo_frame = pFrameData;
 	//printf("DUO Callback captured a frame, timestamp: %d",duo_frame->timeStamp);
 	(void) pUserData;
