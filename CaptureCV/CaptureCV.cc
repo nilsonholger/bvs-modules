@@ -13,6 +13,7 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	writers(),
 	numNodes(bvs.config.getValue<int>(info.conf+".numNodes", 0)),
 	mode(bvs.config.getValue<std::string>(info.conf+".mode", "C").at(0)),
+	displayMode(bvs.config.getValue<bool>(info.conf+".displayMode", false)),
 	videoFiles(),
 	imageFiles(bvs.config.getValue<std::string>(info.conf+".imageFiles", "images/frame_{FRAME}_{NODE}.png")),
 	frameNumberPadding(bvs.config.getValue<int>(info.conf+".frameNumberPadding", 5)),
@@ -40,14 +41,19 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	switch (mode)
 	{
 		case 'C': case 'V': case 'I':
-			for (int i=0; i<numNodes; i++)
+			for (int i=0; i<numNodes; i++) {
 				outputs.emplace_back(new BVS::Connector<cv::Mat>("out"+std::to_string(i+1), BVS::ConnectorType::OUTPUT));
+				if (displayMode) cv::namedWindow("out"+std::to_string(i+1));
+			}
 			break;
 		case 'R': case 'S':
-			for (int i=0; i<numNodes; i++)
+			for (int i=0; i<numNodes; i++) {
 				inputs.emplace_back(new BVS::Connector<cv::Mat>("in"+std::to_string(i+1), BVS::ConnectorType::INPUT));
+				if (displayMode) cv::namedWindow("in"+std::to_string(i+1));
+			}
 			break;
 	}
+	if (displayMode) cv::startWindowThread();
 
 	if (mode=='V' || mode=='R')
 	{
@@ -142,15 +148,20 @@ BVS::Status CaptureCV::execute()
 	{
 		case 'C':
 			for (auto cap: captures) cap.grab();
-			for (int i=0; i<numNodes; i++) captures.at(i).retrieve(**outputs.at(i));
+			for (int i=0; i<numNodes; i++) {
+				captures.at(i).retrieve(**outputs.at(i));
+				if (displayMode) cv::imshow("out"+std::to_string(i+1), **outputs.at(i));
+			}
 			break;
 		case 'V':
-			for (int i=0; i<numNodes; i++)
+			for (int i=0; i<numNodes; i++) {
 				if (!captures.at(i).read(**outputs.at(i)))
 				{
 					LOG(0, "Could not read from '" << videoFiles.at(i) << "'!");
 					requestShutdown = true;
 				}
+				if (displayMode) cv::imshow("out"+std::to_string(i+1), **outputs.at(i));
+			}
 			break;
 		case 'I':
 			for (int i=0; i<numNodes; i++)
@@ -164,6 +175,7 @@ BVS::Status CaptureCV::execute()
 					requestShutdown = true;
 				}
 				**outputs.at(i) = tmp;
+				if (displayMode) cv::imshow("out"+std::to_string(i+1), **outputs.at(i));
 			}
 			counterStart += stepSize;
 			break;
@@ -179,6 +191,7 @@ BVS::Status CaptureCV::execute()
 					if (!writers.at(i).isOpened()) LOG(0, "Could not open writer for '" << videoFiles.at(i));
 				}
 				writers.at(i).write(**inputs.at(i));
+				if (displayMode) cv::imshow("in"+std::to_string(i+1), **inputs.at(i));
 			}
 			LOG(2, "Writing frame(s) to " << numNodes << " file(s)!");
 			break;
@@ -192,6 +205,7 @@ BVS::Status CaptureCV::execute()
 					LOG(0, "Could not write to file '" << filename << "'!");
 					requestShutdown = true;
 				}
+				if (displayMode) cv::imshow("in"+std::to_string(i+1), **inputs.at(i));
 			}
 			LOG(2, "Writing frame(s) to " << numNodes << " file(s)!");
 			counterStart += stepSize;
@@ -200,6 +214,8 @@ BVS::Status CaptureCV::execute()
 	}
 	for (auto in: inputs) in->unlockConnection();
 	for (auto out: outputs) out->unlockConnection();
+
+	if (displayMode) cv::waitKey(1);
 
 	if (requestShutdown) return BVS::Status::SHUTDOWN;
 	return BVS::Status::OK;

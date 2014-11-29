@@ -54,6 +54,7 @@ class CaptureCV : public BVS::Module
 		std::vector<cv::VideoWriter> writers; /**< Writers vector for video output. */
 		int numNodes; /**< Number of nodes to use. */
 		char mode; /**< Capture mode to use (camera, video, image, none). */
+		bool displayMode; /**< Enable disable immediate data display. */
 		std::vector<std::string> videoFiles; /**< List of video names to use. */
 		std::string imageFiles; /**< Image files naming scheme. */
 		int frameNumberPadding; /**< Width of frame Number (Zero Padding) when used as string. */
