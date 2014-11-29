@@ -41,9 +41,7 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 			printParam(GetDUOFirmwareBuild(duo, tmp), tmp,   "Firmware Build:   ");
 		}
 
-		//TODO has bug/weird behaviour, does not properly check given resolution info and print available resolutions
-		int resolutions = EnumerateResolutions(&duo_res, 1, width, height, binning, fps);
-		if (resolutions==0) {
+		if (EnumerateResolutions(&duo_res, 1, width, height, binning, fps)==0) {
 			DUOResolutionInfo res[100];
 			int num = EnumerateResolutions(res, 100, width, height, binning, fps);
 			LOG(1, "Available resolutions for " << width << "x" << height << "@" << fps << " - mode: " << binning << ":");
