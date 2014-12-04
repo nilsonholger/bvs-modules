@@ -71,10 +71,6 @@ class CaptureCV : public BVS::Module
 		int recordWidth; /**< Recorded video width. */
 		int recordHeight; /**< Recorded video height. */
 		bool recordColor; /**< Record videos with color, or not. */
-		bool requestShutdown; /**< Whether there have been incorrect settings. */
-
-		/** Separate image file scheme into pieces. */
-		void parseImageFileName();
 
 		/** Get filename using image name scheme.
 		 * @param[in] frame Frame number to use.
