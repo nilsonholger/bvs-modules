@@ -132,7 +132,6 @@ CaptureCV::~CaptureCV()
 
 BVS::Status CaptureCV::execute()
 {
-	// TODO: change, integrate into switch somehow
 	for (auto& in: inputs) {
 		cv::Mat tmp;
 		if (!in->receive(tmp)) return BVS::Status::NOINPUT;
