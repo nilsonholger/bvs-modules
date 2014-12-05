@@ -3,6 +3,7 @@
 
 
 PDUOFrame Duo3D::duo_frame = NULL;
+std::mutex Duo3D::mutex{};
 
 
 
@@ -118,6 +119,8 @@ BVS::Status Duo3D::execute()
 	}
 	if (duo_frame==NULL) return BVS::Status::WAIT;
 
+	std::lock_guard<std::mutex> lock{mutex};
+
 	if (outL.active()) {
 		cv::Mat duo_left(cv::Size{(int)duo_frame->width, (int)duo_frame->height}, CV_8UC1);
 		duo_left.data = (unsigned char*)duo_frame->leftData;
@@ -145,10 +148,11 @@ BVS::Status Duo3D::execute()
 
 void Duo3D::DUOCallback(const PDUOFrame pFrameData, void * pUserData)
 {
-	// TODO requires access lock, might overwrite data while execute() tries to extract it
+	(void) pUserData;
+
+	std::lock_guard<std::mutex> lock{mutex};
 	duo_frame = pFrameData;
 	//printf("DUO Callback captured a frame, timestamp: %d",duo_frame->timeStamp);
-	(void) pUserData;
 }
 
 

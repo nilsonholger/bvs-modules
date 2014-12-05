@@ -72,6 +72,7 @@ class Duo3D : public BVS::Module
 		DUOResolutionInfo duo_res; /**< DUO resolution info object. */
 		static PDUOFrame duo_frame; /**< Frame with current image data. */
 		static void DUOCallback(const PDUOFrame pFrameData, void* pUserData); /**< Callback to update PDUOFrame. */
+		static std::mutex mutex; /**< Mutex to synchronize with DUOCallback. */
 
 		bool showDuoInfo; /**< Show DUO device info at startup. */
 		bool showDuoParams; /**< Show DUO parameters used by device. */
