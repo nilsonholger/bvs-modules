@@ -68,8 +68,6 @@ class CaptureCV : public BVS::Module
 		std::string recordFOURCC; /**< FOURCC to set in recorded videos. */
 		int fourcc; /**< FOURCC value as integer representation. */
 		double recordFPS; /**< FPS to set in recorded videos. */
-		int recordWidth; /**< Recorded video width. */
-		int recordHeight; /**< Recorded video height. */
 		bool recordColor; /**< Record videos with color, or not. */
 
 		/** Get filename using image name scheme.

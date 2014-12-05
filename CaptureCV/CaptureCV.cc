@@ -28,8 +28,6 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	, recordFOURCC(bvs.config.getValue<std::string>(info.conf+".recordFOURCC", "Y800"))
 	, fourcc()
 	, recordFPS(bvs.config.getValue<double>(info.conf+".recordFPS", 0.0))
-	, recordWidth(bvs.config.getValue<int>(info.conf+".recordWidth", 0))
-	, recordHeight(bvs.config.getValue<int>(info.conf+".recordHeight", 0))
 	, recordColor(bvs.config.getValue<bool>(info.conf+".recordColor", true))
 {
 	if (numNodes==0) LOG(0, "Number of nodes not set!");
@@ -169,10 +167,8 @@ BVS::Status CaptureCV::execute()
 		case 'R':
 			for (int i=0; i<numNodes; i++) {
 				if (!writers.at(i).isOpened()) {
-					if (recordWidth==0) recordWidth = (**inputs.at(i)).cols;
-					if (recordHeight==0) recordHeight = (**inputs.at(i)).rows;
-					LOG(2, videoFiles.at(i) << ": " << recordWidth << "x" << recordHeight << "@" << recordFPS << " Codec: " << recordFOURCC << " Color: " << recordColor);
-					writers.at(i).open(videoFiles.at(i), fourcc, recordFPS, cv::Size(recordWidth, recordHeight), recordColor);
+					LOG(2, videoFiles.at(i) << ": " << (**inputs.at(i)).cols << "x" << (**inputs.at(i)).rows << "@" << recordFPS << " Codec: " << recordFOURCC << " Color: " << recordColor);
+					writers.at(i).open(videoFiles.at(i), fourcc, recordFPS, cv::Size((**inputs.at(i)).cols, (**inputs.at(i)).rows), recordColor);
 					if (!writers.at(i).isOpened()) LOG(0, "Could not open writer for '" << videoFiles.at(i));
 				}
 				writers.at(i).write(**inputs.at(i));
