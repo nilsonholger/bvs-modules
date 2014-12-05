@@ -7,26 +7,26 @@ PDUOFrame Duo3D::duo_frame = NULL;
 
 
 Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
-	: BVS::Module()
+	: BVS::Module{}
 	, info(info)
-	, logger(info.id)
-	, bvs(_bvs)
-	, outL("outL", BVS::ConnectorType::OUTPUT)
-	, outR("outR", BVS::ConnectorType::OUTPUT)
-	, outTime("outTime", BVS::ConnectorType::OUTPUT)
-	, outAccel("outAccel", BVS::ConnectorType::OUTPUT)
-	, outGyro("outGyro", BVS::ConnectorType::OUTPUT)
-	, outMag("outMag", BVS::ConnectorType::OUTPUT)
-	, outTemp("outTemp", BVS::ConnectorType::OUTPUT)
-	, outDUOFrame("outDUOFrame", BVS::ConnectorType::OUTPUT)
-	, duo_res()
-	, showDuoInfo(bvs.config.getValue<bool>(info.conf + ".showDuoInfo", false))
-	, showDuoParams(bvs.config.getValue<bool>(info.conf + ".showDuoParams", false))
-	, blockModule(bvs.config.getValue<bool>(info.conf + ".blockModule", true))
-	, width(bvs.config.getValue<int>(info.conf + ".width", 752))
-	, height(bvs.config.getValue<int>(info.conf + ".height", 480))
-	, binning(bvs.config.getValue<int>(info.conf + ".binning", -1))
-	, fps(bvs.config.getValue<float>(info.conf + ".fps", -1))
+	, logger{info.id}
+	, bvs{_bvs}
+	, outL{"outL", BVS::ConnectorType::OUTPUT}
+	, outR{"outR", BVS::ConnectorType::OUTPUT}
+	, outTime{"outTime", BVS::ConnectorType::OUTPUT}
+	, outAccel{"outAccel", BVS::ConnectorType::OUTPUT}
+	, outGyro{"outGyro", BVS::ConnectorType::OUTPUT}
+	, outMag{"outMag", BVS::ConnectorType::OUTPUT}
+	, outTemp{"outTemp", BVS::ConnectorType::OUTPUT}
+	, outDUOFrame{"outDUOFrame", BVS::ConnectorType::OUTPUT}
+	, duo_res{}
+	, showDuoInfo{bvs.config.getValue<bool>(info.conf + ".showDuoInfo", false)}
+	, showDuoParams{bvs.config.getValue<bool>(info.conf + ".showDuoParams", false)}
+	, blockModule{bvs.config.getValue<bool>(info.conf + ".blockModule", true)}
+	, width{bvs.config.getValue<int>(info.conf + ".width", 752)}
+	, height{bvs.config.getValue<int>(info.conf + ".height", 480)}
+	, binning{bvs.config.getValue<int>(info.conf + ".binning", -1)}
+	, fps{bvs.config.getValue<float>(info.conf + ".fps", -1)}
 {
 	if (OpenDUO(&duo)) {
 		LOG(1, "Connection to DUO established!");
