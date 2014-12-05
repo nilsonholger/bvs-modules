@@ -120,8 +120,8 @@ BVS::Status Duo3D::execute()
 
 	if (outL.active()) {
 		cv::Mat duo_left(cv::Size{(int)duo_frame->width, (int)duo_frame->height}, CV_8UC1);
-		outL.send(duo_left);
 		duo_left.data = (unsigned char*)duo_frame->leftData;
+		outL.send(duo_left);
 	}
 	if (outR.active()) {
 		cv::Mat duo_right(cv::Size{(int)duo_frame->width, (int)duo_frame->height}, CV_8UC1);
