@@ -13,6 +13,7 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	, captures()
 	, writers()
 	, numNodes(bvs.config.getValue<int>(info.conf+".numNodes", 0))
+	, nodeOffset(bvs.config.getValue<int>(info.conf+".nodeOffset", 0))
 	, mode(bvs.config.getValue<std::string>(info.conf+".mode", "C").at(0))
 	, displayMode(bvs.config.getValue<bool>(info.conf+".displayMode", false))
 	, videoFiles()
@@ -72,7 +73,7 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& _bvs)
 		case 'C':
 			enableOutputs();
 			for (int i=0; i<numNodes; i++) {
-				captures.emplace_back(cv::VideoCapture(i));
+				captures.emplace_back(cv::VideoCapture(i+nodeOffset));
 				if (cameraMode>=0) captures.at(i).set(CV_CAP_PROP_MODE, cameraMode);
 				if (cameraFPS>=0) captures.at(i).set(CV_CAP_PROP_FPS, cameraFPS);
 				if (cameraWidth>=0) captures.at(i).set(CV_CAP_PROP_FRAME_WIDTH, cameraWidth);
