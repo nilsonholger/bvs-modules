@@ -20,7 +20,7 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	, outMag{"outMag", BVS::ConnectorType::OUTPUT}
 	, outTemp{"outTemp", BVS::ConnectorType::OUTPUT}
 	, outDUOFrame{"outDUOFrame", BVS::ConnectorType::OUTPUT}
-	, duo_res{}
+	, duo_res{ 0, 0, 0, 0, 0, 0}
 	, showDuoInfo{bvs.config.getValue<bool>(info.conf + ".showDuoInfo", false)}
 	, showDuoParams{bvs.config.getValue<bool>(info.conf + ".showDuoParams", false)}
 	, blockModule{bvs.config.getValue<bool>(info.conf + ".blockModule", true)}
