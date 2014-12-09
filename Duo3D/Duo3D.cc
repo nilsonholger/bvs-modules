@@ -34,8 +34,8 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 
 		if (showDuoInfo) {
 			char tmp[260];
-			LOG(1, "DUO3D INFO:");
-			LOG(1,                                           "Library Version:  v" << GetLibVersion());
+			LOG(2, "DUO3D INFO:");
+			LOG(2,                                           "Library Version:  v" << GetLibVersion());
 			printParam(GetDUODeviceName(duo, tmp), tmp,      "Device Name:      ");
 			printParam(GetDUOSerialNumber(duo, tmp), tmp,    "Serial Number:    ");
 			printParam(GetDUOFirmwareVersion(duo, tmp), tmp, "Firmware Version: v");
@@ -56,7 +56,7 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 		}
 
 		if (SetDUOResolutionInfo(duo, duo_res)) {
-		LOG(1, "Resolution Info:  " << duo_res.width << "x" << duo_res.height
+		LOG(2, "Resolution Info:  " << duo_res.width << "x" << duo_res.height
 				<< "@" << duo_res.fps << "fps - binning mode: " << duo_res.binning);
 		}
 
@@ -70,7 +70,7 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 		setParam(SetDUOLedPWM(duo, bvs.config.getValue(info.conf + ".led", 0.0f)), "LED PWM");
 
 		if(showDuoParams) {
-			LOG(1, "DUO3D PARAMETERS:");
+			LOG(2, "DUO3D PARAMETERS:");
 			double d;
 			bool b;
 			uint32_t w, h;
@@ -81,7 +81,7 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 			printParam(GetDUOVFlip(duo, &b), b,              "Vertical Flip:    ");
 			printParam(GetDUOCameraSwap(duo, &b), b,         "Camera Swap:      ");
 			printParam(GetDUOLedPWM(duo, &d), d,             "LED PWM [0,100]:  ");
-			if (GetDUOFrameDimension(duo, &w, &h)) LOG(1,    "Image Size [WxH]: " << w << "x" << h);
+			if (GetDUOFrameDimension(duo, &w, &h)) LOG(2,    "Image Size [WxH]: " << w << "x" << h);
 		}
 	} else {
 		LOG(0, "Could not connect to DUO!");

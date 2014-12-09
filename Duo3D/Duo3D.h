@@ -105,7 +105,7 @@ class Duo3D : public BVS::Module
 template<typename T> void Duo3D::printParam(bool success, T& t, std::string message)
 {
 	if (success) {
-		LOG(1, message << t);
+		LOG(2, message << t);
 	} else {
 		LOG(0, "Could not set: " << message.erase(message.find_first_of(':'), std::string::npos));
 	}
