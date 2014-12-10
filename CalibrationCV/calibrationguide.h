@@ -85,8 +85,7 @@ class CalibrationGuide
 		double imgDiag; /**< Lenght of image diagonal. */
 
 		/** Point structure. */
-		struct point
-		{
+		struct point {
 			float x; /**< X position. */
 			float y; /**< Y position. */
 		};

@@ -6,18 +6,18 @@
 
 
 StereoCalibration::StereoCalibration(CalNodeVec& nodes)
-	: logger("StereoCalib"),
-	nodes(nodes),
-	imageSize(),
-	rms(0),
-	initRectifyMap(true),
-	objectPoints(),
-	stereoRotation(),
-	stereoTranslation(),
-	stereoEssential(),
-	stereoFundamental(),
-	disparityToDepthMapping(),
-	rectifyMap{{cv::Mat(), cv::Mat()}, {cv::Mat(), cv::Mat()}}
+	: logger("StereoCalib")
+	, nodes(nodes)
+	, imageSize()
+	, rms(0)
+	, initRectifyMap(true)
+	, objectPoints()
+	, stereoRotation()
+	, stereoTranslation()
+	, stereoEssential()
+	, stereoFundamental()
+	, disparityToDepthMapping()
+	, rectifyMap{{cv::Mat(), cv::Mat()}, {cv::Mat(), cv::Mat()}}
 { }
 
 
@@ -35,8 +35,7 @@ bool StereoCalibration::loadFromFile(const std::string& path, const std::string&
 	fs["stereoFundamental"] >> stereoFundamental;
 	fs["disparityToDepthMapping"] >> disparityToDepthMapping;
 
-	for (auto& node: nodes)
-	{
+	for (auto& node: nodes) {
 		std::string id = std::to_string(node->id);
 		fs["cameraMatrix"+id] >> node->cameraMatrix;
 		fs["distCoeffs"+id] >> node->distCoeffs;
@@ -66,8 +65,7 @@ bool StereoCalibration::saveToFile(const std::string& path, const std::string& f
 	fs << "stereoFundamental" << stereoFundamental;
 	fs << "disparityToDepthMapping" << disparityToDepthMapping;
 
-	for (auto& node: nodes)
-	{
+	for (auto& node: nodes) {
 		std::string id = std::to_string(node->id);
 		fs << "cameraMatrix"+id << node->cameraMatrix;
 		fs << "distCoeffs"+id << node->distCoeffs;
@@ -86,8 +84,7 @@ bool StereoCalibration::saveToFile(const std::string& path, const std::string& f
 
 void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size boardSize, float blobSize)
 {
-	if (nodes.size()!=2)
-	{
+	if (nodes.size()!=2) {
 		std::cerr << "Size of input nodes vector is not 2!" << std::endl;
 		exit(1);
 	}
@@ -107,8 +104,7 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 	std::vector<std::thread> threads;
 	std::vector<cv::Mat> rvecs;
 	std::vector<cv::Mat> tvecs;
-	for (auto& node: nodes)
-	{
+	for (auto& node: nodes) {
 		threads.push_back(std::thread([&]{
 					BVS::nameThisThread("calIntrins");
 					double calError = cv::calibrateCamera(objectPoints, node->pointStore,
@@ -154,8 +150,7 @@ void StereoCalibration::rectify(cv::Size imageSize, bool addGridOverlay)
 {
 	this->imageSize = imageSize;
 
-	if (initRectifyMap)
-	{
+	if (initRectifyMap) {
 		cv::initUndistortRectifyMap(nodes.at(0)->cameraMatrix, nodes.at(0)->distCoeffs,
 				nodes.at(0)->rectificationMatrix, nodes.at(0)->projectionMatrix, imageSize,
 				CV_16SC2, rectifyMap[0][0], rectifyMap[0][1]);
@@ -168,10 +163,8 @@ void StereoCalibration::rectify(cv::Size imageSize, bool addGridOverlay)
 	cv::remap(nodes.at(0)->frame, *nodes.at(0)->output, rectifyMap[0][0], rectifyMap[0][1], CV_INTER_LINEAR);
 	cv::remap(nodes.at(1)->frame, *nodes.at(1)->output, rectifyMap[1][0], rectifyMap[1][1], CV_INTER_LINEAR);
 
-	if (addGridOverlay)
-	{
-		for (auto& node: nodes)
-		{
+	if (addGridOverlay) {
+		for (auto& node: nodes) {
 			for(int i = 0; i < node->output->rows; i += node->output->rows/10)
 				cv::line(*node->output, cv::Point(0, i), cv::Point(node->output->cols, i), cv::Scalar(0, 255, 0), 1, 8);
 			for(int i = 0; i < node->output->cols; i += node->output->cols/10)
