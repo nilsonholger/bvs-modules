@@ -109,11 +109,11 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 					BVS::nameThisThread("calIntrins");
 					double calError = cv::calibrateCamera(objectPoints, node->pointStore,
 						imageSize, node->cameraMatrix, node->distCoeffs, rvecs, tvecs,
-						CV_CALIB_FIX_PRINCIPAL_POINT + CV_CALIB_FIX_ASPECT_RATIO +
-						CV_CALIB_ZERO_TANGENT_DIST + CV_CALIB_SAME_FOCAL_LENGTH +
-						CV_CALIB_RATIONAL_MODEL +
-						CV_CALIB_FIX_K3 + CV_CALIB_FIX_K4 + CV_CALIB_FIX_K5,
-						cv::TermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5)
+						cv::CALIB_FIX_PRINCIPAL_POINT + cv::CALIB_FIX_ASPECT_RATIO +
+						cv::CALIB_ZERO_TANGENT_DIST + cv::CALIB_SAME_FOCAL_LENGTH +
+						cv::CALIB_RATIONAL_MODEL +
+						cv::CALIB_FIX_K3 + cv::CALIB_FIX_K4 + cv::CALIB_FIX_K5,
+						cv::TermCriteria(cv::TermCriteria::MAX_ITER+cv::TermCriteria::EPS, 100, 1e-5)
 						);
 					(void) calError;
 					LOG(1, "reprojection error for node " << node->id << ": " << calError);
@@ -126,9 +126,9 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 			objectPoints, nodes.at(0)->pointStore, nodes.at(1)->pointStore,
 			nodes.at(0)->cameraMatrix, nodes.at(0)->distCoeffs, nodes.at(1)->cameraMatrix, nodes.at(1)->distCoeffs,
 			imageSize, stereoRotation, stereoTranslation, stereoEssential, stereoFundamental,
-			cv::TermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5),
-			CV_CALIB_USE_INTRINSIC_GUESS + CV_CALIB_FIX_PRINCIPAL_POINT + CV_CALIB_FIX_ASPECT_RATIO +
-			CV_CALIB_SAME_FOCAL_LENGTH + CV_CALIB_RATIONAL_MODEL + CV_CALIB_FIX_K3 + CV_CALIB_FIX_K4 + CV_CALIB_FIX_K5);
+			cv::CALIB_USE_INTRINSIC_GUESS + cv::CALIB_FIX_PRINCIPAL_POINT + cv::CALIB_FIX_ASPECT_RATIO +
+			cv::CALIB_SAME_FOCAL_LENGTH + cv::CALIB_RATIONAL_MODEL + cv::CALIB_FIX_K3 + cv::CALIB_FIX_K4 + cv::CALIB_FIX_K5,
+			cv::TermCriteria(cv::TermCriteria::MAX_ITER+cv::TermCriteria::EPS, 100, 1e-5));
 	LOG(1, "stereo reprojection error: " << rms);
 
 	LOG(2, "calculating stereo rectification!");
@@ -138,7 +138,7 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 			imageSize, stereoRotation, stereoTranslation,
 			nodes.at(0)->rectificationMatrix, nodes.at(1)->rectificationMatrix,
 			nodes.at(0)->projectionMatrix, nodes.at(1)->projectionMatrix,
-			disparityToDepthMapping, CV_CALIB_ZERO_DISPARITY, 0.0f, imageSize,
+			disparityToDepthMapping, cv::CALIB_ZERO_DISPARITY, 0.0f, imageSize,
 			&nodes.at(0)->validRegionOfInterest, &nodes.at(1)->validRegionOfInterest);
 
 	LOG(2, "calibration done!");
@@ -160,8 +160,8 @@ void StereoCalibration::rectify(cv::Size imageSize, bool addGridOverlay)
 		initRectifyMap = false;
 	}
 
-	cv::remap(nodes.at(0)->frame, *nodes.at(0)->output, rectifyMap[0][0], rectifyMap[0][1], CV_INTER_LINEAR);
-	cv::remap(nodes.at(1)->frame, *nodes.at(1)->output, rectifyMap[1][0], rectifyMap[1][1], CV_INTER_LINEAR);
+	cv::remap(nodes.at(0)->frame, *nodes.at(0)->output, rectifyMap[0][0], rectifyMap[0][1], cv::INTER_LINEAR);
+	cv::remap(nodes.at(1)->frame, *nodes.at(1)->output, rectifyMap[1][0], rectifyMap[1][1], cv::INTER_LINEAR);
 
 	if (addGridOverlay) {
 		for (auto& node: nodes) {

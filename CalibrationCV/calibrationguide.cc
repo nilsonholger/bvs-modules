@@ -23,9 +23,9 @@ void CalibrationGuide::addTargetOverlay(cv::Mat& img)
 	// check correct settings usage
 	if (numImages!=9*sectorDetections) {
 		cv::putText(img, "ERROR!!!",
-				cv::Point(10, img.rows/2), CV_FONT_HERSHEY_DUPLEX, 1.0f, color, 2);
+				cv::Point(10, img.rows/2), cv::FONT_HERSHEY_DUPLEX, 1.0f, color, 2);
 		cv::putText(img, "numImages != 9 * sectorDetections!",
-				cv::Point(10, img.rows/2+30), CV_FONT_HERSHEY_DUPLEX, 1.0f, color);
+				cv::Point(10, img.rows/2+30), cv::FONT_HERSHEY_DUPLEX, 1.0f, color);
 		return;
 	}
 
@@ -67,11 +67,11 @@ bool CalibrationGuide::checkDetectionQuality(cv::Mat& img, std::vector<cv::Point
 	if (/*diag > imgDiag/2 ||*/ std::abs(detCenter.x-center.x)>size.x/6 || std::abs(detCenter.y-center.y)>size.y/6) {
 		color = {0, 0, 255};
 		cv::putText(img, "Pattern center position OUTSIDE OF TARGET.",
-				cv::Point(10, img.rows-10), CV_FONT_HERSHEY_DUPLEX,
+				cv::Point(10, img.rows-10), cv::FONT_HERSHEY_DUPLEX,
 				1.0f, color);
 		return false;
 	} else cv::putText(img, "Pattern center position OK.",
-			cv::Point(10, img.rows-10), CV_FONT_HERSHEY_DUPLEX,
+			cv::Point(10, img.rows-10), cv::FONT_HERSHEY_DUPLEX,
 			1.0f, color);
 
 	// update state

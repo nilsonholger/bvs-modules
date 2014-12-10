@@ -118,16 +118,16 @@ BVS::Status CalibrationCV::execute()
 		if (!calibrated) {
 			for (auto& node: nodes) {
 				cv::remap(node->frame, *node->output, reflectX, reflectY, 0);
-				if(node->output->type()==CV_8UC1) cv::cvtColor(*node->output, *node->output, CV_GRAY2BGR);
+				if(node->output->type()==CV_8UC1) cv::cvtColor(*node->output, *node->output, cv::COLOR_GRAY2BGR);
 			}
 			if (useCalibrationGuide) guide.addTargetOverlay(*nodes[0]->output);
 			if (numDetections<numImages) collectCalibrationImages();
 			if (numDetections==numImages && !detectionRunning) calibrate();
 			for (auto& node: nodes) {
 				cv::putText(*node->output, bvs.getFPS(), cv::Point(10, 30),
-						CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 0, 255), 2);
+						cv::FONT_HERSHEY_SIMPLEX, 1.0f, cv::Scalar(0, 0, 255), 2);
 				cv::putText(*node->output, std::to_string(numDetections) + "/" + std::to_string(numImages),
-						cv::Point(100, 30), CV_FONT_HERSHEY_SIMPLEX, 1.0f, cv::Scalar(0, 255, 0), 2, 8);
+						cv::Point(100, 30), cv::FONT_HERSHEY_SIMPLEX, 1.0f, cv::Scalar(0, 255, 0), 2, 8);
 				cv::imshow(info.id+"_"+std::to_string(node->id), *node->output);
 				if (calibrated) cv::destroyWindow(std::to_string(node->id));
 			}
@@ -251,7 +251,7 @@ void CalibrationCV::collectCalibrationImages()
 
 		if (!foundPattern) {
 			cv::putText(*nodes[0]->output, "Pattern NOT FOUND!",
-					cv::Point(10, imageSize.height-10), CV_FONT_HERSHEY_DUPLEX,
+					cv::Point(10, imageSize.height-10), cv::FONT_HERSHEY_DUPLEX,
 					1.0f, cv::Scalar(0, 0, 255));
 			break;
 		}

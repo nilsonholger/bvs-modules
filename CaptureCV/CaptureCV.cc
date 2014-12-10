@@ -74,10 +74,10 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& _bvs)
 			enableOutputs();
 			for (int i=0; i<numNodes; i++) {
 				captures.emplace_back(cv::VideoCapture(i+nodeOffset));
-				if (cameraMode>=0) captures.at(i).set(CV_CAP_PROP_MODE, cameraMode);
-				if (cameraFPS>=0) captures.at(i).set(CV_CAP_PROP_FPS, cameraFPS);
-				if (cameraWidth>=0) captures.at(i).set(CV_CAP_PROP_FRAME_WIDTH, cameraWidth);
-				if (cameraHeight>=0) captures.at(i).set(CV_CAP_PROP_FRAME_HEIGHT, cameraHeight);
+				if (cameraMode>=0) captures.at(i).set(cv::CAP_PROP_MODE, cameraMode);
+				if (cameraFPS>=0) captures.at(i).set(cv::CAP_PROP_FPS, cameraFPS);
+				if (cameraWidth>=0) captures.at(i).set(cv::CAP_PROP_FRAME_WIDTH, cameraWidth);
+				if (cameraHeight>=0) captures.at(i).set(cv::CAP_PROP_FRAME_HEIGHT, cameraHeight);
 				if (!captures.at(i).isOpened()) LOG(0, "Could not open camera: " << i << "!");
 			}
 			break;
@@ -98,7 +98,7 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& _bvs)
 			enableInputs();
 			getVideoFiles();
 			if (recordFOURCC.length()!=4) { LOG(0, "RecordFOURCC length must be 4!"); }
-			else { fourcc = CV_FOURCC(recordFOURCC[0], recordFOURCC[1], recordFOURCC[2], recordFOURCC[3]); }
+			else { fourcc = cv::VideoWriter::fourcc(recordFOURCC[0], recordFOURCC[1], recordFOURCC[2], recordFOURCC[3]); }
 			for (int i=0; i<numNodes; i++) writers.emplace_back(cv::VideoWriter());
 			break;
 		case 'S':
