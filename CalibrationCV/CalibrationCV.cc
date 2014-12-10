@@ -75,7 +75,6 @@ CalibrationCV::CalibrationCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	if (!(calibrated || useSavedImages))
 	{
 		for (auto& node: nodes) cv::namedWindow(info.id+"_"+std::to_string(node->id));
-		cv::startWindowThread();
 	}
 }
 
