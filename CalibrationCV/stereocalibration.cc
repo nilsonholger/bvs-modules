@@ -5,9 +5,10 @@
 
 
 
-StereoCalibration::StereoCalibration(CalNodeVec& nodes)
+StereoCalibration::StereoCalibration(CalNodeVec& nodes, bool fisheye)
 	: logger("StereoCalib")
 	, nodes(nodes)
+	, fisheye(fisheye)
 	, imageSize()
 	, rms(0)
 	, initRectifyMap(true)

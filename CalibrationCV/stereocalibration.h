@@ -19,8 +19,9 @@ class StereoCalibration
 	public:
 		/** Constructor.
 		 * @param[in] nodes Vector of calibration nodes (MUST be of size 2).
+		 * @param[in] fisheye Use fisheye distortion model.
 		 */
-		StereoCalibration(CalNodeVec& nodes);
+		StereoCalibration(CalNodeVec& nodes, bool fisheye);
 
 		/** Loads calibration from file.
 		 * @param[in] path Path to file (directory).
@@ -53,6 +54,7 @@ class StereoCalibration
 	private:
 		BVS::Logger logger; /**< Logger instance. */
 		CalNodeVec& nodes; /**< Vector of calibration nodes. */
+		bool fisheye; /**< Use fisheye distortion model. */
 		cv::Size imageSize; /**< Image size. */
 		double rms; /** Reprojection error. */
 		bool initRectifyMap; /**< If rectifyMap needs initialization. */

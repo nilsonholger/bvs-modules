@@ -138,6 +138,7 @@ class CalibrationCV : public BVS::Module
 		bool addGridOverlay; /**< Whether to add grid overlay on output images. */
 		bool useCalibrationGuide; /**< Whether to use the calibration guide. */
 		int sectorDetections; /**< Number of per sector detections. */
+		bool fisheye; /**< Use fisheye model for calibration and rectification. */
 
 		bool calibrated; /** Calibration status. */
 		bool detectionRunning; /** Detection thread running in background. */
