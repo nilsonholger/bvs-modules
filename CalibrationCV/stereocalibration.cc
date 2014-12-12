@@ -108,39 +108,70 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 	for (auto& node: nodes) {
 		threads.push_back(std::thread([&]{
 					BVS::nameThisThread("calIntrins");
-					double calError = cv::calibrateCamera(objectPoints, node->pointStore,
-						imageSize, node->cameraMatrix, node->distCoeffs, rvecs, tvecs,
-						cv::CALIB_FIX_PRINCIPAL_POINT + cv::CALIB_FIX_ASPECT_RATIO +
-						cv::CALIB_ZERO_TANGENT_DIST + cv::CALIB_SAME_FOCAL_LENGTH +
-						cv::CALIB_RATIONAL_MODEL +
-						cv::CALIB_FIX_K3 + cv::CALIB_FIX_K4 + cv::CALIB_FIX_K5,
-						cv::TermCriteria(cv::TermCriteria::MAX_ITER+cv::TermCriteria::EPS, 100, 1e-5)
-						);
-					(void) calError;
+					double calError;
+					if (fisheye)
+						calError = cv::fisheye::calibrate(objectPoints, node->pointStore,
+							imageSize, node->cameraMatrix, node->distCoeffs, rvecs, tvecs,
+							// TODO: cv::CALIB_RECOMPUTE_EXTRINSIC, cv::CALIB_CHECK_COND, cv::CALIB_FIX_SKEW, cv::CALIB_FIX_K1...K4 <- cv::fisheye::
+							cv::CALIB_FIX_PRINCIPAL_POINT + cv::CALIB_FIX_ASPECT_RATIO +
+							cv::CALIB_ZERO_TANGENT_DIST + cv::CALIB_SAME_FOCAL_LENGTH +
+							cv::CALIB_RATIONAL_MODEL +
+							cv::CALIB_FIX_K3 + cv::CALIB_FIX_K4 + cv::CALIB_FIX_K5,
+							cv::TermCriteria(cv::TermCriteria::MAX_ITER+cv::TermCriteria::EPS, 100, 1e-5)
+							);
+					else
+						calError = cv::calibrateCamera(objectPoints, node->pointStore,
+							imageSize, node->cameraMatrix, node->distCoeffs, rvecs, tvecs,
+							cv::CALIB_FIX_PRINCIPAL_POINT + cv::CALIB_FIX_ASPECT_RATIO +
+							cv::CALIB_ZERO_TANGENT_DIST + cv::CALIB_SAME_FOCAL_LENGTH +
+							cv::CALIB_RATIONAL_MODEL +
+							cv::CALIB_FIX_K3 + cv::CALIB_FIX_K4 + cv::CALIB_FIX_K5,
+							cv::TermCriteria(cv::TermCriteria::MAX_ITER+cv::TermCriteria::EPS, 100, 1e-5)
+							);
 					LOG(1, "reprojection error for node " << node->id << ": " << calError);
 					}));
 	}
 	for (auto& t: threads) t.join();
 
 	LOG(2, "calibrating stereo!");
-	rms = cv::stereoCalibrate(
-			objectPoints, nodes.at(0)->pointStore, nodes.at(1)->pointStore,
-			nodes.at(0)->cameraMatrix, nodes.at(0)->distCoeffs, nodes.at(1)->cameraMatrix, nodes.at(1)->distCoeffs,
-			imageSize, stereoRotation, stereoTranslation, stereoEssential, stereoFundamental,
-			cv::CALIB_USE_INTRINSIC_GUESS + cv::CALIB_FIX_PRINCIPAL_POINT + cv::CALIB_FIX_ASPECT_RATIO +
-			cv::CALIB_SAME_FOCAL_LENGTH + cv::CALIB_RATIONAL_MODEL + cv::CALIB_FIX_K3 + cv::CALIB_FIX_K4 + cv::CALIB_FIX_K5,
-			cv::TermCriteria(cv::TermCriteria::MAX_ITER+cv::TermCriteria::EPS, 100, 1e-5));
+	if (fisheye)
+		rms = cv::fisheye::stereoCalibrate(
+				objectPoints, nodes.at(0)->pointStore, nodes.at(1)->pointStore,
+				nodes.at(0)->cameraMatrix, nodes.at(0)->distCoeffs, nodes.at(1)->cameraMatrix, nodes.at(1)->distCoeffs,
+				imageSize, stereoRotation, stereoTranslation, // stereoEssential, stereoFundamental,
+				// TODO: cv::CALIB_FIX_INTRINSIC or cv::CALIB_USE_INTRINSIC_GUESS, cv::CALIB_RECOMPUTE_EXTRINSIC, cv::CALIB_CHECK_COND, cv::CALIB_FIX_SKEW, cv::CALIB_FIX_K1...K4 <- cv::fisheye::
+				cv::CALIB_USE_INTRINSIC_GUESS + cv::CALIB_FIX_PRINCIPAL_POINT + cv::CALIB_FIX_ASPECT_RATIO +
+				cv::CALIB_SAME_FOCAL_LENGTH + cv::CALIB_RATIONAL_MODEL + cv::CALIB_FIX_K3 + cv::CALIB_FIX_K4 + cv::CALIB_FIX_K5,
+				cv::TermCriteria(cv::TermCriteria::MAX_ITER+cv::TermCriteria::EPS, 100, 1e-5));
+	else
+		rms = cv::stereoCalibrate(
+				objectPoints, nodes.at(0)->pointStore, nodes.at(1)->pointStore,
+				nodes.at(0)->cameraMatrix, nodes.at(0)->distCoeffs, nodes.at(1)->cameraMatrix, nodes.at(1)->distCoeffs,
+				imageSize, stereoRotation, stereoTranslation, stereoEssential, stereoFundamental,
+				cv::CALIB_USE_INTRINSIC_GUESS + cv::CALIB_FIX_PRINCIPAL_POINT + cv::CALIB_FIX_ASPECT_RATIO +
+				cv::CALIB_SAME_FOCAL_LENGTH + cv::CALIB_RATIONAL_MODEL + cv::CALIB_FIX_K3 + cv::CALIB_FIX_K4 + cv::CALIB_FIX_K5,
+				cv::TermCriteria(cv::TermCriteria::MAX_ITER+cv::TermCriteria::EPS, 100, 1e-5));
 	LOG(1, "stereo reprojection error: " << rms);
 
 	LOG(2, "calculating stereo rectification!");
-	cv::stereoRectify(
-			nodes.at(0)->cameraMatrix, nodes.at(0)->distCoeffs,
-			nodes.at(1)->cameraMatrix, nodes.at(1)->distCoeffs,
-			imageSize, stereoRotation, stereoTranslation,
-			nodes.at(0)->rectificationMatrix, nodes.at(1)->rectificationMatrix,
-			nodes.at(0)->projectionMatrix, nodes.at(1)->projectionMatrix,
-			disparityToDepthMapping, cv::CALIB_ZERO_DISPARITY, 0.0f, imageSize,
-			&nodes.at(0)->validRegionOfInterest, &nodes.at(1)->validRegionOfInterest);
+	if (fisheye)
+		cv::fisheye::stereoRectify(
+				nodes.at(0)->cameraMatrix, nodes.at(0)->distCoeffs,
+				nodes.at(1)->cameraMatrix, nodes.at(1)->distCoeffs,
+				imageSize, stereoRotation, stereoTranslation,
+				nodes.at(0)->rectificationMatrix, nodes.at(1)->rectificationMatrix,
+				nodes.at(0)->projectionMatrix, nodes.at(1)->projectionMatrix,
+				disparityToDepthMapping, cv::CALIB_ZERO_DISPARITY, imageSize,
+				0.0, 1.0); // TODO: check settings
+	else
+		cv::stereoRectify(
+				nodes.at(0)->cameraMatrix, nodes.at(0)->distCoeffs,
+				nodes.at(1)->cameraMatrix, nodes.at(1)->distCoeffs,
+				imageSize, stereoRotation, stereoTranslation,
+				nodes.at(0)->rectificationMatrix, nodes.at(1)->rectificationMatrix,
+				nodes.at(0)->projectionMatrix, nodes.at(1)->projectionMatrix,
+				disparityToDepthMapping, cv::CALIB_ZERO_DISPARITY, 0.0, imageSize,
+				&nodes.at(0)->validRegionOfInterest, &nodes.at(1)->validRegionOfInterest);
 
 	LOG(2, "calibration done!");
 }
@@ -152,10 +183,16 @@ void StereoCalibration::rectify(cv::Size imageSize, bool addGridOverlay)
 	this->imageSize = imageSize;
 
 	if (initRectifyMap) {
-		for (int i=0; i<2; i++)
-			cv::initUndistortRectifyMap(nodes.at(i)->cameraMatrix, nodes.at(i)->distCoeffs,
-					nodes.at(i)->rectificationMatrix, nodes.at(i)->projectionMatrix, imageSize,
-					CV_16SC2, rectifyMap[i][0], rectifyMap[i][1]);
+		if (fisheye)
+			for (int i=0; i<2; i++)
+				cv::fisheye::initUndistortRectifyMap(nodes.at(i)->cameraMatrix, nodes.at(i)->distCoeffs,
+						nodes.at(i)->rectificationMatrix, nodes.at(i)->projectionMatrix, imageSize,
+						CV_16SC2, rectifyMap[i][0], rectifyMap[i][1]);
+		else
+			for (int i=0; i<2; i++)
+				cv::initUndistortRectifyMap(nodes.at(i)->cameraMatrix, nodes.at(i)->distCoeffs,
+						nodes.at(i)->rectificationMatrix, nodes.at(i)->projectionMatrix, imageSize,
+						CV_16SC2, rectifyMap[i][0], rectifyMap[i][1]);
 		initRectifyMap = false;
 	}
 
