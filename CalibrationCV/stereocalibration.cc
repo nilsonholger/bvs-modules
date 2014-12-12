@@ -151,17 +151,15 @@ void StereoCalibration::rectify(cv::Size imageSize, bool addGridOverlay)
 	this->imageSize = imageSize;
 
 	if (initRectifyMap) {
-		cv::initUndistortRectifyMap(nodes.at(0)->cameraMatrix, nodes.at(0)->distCoeffs,
-				nodes.at(0)->rectificationMatrix, nodes.at(0)->projectionMatrix, imageSize,
-				CV_16SC2, rectifyMap[0][0], rectifyMap[0][1]);
-		cv::initUndistortRectifyMap(nodes.at(1)->cameraMatrix, nodes.at(1)->distCoeffs,
-				nodes.at(1)->rectificationMatrix, nodes.at(1)->projectionMatrix, imageSize,
-				CV_16SC2, rectifyMap[1][0], rectifyMap[1][1]);
+		for (int i=0; i<2; i++)
+			cv::initUndistortRectifyMap(nodes.at(i)->cameraMatrix, nodes.at(i)->distCoeffs,
+					nodes.at(i)->rectificationMatrix, nodes.at(i)->projectionMatrix, imageSize,
+					CV_16SC2, rectifyMap[i][0], rectifyMap[i][1]);
 		initRectifyMap = false;
 	}
 
-	cv::remap(nodes.at(0)->frame, *nodes.at(0)->output, rectifyMap[0][0], rectifyMap[0][1], cv::INTER_LINEAR);
-	cv::remap(nodes.at(1)->frame, *nodes.at(1)->output, rectifyMap[1][0], rectifyMap[1][1], cv::INTER_LINEAR);
+	for (int i=0; i<2; i++)
+		cv::remap(nodes.at(i)->frame, *nodes.at(i)->output, rectifyMap[i][0], rectifyMap[i][1], cv::INTER_LINEAR);
 
 	if (addGridOverlay) {
 		for (auto& node: nodes) {
