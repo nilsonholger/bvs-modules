@@ -112,11 +112,9 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 					if (fisheye)
 						calError = cv::fisheye::calibrate(objectPoints, node->pointStore,
 							imageSize, node->cameraMatrix, node->distCoeffs, rvecs, tvecs,
-							// TODO: cv::CALIB_RECOMPUTE_EXTRINSIC, cv::CALIB_CHECK_COND, cv::CALIB_FIX_SKEW, cv::CALIB_FIX_K1...K4 <- cv::fisheye::
-							cv::CALIB_FIX_PRINCIPAL_POINT + cv::CALIB_FIX_ASPECT_RATIO +
-							cv::CALIB_ZERO_TANGENT_DIST + cv::CALIB_SAME_FOCAL_LENGTH +
-							cv::CALIB_RATIONAL_MODEL +
-							cv::CALIB_FIX_K3 + cv::CALIB_FIX_K4 + cv::CALIB_FIX_K5,
+							// TODO: optimize... cv::fisheye::CALIB_FIX_K1...K4
+							cv::fisheye::CALIB_RECOMPUTE_EXTRINSIC + cv::fisheye::CALIB_CHECK_COND +
+							cv::fisheye::CALIB_FIX_SKEW,
 							cv::TermCriteria(cv::TermCriteria::MAX_ITER+cv::TermCriteria::EPS, 100, 1e-5)
 							);
 					else
@@ -138,10 +136,10 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 		rms = cv::fisheye::stereoCalibrate(
 				objectPoints, nodes.at(0)->pointStore, nodes.at(1)->pointStore,
 				nodes.at(0)->cameraMatrix, nodes.at(0)->distCoeffs, nodes.at(1)->cameraMatrix, nodes.at(1)->distCoeffs,
-				imageSize, stereoRotation, stereoTranslation, // stereoEssential, stereoFundamental,
-				// TODO: cv::CALIB_FIX_INTRINSIC or cv::CALIB_USE_INTRINSIC_GUESS, cv::CALIB_RECOMPUTE_EXTRINSIC, cv::CALIB_CHECK_COND, cv::CALIB_FIX_SKEW, cv::CALIB_FIX_K1...K4 <- cv::fisheye::
-				cv::CALIB_USE_INTRINSIC_GUESS + cv::CALIB_FIX_PRINCIPAL_POINT + cv::CALIB_FIX_ASPECT_RATIO +
-				cv::CALIB_SAME_FOCAL_LENGTH + cv::CALIB_RATIONAL_MODEL + cv::CALIB_FIX_K3 + cv::CALIB_FIX_K4 + cv::CALIB_FIX_K5,
+				imageSize, stereoRotation, stereoTranslation,
+				// TODO: optimize... cv::fisheye::CALIB_FIX_INTRINSIC, cv::CALIB_FIX_K1...K4
+				cv::fisheye::CALIB_USE_INTRINSIC_GUESS + cv::fisheye::CALIB_RECOMPUTE_EXTRINSIC +
+				cv::fisheye::CALIB_CHECK_COND + cv::fisheye::CALIB_FIX_SKEW,
 				cv::TermCriteria(cv::TermCriteria::MAX_ITER+cv::TermCriteria::EPS, 100, 1e-5));
 	else
 		rms = cv::stereoCalibrate(
