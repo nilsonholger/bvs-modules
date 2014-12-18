@@ -70,7 +70,7 @@ CalibrationCV::CalibrationCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	}
 
 	if (!useCalibrationFile.empty()) calibrated = loadCalibrationFrom(directory, useCalibrationFile);
-	if (!calibrated) detectionThread = std::thread(&CalibrationCV::detectCalibrationPoints, this);
+	if (!calibrated && !useSavedImages) detectionThread = std::thread(&CalibrationCV::detectCalibrationPoints, this);
 	if (!(calibrated || useSavedImages))
 		for (auto& node: nodes) cv::namedWindow(info.id+"_"+std::to_string(node->id));
 }
@@ -93,20 +93,7 @@ CalibrationCV::~CalibrationCV()
 BVS::Status CalibrationCV::execute()
 {
 	if (useSavedImages) {
-		if (numDetections<numImages) {
-			for (auto& node: nodes) {
-				node->frame = cv::imread(directory + "/" + imageDirectory + "/img"
-						+ std::to_string(numDetections+1) + "-" + std::to_string(node->id) + ".pbm");
-				if (node->frame.empty()) {
-					LOG(1, "NOT FOUND: " << directory << "/" << imageDirectory + "/img" + std::to_string(numDetections+1)
-							+ "-" + std::to_string(node->id) + ".pbm");
-					return BVS::Status::SHUTDOWN;
-				}
-			}
-			if (imageSize == cv::Size()) imageSize = nodes[0]->frame.size();
-			notifyDetectionThread();
-		}
-		if (numDetections==numImages && !detectionRunning && !calibrated) calibrate();
+		calibrateUsingSavedImages();
 		if (calibrated && rectifyCalImages) if (!rectifyCalibrationImages()) return BVS::Status::SHUTDOWN;
 	} else {
 		for (auto& node: nodes) {
@@ -278,8 +265,6 @@ void CalibrationCV::notifyDetectionThread()
 			(std::chrono::high_resolution_clock::now() - shotTimer).count() < autoShotDelay && !useSavedImages)
 		return;
 
-	if (useSavedImages) LOG(2, "loading image: " << numDetections+1 << "/" << numImages);
-	
 	shotTimer = std::chrono::high_resolution_clock::now();
 	numDetections++;
 	for (auto& node: nodes)
@@ -337,6 +322,29 @@ void CalibrationCV::clearCalibrationData()
 		node->pointStore.clear();
 		node->pointStore.shrink_to_fit();
 	}
+}
+
+
+
+void CalibrationCV::calibrateUsingSavedImages()
+{
+	for (auto& node: nodes)
+		node->pointStore.resize(numImages);
+
+	for (; numDetections<numImages; numDetections++) {
+		LOG(2, "Processing image: " << numDetections+1 << "/" << numImages);
+		for (auto& node: nodes) {
+			std::string file = directory + "/" + imageDirectory + "/img" + std::to_string(numDetections+1) + "-" + std::to_string(node->id) + ".pbm";
+			node->frame = cv::imread(file);
+			if (node->frame.empty()) LOG(0, "Image not found: " << file);
+			if (imageSize == cv::Size()) imageSize = nodes[0]->frame.size();
+			if (!cv::findCirclesGrid(node->frame, boardSize, node->points, flags))
+				LOG(0, "Could not find grid in image: " << file);
+			node->pointStore.at(numDetections) = node->points;
+		}
+	}
+
+	calibrate();
 }
 
 

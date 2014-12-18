@@ -110,6 +110,9 @@ class CalibrationCV : public BVS::Module
 		 */
 		void rectifyOutputNodes();
 
+		/** Calibrate using saved images. */
+		void calibrateUsingSavedImages();
+
 		/** Rectify calibration images. */
 		bool rectifyCalibrationImages();
 
