@@ -93,8 +93,9 @@ CalibrationCV::~CalibrationCV()
 BVS::Status CalibrationCV::execute()
 {
 	if (useSavedImages) {
-		calibrateUsingSavedImages();
-		if (calibrated && rectifyCalImages) if (!rectifyCalibrationImages()) return BVS::Status::SHUTDOWN;
+		if (!calibrated) calibrateUsingSavedImages();
+		if (calibrated && rectifyCalImages) rectifyCalibrationImages();
+		return BVS::Status::SHUTDOWN;
 	} else {
 		for (auto& node: nodes) {
 			if(!node->input.receive(node->frame)) return BVS::Status::NOINPUT;
@@ -332,14 +333,14 @@ void CalibrationCV::calibrateUsingSavedImages()
 		node->pointStore.resize(numImages);
 
 	for (; numDetections<numImages; numDetections++) {
-		LOG(2, "Processing image: " << numDetections+1 << "/" << numImages);
+		LOG(2, "processing image: " << numDetections+1 << "/" << numImages);
 		for (auto& node: nodes) {
 			std::string file = directory + "/" + imageDirectory + "/img" + std::to_string(numDetections+1) + "-" + std::to_string(node->id) + ".pbm";
 			node->frame = cv::imread(file);
-			if (node->frame.empty()) LOG(0, "Image not found: " << file);
+			if (node->frame.empty()) LOG(0, "image not found: " << file);
 			if (imageSize == cv::Size()) imageSize = nodes[0]->frame.size();
 			if (!cv::findCirclesGrid(node->frame, boardSize, node->points, flags))
-				LOG(0, "Could not find grid in image: " << file);
+				LOG(0, "could not find grid in image: " << file);
 			node->pointStore.at(numDetections) = node->points;
 		}
 	}
@@ -351,19 +352,22 @@ void CalibrationCV::calibrateUsingSavedImages()
 
 bool CalibrationCV::rectifyCalibrationImages()
 {
-	LOG(2, "rectifying image " << rectifyCounter);
+	for (; rectifyCounter<=numImages; rectifyCounter++)
+	{
+		LOG(2, "rectifying image " << rectifyCounter << "/" << numImages);
 
-	for (auto& node: nodes) {
-		std::string file = directory + "/" + imageDirectory + "/img" + std::to_string(rectifyCounter) + "-" + std::to_string(node->id) + ".pbm";
-		node->frame = cv::imread(file);
-		if (node->frame.empty()) {
-			LOG(1, "NOT FOUND: " << file);
-			return false;
+		for (auto& node: nodes) {
+			std::string file = directory + "/" + imageDirectory + "/img" + std::to_string(rectifyCounter) + "-" + std::to_string(node->id) + ".pbm";
+			node->frame = cv::imread(file);
+			if (node->frame.empty()) {
+				LOG(0, "image not found: " << file);
+				return false;
+			}
+			if (imageSize == cv::Size()) imageSize = nodes[0]->frame.size();
 		}
+		rectifyOutputNodes();
+		for (auto& node: nodes) cv::imwrite(directory + "/" + rectifiedDirectory + "/rect" + std::to_string(rectifyCounter) + "-" + std::to_string(node->id) + ".jpg", *node->output);
 	}
-	rectifyOutputNodes();
-	for (auto& node: nodes) cv::imwrite(directory + "/" + rectifiedDirectory + "/rect" + std::to_string(rectifyCounter) + "-" + std::to_string(node->id) + ".jpg", *node->output);
-	rectifyCounter++;
 	return true;
 }
 
