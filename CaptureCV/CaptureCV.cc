@@ -168,7 +168,7 @@ BVS::Status CaptureCV::execute()
 		case 'R':
 			for (int i=0; i<numNodes; i++) {
 				if (!writers.at(i).isOpened()) {
-					LOG(2, videoFiles.at(i) << ": " << (**inputs.at(i)).cols << "x" << (**inputs.at(i)).rows << "@" << recordFPS << " Codec: " << recordFOURCC << " Color: " << recordColor);
+					LOG(2, videoFiles.at(i) << ":" << (**inputs.at(i)).cols << "x" << (**inputs.at(i)).rows << "@" << recordFPS << "fps(" << recordFOURCC << "," << (recordColor ? "COLOR" : "NOCOLOR") << ")");
 					writers.at(i).open(videoFiles.at(i), fourcc, recordFPS, cv::Size((**inputs.at(i)).cols, (**inputs.at(i)).rows), recordColor);
 					if (!writers.at(i).isOpened()) LOG(0, "Could not open writer for '" << videoFiles.at(i));
 				}
