@@ -83,7 +83,7 @@ bool StereoCalibration::saveToFile(const std::string& path, const std::string& f
 
 
 
-void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size boardSize, float blobSize)
+void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size boardSize, std::string pattern, float blobSize)
 {
 	if (nodes.size()!=2) {
 		std::cerr << "Size of input nodes vector is not 2!" << std::endl;
@@ -96,10 +96,10 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 	for (int i=0; i<numImages; i++)
 		for (int j=0; j<boardSize.height; j++)
 			for (int k=0; k<boardSize.width; k++)
-				// below works for CHESSBOARDS or SYMMETRIC CIRCLE patterns only
-				//objectPoints.at(i).push_back(cv::Point3f(j*blobSize, k*blobSize, 0));
-				// below is for ASYMMETRIC CIRCLE patterns
-				objectPoints.at(i).push_back(cv::Point3f(double((2*k+j%2)*blobSize/2.), double(j*blobSize/2.), 0.));
+				if (pattern.at(0)=='A')
+					objectPoints.at(i).push_back(cv::Point3f(double((2*k+j%2)*blobSize/2.), double(j*blobSize/2.), 0.)); // for ASYMMETRIC CIRCLE patterns
+				else
+					objectPoints.at(i).push_back(cv::Point3f(j*blobSize, k*blobSize, 0)); // for CHESSBOARDS or SYMMETRIC CIRCLE patterns only
 
 	LOG(2, "calibrating individual cameras intrinsics!");
 	std::vector<std::thread> threads;

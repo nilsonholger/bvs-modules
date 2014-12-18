@@ -34,6 +34,7 @@ CalibrationCV::CalibrationCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	, objectPoints()
 	, imageSize()
 	, boardSize(gridX, gridY)
+	, flags{pattern.at(0)=='A' ? cv::CALIB_CB_ASYMMETRIC_GRID : cv::CALIB_CB_SYMMETRIC_GRID}
 	, detectionThread()
 	, detectionMutex()
 	, detectionLock(detectionMutex)
@@ -208,7 +209,7 @@ void CalibrationCV::calibrate()
 			// single camera
 			break;
 		case 2:
-			stereo.calibrate(numDetections, imageSize, boardSize, gridBlobSize);
+			stereo.calibrate(numDetections, imageSize, boardSize, pattern, gridBlobSize);
 			if (!useCalibrationFile.empty()) saveCalibrationTo(directory, useCalibrationFile);
 			break;
 	}
@@ -242,7 +243,7 @@ void CalibrationCV::collectCalibrationImages()
 		/** @todo paralellize with threads to decrease latency? */
 		cv::pyrDown(node->frame, node->scaledFrame, cv::Size(imageSize.width/2, imageSize.height/2));
 		foundPattern = cv::findCirclesGrid(node->scaledFrame, boardSize,
-				node->framePoints, cv::CALIB_CB_ASYMMETRIC_GRID);
+				node->framePoints, flags);
 		for (auto& point: node->framePoints) {
 			point.x = node->frame.cols - point.x * 2;
 			point.y = point.y * 2;
@@ -302,7 +303,7 @@ void CalibrationCV::detectCalibrationPoints()
 		detectionCond.wait(detectionLock, [&](){ return detectionRunning; });
 		numPositives = 0;
 		for (auto& node: nodes) {
-			foundPattern = cv::findCirclesGrid(node->sample, boardSize, node->points, cv::CALIB_CB_ASYMMETRIC_GRID);
+			foundPattern = cv::findCirclesGrid(node->sample, boardSize, node->points, flags);
 			if (!foundPattern) {
 				numDetections--;
 				break;

@@ -152,6 +152,7 @@ class CalibrationCV : public BVS::Module
 		std::vector<std::vector<cv::Point3f>> objectPoints; /**< Vector of pattern object points. */
 		cv::Size imageSize; /**< Input image size. */
 		cv::Size boardSize; /**< Detection pattern board size. */
+		int flags; /**< Calibration flags. */
 
 		std::thread detectionThread; /**< Detection thread handle. */
 		std::mutex detectionMutex; /**< Mutex for detectionThread. */
