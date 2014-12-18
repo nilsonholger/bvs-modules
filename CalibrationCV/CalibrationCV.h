@@ -108,7 +108,7 @@ class CalibrationCV : public BVS::Module
 		/** Rectify output.
 		 * This method rectifies the output for all nodes.
 		 */
-		void rectifyOutput();
+		void rectifyOutputNodes();
 
 		/** Rectify calibration images. */
 		bool rectifyCalibrationImages();
@@ -121,25 +121,29 @@ class CalibrationCV : public BVS::Module
 
 		// config options
 		int numNodes; /**< Number of calibration nodes. */
-		int numImages; /**< Number of calibration images. */
-		float blobSize; /**< Square size or circle center distance of detection pattern. */
-		bool autoShotMode; /**< Auto or manual mode. */
-		int autoShotDelay; /**< Delay for auto mode. */
 		std::string directory; /**< Base directory of calibration data. */
+		std::string useCalibrationFile; /**< File to save/load calibration to/from. */
 		bool saveImages; /**< Whether to save images or not. */
 		bool useSavedImages; /**< Calculate calibration using saved images. */
-		bool rectifyCalImages; /**< Save rectified calibration images and quit. */
 		std::string imageDirectory; /**< Directory for calibration images (saveImages/useSavedImages). */
-		std::string outputDirectory; /** Directory for rectified calibration images. */
-		bool loadCalibration; /**< Whether to load calibration. */
-		bool saveCalibration; /**< Whether to save calibration. */
-		std::string calibrationFile; /**< File to save/load calibration to/from. */
-		bool createRectifiedOutput; /**< Whether to rectify the output images. */
+		int autoShotDelay; /**< Delay for auto mode. */
+
+		int numImages; /**< Number of calibration images. */
+		bool fisheye; /**< Use fisheye model for calibration and rectification. */
+		std::string pattern; /**< Pattern type to use ((a-)symmetric). */
+		float gridBlobSize; /**< Square size or circle center distance of detection pattern. */
+		unsigned int gridX; /**< Grid size in one direction. */
+		unsigned int gridY; /**< Grid size in other direction. */
+
+		bool rectifyOutput; /**< Whether to rectify the output images. */
 		bool addGridOverlay; /**< Whether to add grid overlay on output images. */
+		bool rectifyCalImages; /**< Save rectified calibration images and quit. */
+		std::string rectifiedDirectory; /** Directory for rectified calibration images. */
+
 		bool useCalibrationGuide; /**< Whether to use the calibration guide. */
 		int sectorDetections; /**< Number of per sector detections. */
-		bool fisheye; /**< Use fisheye model for calibration and rectification. */
 
+		// internal
 		bool calibrated; /** Calibration status. */
 		bool detectionRunning; /** Detection thread running in background. */
 		int numDetections; /**< Number of detected patterns. */
