@@ -17,16 +17,19 @@ FlowerBoxReader::FlowerBoxReader(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	, imgR("imgR", BVS::ConnectorType::OUTPUT)
 	, section("section", BVS::ConnectorType::OUTPUT)
 	, disparity("disparity", BVS::ConnectorType::OUTPUT)
-	, dataDir(bvs.config.getValue<std::string>(info.conf+".directory", {}))
-	, videoList{{}}
+	, dataDir(bvs.config.getValue<std::string>(info.conf+".directory", "flowerbox"))
+	, videoList{ "alley", "alley-leveled", "bicycle", "car", "corridor", "fence", "flowerbox", "hedge", "ladder", "narrow", "pan", "passage", "railing", "ramp", "ridge", "sidewalk", "sidewalk-2", "sidewalk-leveled", "sign", "street" }
 	, video{}
 	, counter{30}
 {
-	if (dataDir.empty()) requestShutdown = true;
-	bvs.config.getValue(info.conf+".videoList", videoList);
-	if (videoList.empty()) requestShutdown = true;
-	video = videoList.front();
-	videoList.erase(videoList.begin());
+	std::vector<std::string> tmp;
+	bvs.config.getValue(info.conf+".videoList", tmp);
+	if (!tmp.empty()) {
+		videoList = tmp;
+		video = videoList.front();
+		videoList.erase(videoList.begin());
+	}
+	if (dataDir.empty() || videoList.empty()) requestShutdown = true;
 }
 
 
