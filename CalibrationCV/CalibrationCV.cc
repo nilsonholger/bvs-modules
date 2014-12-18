@@ -69,7 +69,7 @@ CalibrationCV::CalibrationCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 
 	if (loadCalibration) calibrated = loadCalibrationFrom(directory, calibrationFile);
 	if (!calibrated) detectionThread = std::thread(&CalibrationCV::detectCalibrationPoints, this);
-	if (!(calibrated || useSavedImages))
+	if (!calibrated && !useSavedImages)
 		for (auto& node: nodes) cv::namedWindow(info.id+"_"+std::to_string(node->id));
 }
 
@@ -272,8 +272,10 @@ void CalibrationCV::notifyDetectionThread()
 {
 	if (detectionRunning) return;
 
-	if (autoShotMode && std::chrono::duration_cast<std::chrono::seconds>
-			(std::chrono::high_resolution_clock::now() - shotTimer).count() < autoShotDelay && !useSavedImages)
+	if (!useSavedImages && autoShotDelay!=0 &&
+			std::chrono::duration_cast<std::chrono::seconds>
+			(std::chrono::high_resolution_clock::now() - shotTimer).count()
+			< autoShotDelay)
 		return;
 
 	if (useSavedImages) LOG(2, "loading image: " << numDetections+1 << "/" << numImages);
