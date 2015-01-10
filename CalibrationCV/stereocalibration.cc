@@ -103,8 +103,8 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 
 	LOG(2, "calibrating individual cameras intrinsics!");
 	std::vector<std::thread> threads;
-	std::vector<cv::Mat> rvecs;
-	std::vector<cv::Mat> tvecs;
+	std::vector<cv::Vec3d> rvecs;
+	std::vector<cv::Vec3d> tvecs;
 	for (auto& node: nodes) {
 		threads.push_back(std::thread([&]{
 					BVS::nameThisThread("calIntrins");
@@ -113,8 +113,7 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 						calError = cv::fisheye::calibrate(objectPoints, node->pointStore,
 							imageSize, node->cameraMatrix, node->distCoeffs, rvecs, tvecs,
 							// TODO: optimize... cv::fisheye::CALIB_FIX_K1...K4
-							cv::fisheye::CALIB_RECOMPUTE_EXTRINSIC + cv::fisheye::CALIB_CHECK_COND +
-							cv::fisheye::CALIB_FIX_SKEW,
+							cv::fisheye::CALIB_RECOMPUTE_EXTRINSIC + cv::fisheye::CALIB_FIX_SKEW,
 							cv::TermCriteria(cv::TermCriteria::MAX_ITER+cv::TermCriteria::EPS, 100, 1e-5)
 							);
 					else
