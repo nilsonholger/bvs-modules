@@ -54,7 +54,7 @@ CalibrationCV::CalibrationCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 				BVS::Connector<cv::Mat>(std::string("in") + std::to_string(i+1), BVS::ConnectorType::INPUT),
 				BVS::Connector<cv::Mat>(std::string("out") + std::to_string(i+1), BVS::ConnectorType::OUTPUT),
 				cv::Mat(), cv::Mat(), std::vector<cv::Point2f>(), cv::Mat(),
-				std::vector<cv::Point2f>(), std::vector<std::vector<cv::Point2f>>(),
+				std::vector<cv::Point2d>(), std::vector<std::vector<cv::Point2d>>(),
 				cv::Mat::eye(3, 3, CV_64F), cv::Mat(), cv::Mat(), cv::Mat(), cv::Rect()));
 	}
 

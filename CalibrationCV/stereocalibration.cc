@@ -97,9 +97,9 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 		for (int j=0; j<boardSize.height; j++)
 			for (int k=0; k<boardSize.width; k++)
 				if (pattern.at(0)=='A')
-					objectPoints.at(i).push_back(cv::Point3f(double((2*k+j%2)*blobSize/2.), double(j*blobSize/2.), 0.)); // for ASYMMETRIC CIRCLE patterns
+					objectPoints.at(i).push_back(cv::Point3d(double((2*k+j%2)*blobSize/2.), double(j*blobSize/2.), 0.)); // for ASYMMETRIC CIRCLE patterns
 				else
-					objectPoints.at(i).push_back(cv::Point3f(j*blobSize, k*blobSize, 0)); // for CHESSBOARDS or SYMMETRIC CIRCLE patterns only
+					objectPoints.at(i).push_back(cv::Point3d(j*blobSize, k*blobSize, 0)); // for CHESSBOARDS or SYMMETRIC CIRCLE patterns only
 
 	LOG(2, "calibrating individual cameras intrinsics!");
 	std::vector<std::thread> threads;
@@ -112,7 +112,8 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 					if (fisheye)
 						calError = cv::fisheye::calibrate(objectPoints, node->pointStore,
 							imageSize, node->cameraMatrix, node->distCoeffs, rvecs, tvecs,
-							// TODO: optimize... cv::fisheye::CALIB_FIX_K1...K4
+							cv::fisheye::CALIB_FIX_K1 + cv::fisheye::CALIB_FIX_K2 +
+							//cv::fisheye::CALIB_FIX_K3 + cv::fisheye::CALIB_FIX_K4 +
 							cv::fisheye::CALIB_RECOMPUTE_EXTRINSIC + cv::fisheye::CALIB_FIX_SKEW,
 							cv::TermCriteria(cv::TermCriteria::MAX_ITER+cv::TermCriteria::EPS, 100, 1e-5)
 							);
@@ -136,9 +137,13 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 				objectPoints, nodes.at(0)->pointStore, nodes.at(1)->pointStore,
 				nodes.at(0)->cameraMatrix, nodes.at(0)->distCoeffs, nodes.at(1)->cameraMatrix, nodes.at(1)->distCoeffs,
 				imageSize, stereoRotation, stereoTranslation,
-				// TODO: optimize... cv::fisheye::CALIB_FIX_INTRINSIC, cv::CALIB_FIX_K1...K4
-				cv::fisheye::CALIB_USE_INTRINSIC_GUESS + cv::fisheye::CALIB_RECOMPUTE_EXTRINSIC +
-				cv::fisheye::CALIB_CHECK_COND + cv::fisheye::CALIB_FIX_SKEW,
+				cv::fisheye::CALIB_FIX_K1 + cv::fisheye::CALIB_FIX_K2 +
+				cv::fisheye::CALIB_FIX_K3 + cv::fisheye::CALIB_FIX_K4 +
+				cv::fisheye::CALIB_FIX_INTRINSIC +
+				//cv::fisheye::CALIB_USE_INTRINSIC_GUESS +
+				//cv::fisheye::CALIB_RECOMPUTE_EXTRINSIC +
+				cv::fisheye::CALIB_CHECK_COND +
+				cv::fisheye::CALIB_FIX_SKEW,
 				cv::TermCriteria(cv::TermCriteria::MAX_ITER+cv::TermCriteria::EPS, 100, 1e-5));
 	else
 		rms = cv::stereoCalibrate(
@@ -159,7 +164,7 @@ void StereoCalibration::calibrate(int numImages, cv::Size imageSize, cv::Size bo
 				nodes.at(0)->rectificationMatrix, nodes.at(1)->rectificationMatrix,
 				nodes.at(0)->projectionMatrix, nodes.at(1)->projectionMatrix,
 				disparityToDepthMapping, cv::CALIB_ZERO_DISPARITY, imageSize,
-				0.0, 1.0); // TODO: check settings
+				0.0, 1.0);
 	else
 		cv::stereoRectify(
 				nodes.at(0)->cameraMatrix, nodes.at(0)->distCoeffs,

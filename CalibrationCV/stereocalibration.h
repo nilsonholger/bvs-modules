@@ -60,7 +60,7 @@ class StereoCalibration
 		double rms; /** Reprojection error. */
 		bool initRectifyMap; /**< If rectifyMap needs initialization. */
 		/** Pattern object points (in 3-dimensional coordinates). */
-		std::vector<std::vector<cv::Point3f>> objectPoints;
+		std::vector<std::vector<cv::Point3d>> objectPoints;
 		cv::Mat stereoRotation; /**< Rotation between principal planes. */
 		cv::Mat stereoTranslation; /**< Translation between principal planes. */
 		/** Essential matrix, relates corresponding stereo points (for pinhole camera model). */
