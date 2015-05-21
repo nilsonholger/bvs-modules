@@ -4,7 +4,9 @@ BVS (BASE) MODULES
 * **AndroidCV:** Display module for the android client.
 * **CalibrationCV:** Calibrate cameras (nodes), currently only extrinsic and intrinsic calibration for a stereo camera setup is supported.
 * **CaptureCV:** Common capture/conversion module, provides access to streams from attached cameras as well as image/video conversions.
+* **Duo3D:** Wrapper for the DUO3D camera device, requires the DUO libraries.
 * **ExampleCV:** Example of how to use the framework.
+* **FlowerBoxReader:** Provides serialized access to the flowerbox dataset.
 * **KinectXLite:** Manuel Martinez's header only Kinect driver.
 * **OpenNIXLite:** Manuel Martinez's header only OpenNI wrapper [requires OpenNI2].
 * **StereoCVCUDA:** Wrapper for OpenCV's CUDA stereo capabilities.
