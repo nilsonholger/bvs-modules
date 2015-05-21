@@ -10,6 +10,7 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	, bvs(_bvs)
 	, outputs()
 	, inputs()
+	, folder("folder", BVS::ConnectorType::INPUT)
 	, captures()
 	, writers()
 	, numNodes(bvs.config.getValue<int>(info.conf+".numNodes", 0))
@@ -74,10 +75,10 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& _bvs)
 			enableOutputs();
 			for (int i=0; i<numNodes; i++) {
 				captures.emplace_back(cv::VideoCapture(i+nodeOffset));
-				if (cameraMode>=0) captures.at(i).set(CV_CAP_PROP_MODE, cameraMode);
-				if (cameraFPS>=0) captures.at(i).set(CV_CAP_PROP_FPS, cameraFPS);
-				if (cameraWidth>=0) captures.at(i).set(CV_CAP_PROP_FRAME_WIDTH, cameraWidth);
-				if (cameraHeight>=0) captures.at(i).set(CV_CAP_PROP_FRAME_HEIGHT, cameraHeight);
+				if (cameraMode>=0) captures.at(i).set(cv::CAP_PROP_MODE, cameraMode);
+				if (cameraFPS>=0) captures.at(i).set(cv::CAP_PROP_FPS, cameraFPS);
+				if (cameraWidth>=0) captures.at(i).set(cv::CAP_PROP_FRAME_WIDTH, cameraWidth);
+				if (cameraHeight>=0) captures.at(i).set(cv::CAP_PROP_FRAME_HEIGHT, cameraHeight);
 				if (!captures.at(i).isOpened()) LOG(0, "Could not open camera: " << i << "!");
 			}
 			break;
@@ -98,7 +99,7 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& _bvs)
 			enableInputs();
 			getVideoFiles();
 			if (recordFOURCC.length()!=4) { LOG(0, "RecordFOURCC length must be 4!"); }
-			else { fourcc = CV_FOURCC(recordFOURCC[0], recordFOURCC[1], recordFOURCC[2], recordFOURCC[3]); }
+			else { fourcc = cv::VideoWriter::fourcc(recordFOURCC[0], recordFOURCC[1], recordFOURCC[2], recordFOURCC[3]); }
 			for (int i=0; i<numNodes; i++) writers.emplace_back(cv::VideoWriter());
 			break;
 		case 'S':
@@ -211,13 +212,16 @@ std::string CaptureCV::getImageFileName(int frame, int nodeID)
 {
 	std::string tmp;
 	for (auto& piece: fileNamePieces) {
-		if (piece == "FRAME") {
+		if (piece == "FOLDER") {
+			std::string f;
+			folder.receive(f);
+			tmp += f;
+		} else if (piece == "FRAME") {
 			std::string fr = std::to_string(frame);
 			if (fr.size() < (unsigned int)frameNumberPadding)
 				fr.insert(fr.begin(), frameNumberPadding-fr.size(), '0');
 			tmp += fr;
-		}
-		else if (piece == "NODE") tmp += std::to_string(nodeID+1);
+		} else if (piece == "NODE") tmp += std::to_string(nodeID+1);
 		else tmp += piece;
 	}
 

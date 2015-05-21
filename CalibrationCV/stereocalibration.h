@@ -19,8 +19,9 @@ class StereoCalibration
 	public:
 		/** Constructor.
 		 * @param[in] nodes Vector of calibration nodes (MUST be of size 2).
+		 * @param[in] fisheye Use fisheye distortion model.
 		 */
-		StereoCalibration(CalNodeVec& nodes);
+		StereoCalibration(CalNodeVec& nodes, bool fisheye);
 
 		/** Loads calibration from file.
 		 * @param[in] path Path to file (directory).
@@ -40,9 +41,10 @@ class StereoCalibration
 		 * @param[in] numImages Number of images for calibration.
 		 * @param[in] imageSize Size of image where points were detected.
 		 * @param[in] boardSize Size of the calibration pattern.
+		 * @param[in] pattern Pattern type ((a-)symmetric).
 		 * @param[in] blobSize Size of pattern blobs (squares or distance of circle centers).
 		 */
-		void calibrate(int numImages, cv::Size imageSize, cv::Size boardSize, float blobSize);
+		void calibrate(int numImages, cv::Size imageSize, cv::Size boardSize, std::string pattern, float blobSize);
 
 		/** Rectify output image.
 		 * @param[in] imageSize Size of image where points were detected.
@@ -53,11 +55,12 @@ class StereoCalibration
 	private:
 		BVS::Logger logger; /**< Logger instance. */
 		CalNodeVec& nodes; /**< Vector of calibration nodes. */
+		bool fisheye; /**< Use fisheye distortion model. */
 		cv::Size imageSize; /**< Image size. */
 		double rms; /** Reprojection error. */
 		bool initRectifyMap; /**< If rectifyMap needs initialization. */
 		/** Pattern object points (in 3-dimensional coordinates). */
-		std::vector<std::vector<cv::Point3f>> objectPoints;
+		std::vector<std::vector<cv::Point3d>> objectPoints;
 		cv::Mat stereoRotation; /**< Rotation between principal planes. */
 		cv::Mat stereoTranslation; /**< Translation between principal planes. */
 		/** Essential matrix, relates corresponding stereo points (for pinhole camera model). */

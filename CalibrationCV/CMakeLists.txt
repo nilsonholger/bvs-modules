@@ -4,7 +4,7 @@ create_symlink(${CMAKE_CURRENT_SOURCE_DIR}/CalibrationCV.conf ${CMAKE_BINARY_DIR
 add_bvs_module(CalibrationCV CalibrationCV.cc stereocalibration.cc calibrationguide.cc)
 
 if(NOT BVS_ANDROID_APP)
-	target_link_libraries(CalibrationCV opencv_core opencv_highgui opencv_calib3d opencv_features2d opencv_imgproc)
+	target_link_libraries(CalibrationCV opencv_core opencv_highgui opencv_calib3d opencv_features2d opencv_imgproc opencv_imgcodecs)
 else()
 	target_link_libraries(CalibrationCV opencv_java log)
 endif()

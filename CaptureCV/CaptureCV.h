@@ -50,6 +50,7 @@ class CaptureCV : public BVS::Module
 		const BVS::Info& bvs; /**< Framework info. */
 		std::vector<BVS::Connector<cv::Mat>*> outputs; /**< Output connectors. */
 		std::vector<BVS::Connector<cv::Mat>*> inputs; /**< Input connectors. */
+		BVS::Connector<std::string> folder; /** Optional folder name input. */
 		std::vector<cv::VideoCapture> captures; /**< Captures vector for camera usage. */
 		std::vector<cv::VideoWriter> writers; /**< Writers vector for video output. */
 		int numNodes; /**< Number of nodes to use. */

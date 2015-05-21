@@ -38,7 +38,7 @@ struct CalibrationNode
 	 */
 	CalibrationNode(int id, BVS::Connector<cv::Mat> input, BVS::Connector<cv::Mat> output,
 			cv::Mat frame, cv::Mat scaledFrame, std::vector<cv::Point2f> framePoints, cv::Mat sample,
-			std::vector<cv::Point2f> points, std::vector<std::vector<cv::Point2f>> pointStore,
+			std::vector<cv::Point2d> points, std::vector<std::vector<cv::Point2d>> pointStore,
 			cv::Mat cameraMatrix, cv::Mat distCoeffs, cv::Mat rectificationMatrix, cv::Mat projectionMatrix,
 			cv::Rect validRegionOfInterest)
 		: id(id),
@@ -64,8 +64,8 @@ struct CalibrationNode
 	cv::Mat scaledFrame; /**< Scaled input frame. */
 	std::vector<cv::Point2f> framePoints; /**< Current frame points. */
 	cv::Mat sample; /**< Full size sample. */
-	std::vector<cv::Point2f> points; /**< Detected points. */
-	std::vector<std::vector<cv::Point2f>> pointStore; /**< Store of detected points. */
+	std::vector<cv::Point2d> points; /**< Detected points. */
+	std::vector<std::vector<cv::Point2d>> pointStore; /**< Store of detected points. */
 	cv::Mat cameraMatrix; /**< Internal camera matrix. */
 	cv::Mat distCoeffs; /**< Distortion coefficients. */
 	cv::Mat rectificationMatrix; /**< Rectification matrix. */

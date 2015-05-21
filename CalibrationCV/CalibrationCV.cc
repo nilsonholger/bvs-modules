@@ -9,21 +9,22 @@ CalibrationCV::CalibrationCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	, logger(info.id)
 	, bvs(bvs)
 	, numNodes(bvs.config.getValue<int>(info.conf + ".numNodes", 0))
-	, numImages(bvs.config.getValue<int>(info.conf + ".numImages", 45))
-	, blobSize(bvs.config.getValue<float>(info.conf + ".blobSize", 1.0f))
-	, autoShotMode(bvs.config.getValue<bool>(info.conf + ".autoShotMode", true))
-	, autoShotDelay(bvs.config.getValue<int>(info.conf + ".autoShotDelay", 1))
 	, directory(bvs.config.getValue<std::string>(info.conf + ".directory", "calibrationData"))
+	, useCalibrationFile(bvs.config.getValue<std::string>(info.conf + ".useCalibrationFile", "calibration.xml"))
 	, saveImages(bvs.config.getValue<bool>(info.conf + ".saveImages", false))
 	, useSavedImages(bvs.config.getValue<bool>(info.conf + ".useSavedImages", false))
-	, rectifyCalImages(bvs.config.getValue<bool>(info.conf + ".rectifyCalImages", false))
 	, imageDirectory(bvs.config.getValue<std::string>(info.conf + ".imageDirectory", "calibrationImages"))
-	, outputDirectory(bvs.config.getValue<std::string>(info.conf + ".outputDirectory", "rectifiedImages"))
-	, loadCalibration(bvs.config.getValue<bool>(info.conf + ".loadCalibration", true))
-	, saveCalibration(bvs.config.getValue<bool>(info.conf + ".saveCalibration", true))
-	, calibrationFile(bvs.config.getValue<std::string>(info.conf + ".calibrationFile", "calibration.xml"))
-	, createRectifiedOutput(bvs.config.getValue<bool>(info.conf + ".createRectifiedOutput", true))
+	, autoShotDelay(bvs.config.getValue<int>(info.conf + ".autoShotDelay", 1))
+	, numImages(bvs.config.getValue<int>(info.conf + ".numImages", 45))
+	, fisheye(bvs.config.getValue<bool>(info.conf + ".fisheye", false))
+	, pattern(bvs.config.getValue<std::string>(info.conf + ".pattern", "ASYMMETRIC"))
+	, gridBlobSize(bvs.config.getValue<float>(info.conf + ".gridBlobSize", 1.0f))
+	, gridX(bvs.config.getValue<unsigned int>(info.conf + ".gridX", 4))
+	, gridY(bvs.config.getValue<unsigned int>(info.conf + ".gridY", 11))
+	, rectifyOutput(bvs.config.getValue<bool>(info.conf + ".rectifyOutput", true))
 	, addGridOverlay(bvs.config.getValue<bool>(info.conf + ".addGridOverlay", false))
+	, rectifyCalImages(bvs.config.getValue<bool>(info.conf + ".rectifyCalImages", false))
+	, rectifiedDirectory(bvs.config.getValue<std::string>(info.conf + ".outputDirectory", "rectifiedImages"))
 	, useCalibrationGuide(bvs.config.getValue<bool>(info.conf + ".useCalibrationGuide", false))
 	, sectorDetections(bvs.config.getValue<int>(info.conf + ".sectorDetections", 5))
 	, calibrated(false)
@@ -32,7 +33,8 @@ CalibrationCV::CalibrationCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	, rectifyCounter(1)
 	, objectPoints()
 	, imageSize()
-	, boardSize(4, 11)
+	, boardSize(gridX, gridY)
+	, flags{pattern.at(0)=='A' ? cv::CALIB_CB_ASYMMETRIC_GRID : cv::CALIB_CB_SYMMETRIC_GRID}
 	, detectionThread()
 	, detectionMutex()
 	, detectionLock(detectionMutex)
@@ -41,7 +43,7 @@ CalibrationCV::CalibrationCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 	, reflectX()
 	, reflectY()
 	, nodes()
-	, stereo(nodes)
+	, stereo(nodes, fisheye)
 	, guide(numImages, numDetections, sectorDetections)
 {
 	if (numNodes==0) LOG(0, "numNodes == 0!!!");
@@ -52,7 +54,7 @@ CalibrationCV::CalibrationCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 				BVS::Connector<cv::Mat>(std::string("in") + std::to_string(i+1), BVS::ConnectorType::INPUT),
 				BVS::Connector<cv::Mat>(std::string("out") + std::to_string(i+1), BVS::ConnectorType::OUTPUT),
 				cv::Mat(), cv::Mat(), std::vector<cv::Point2f>(), cv::Mat(),
-				std::vector<cv::Point2f>(), std::vector<std::vector<cv::Point2f>>(),
+				std::vector<cv::Point2d>(), std::vector<std::vector<cv::Point2d>>(),
 				cv::Mat::eye(3, 3, CV_64F), cv::Mat(), cv::Mat(), cv::Mat(), cv::Rect()));
 	}
 
@@ -63,13 +65,13 @@ CalibrationCV::CalibrationCV(BVS::ModuleInfo info, const BVS::Info& bvs)
 		if (stat(tmp.c_str(), buf)) mkdir(tmp.c_str(), 0755);
 	}
 	if (rectifyCalImages) {
-		std::string tmp = directory + "/" + outputDirectory;
+		std::string tmp = directory + "/" + rectifiedDirectory;
 		if (stat(tmp.c_str(), buf)) mkdir(tmp.c_str(), 0755);
 	}
 
-	if (loadCalibration) calibrated = loadCalibrationFrom(directory, calibrationFile);
-	if (!calibrated) detectionThread = std::thread(&CalibrationCV::detectCalibrationPoints, this);
-	if (!calibrated && !useSavedImages)
+	if (!useCalibrationFile.empty()) calibrated = loadCalibrationFrom(directory, useCalibrationFile);
+	if (!calibrated && !useSavedImages) detectionThread = std::thread(&CalibrationCV::detectCalibrationPoints, this);
+	if (!(calibrated || useSavedImages))
 		for (auto& node: nodes) cv::namedWindow(info.id+"_"+std::to_string(node->id));
 }
 
@@ -91,21 +93,9 @@ CalibrationCV::~CalibrationCV()
 BVS::Status CalibrationCV::execute()
 {
 	if (useSavedImages) {
-		if (numDetections<numImages) {
-			for (auto& node: nodes) {
-				node->frame = cv::imread(directory + "/" + imageDirectory + "/img"
-						+ std::to_string(numDetections+1) + "-" + std::to_string(node->id) + ".pbm");
-				if (node->frame.empty()) {
-					LOG(1, "NOT FOUND: " << directory << "/" << imageDirectory + "/img" + std::to_string(numDetections+1)
-							+ "-" + std::to_string(node->id) + ".pbm");
-					return BVS::Status::SHUTDOWN;
-				}
-			}
-			if (imageSize == cv::Size()) imageSize = nodes[0]->frame.size();
-			notifyDetectionThread();
-		}
-		if (numDetections==numImages && !detectionRunning && !calibrated) calibrate();
-		if (calibrated && rectifyCalImages) if (!rectifyCalibrationImages()) return BVS::Status::SHUTDOWN;
+		if (!calibrated) calibrateUsingSavedImages();
+		if (calibrated && rectifyCalImages) rectifyCalibrationImages();
+		return BVS::Status::SHUTDOWN;
 	} else {
 		for (auto& node: nodes) {
 			if(!node->input.receive(node->frame)) return BVS::Status::NOINPUT;
@@ -118,24 +108,24 @@ BVS::Status CalibrationCV::execute()
 		if (!calibrated) {
 			for (auto& node: nodes) {
 				cv::remap(node->frame, *node->output, reflectX, reflectY, 0);
-				if(node->output->type()==CV_8UC1) cv::cvtColor(*node->output, *node->output, CV_GRAY2BGR);
+				if(node->output->type()==CV_8UC1) cv::cvtColor(*node->output, *node->output, cv::COLOR_GRAY2BGR);
 			}
 			if (useCalibrationGuide) guide.addTargetOverlay(*nodes[0]->output);
 			if (numDetections<numImages) collectCalibrationImages();
 			if (numDetections==numImages && !detectionRunning) calibrate();
 			for (auto& node: nodes) {
 				cv::putText(*node->output, bvs.getFPS(), cv::Point(10, 30),
-						CV_FONT_HERSHEY_SIMPLEX, 1.0f, cvScalar(0, 0, 255), 2);
+						cv::FONT_HERSHEY_SIMPLEX, 1.0f, cv::Scalar(0, 0, 255), 2);
 				cv::putText(*node->output, std::to_string(numDetections) + "/" + std::to_string(numImages),
-						cv::Point(100, 30), CV_FONT_HERSHEY_SIMPLEX, 1.0f, cv::Scalar(0, 255, 0), 2, 8);
+						cv::Point(100, 30), cv::FONT_HERSHEY_SIMPLEX, 1.0f, cv::Scalar(0, 255, 0), 2, 8);
 				cv::imshow(info.id+"_"+std::to_string(node->id), *node->output);
 				if (calibrated) cv::destroyWindow(std::to_string(node->id));
 			}
 			char c = cv::waitKey(1);
 			if (c==27) return BVS::Status::SHUTDOWN;
-			if (!autoShotMode && c==' ') notifyDetectionThread();
+			if (autoShotDelay==0 && c==' ') notifyDetectionThread();
 		}
-		else if (createRectifiedOutput) rectifyOutput();
+		else if (rectifyOutput) rectifyOutputNodes();
 		else for (auto& node: nodes) *node->output = node->frame;
 	}
 
@@ -207,8 +197,8 @@ void CalibrationCV::calibrate()
 			// single camera
 			break;
 		case 2:
-			stereo.calibrate(numDetections, imageSize, boardSize, blobSize);
-			if (saveCalibration) saveCalibrationTo(directory, calibrationFile);
+			stereo.calibrate(numDetections, imageSize, boardSize, pattern, gridBlobSize);
+			if (!useCalibrationFile.empty()) saveCalibrationTo(directory, useCalibrationFile);
 			break;
 	}
 
@@ -218,7 +208,7 @@ void CalibrationCV::calibrate()
 
 
 
-void CalibrationCV::rectifyOutput()
+void CalibrationCV::rectifyOutputNodes()
 {
 	switch (numNodes) {
 		case 1:
@@ -241,7 +231,7 @@ void CalibrationCV::collectCalibrationImages()
 		/** @todo paralellize with threads to decrease latency? */
 		cv::pyrDown(node->frame, node->scaledFrame, cv::Size(imageSize.width/2, imageSize.height/2));
 		foundPattern = cv::findCirclesGrid(node->scaledFrame, boardSize,
-				node->framePoints, cv::CALIB_CB_ASYMMETRIC_GRID);
+				node->framePoints, flags);
 		for (auto& point: node->framePoints) {
 			point.x = node->frame.cols - point.x * 2;
 			point.y = point.y * 2;
@@ -251,13 +241,13 @@ void CalibrationCV::collectCalibrationImages()
 
 		if (!foundPattern) {
 			cv::putText(*nodes[0]->output, "Pattern NOT FOUND!",
-					cv::Point(10, imageSize.height-10), CV_FONT_HERSHEY_DUPLEX,
+					cv::Point(10, imageSize.height-10), cv::FONT_HERSHEY_DUPLEX,
 					1.0f, cv::Scalar(0, 0, 255));
 			break;
 		}
 		else numPositives++;
 		if (numPositives==numNodes) {
-			if (!autoShotMode) return;
+			if (autoShotDelay==0) return;
 			if (useCalibrationGuide)
 				if (!guide.checkDetectionQuality(*nodes[0]->output, nodes[0]->framePoints))
 					return;
@@ -272,14 +262,10 @@ void CalibrationCV::notifyDetectionThread()
 {
 	if (detectionRunning) return;
 
-	if (!useSavedImages && autoShotDelay!=0 &&
-			std::chrono::duration_cast<std::chrono::seconds>
-			(std::chrono::high_resolution_clock::now() - shotTimer).count()
-			< autoShotDelay)
+	if (autoShotDelay!=0 && std::chrono::duration_cast<std::chrono::seconds>
+			(std::chrono::high_resolution_clock::now() - shotTimer).count() < autoShotDelay && !useSavedImages)
 		return;
 
-	if (useSavedImages) LOG(2, "loading image: " << numDetections+1 << "/" << numImages);
-	
 	shotTimer = std::chrono::high_resolution_clock::now();
 	numDetections++;
 	for (auto& node: nodes)
@@ -303,7 +289,7 @@ void CalibrationCV::detectCalibrationPoints()
 		detectionCond.wait(detectionLock, [&](){ return detectionRunning; });
 		numPositives = 0;
 		for (auto& node: nodes) {
-			foundPattern = cv::findCirclesGrid(node->sample, boardSize, node->points, cv::CALIB_CB_ASYMMETRIC_GRID);
+			foundPattern = cv::findCirclesGrid(node->sample, boardSize, node->points, flags);
 			if (!foundPattern) {
 				numDetections--;
 				break;
@@ -341,21 +327,47 @@ void CalibrationCV::clearCalibrationData()
 
 
 
-bool CalibrationCV::rectifyCalibrationImages()
+void CalibrationCV::calibrateUsingSavedImages()
 {
-	LOG(2, "rectifying image " << rectifyCounter);
+	for (auto& node: nodes)
+		node->pointStore.resize(numImages);
 
-	for (auto& node: nodes) {
-		std::string file = directory + "/" + imageDirectory + "/img" + std::to_string(rectifyCounter) + "-" + std::to_string(node->id) + ".pbm";
-		node->frame = cv::imread(file);
-		if (node->frame.empty()) {
-			LOG(1, "NOT FOUND: " << file);
-			return false;
+	for (; numDetections<numImages; numDetections++) {
+		LOG(2, "processing image: " << numDetections+1 << "/" << numImages);
+		for (auto& node: nodes) {
+			std::string file = directory + "/" + imageDirectory + "/img" + std::to_string(numDetections+1) + "-" + std::to_string(node->id) + ".pbm";
+			node->frame = cv::imread(file);
+			if (node->frame.empty()) LOG(0, "image not found: " << file);
+			if (imageSize == cv::Size()) imageSize = nodes[0]->frame.size();
+			if (!cv::findCirclesGrid(node->frame, boardSize, node->points, flags))
+				LOG(0, "could not find grid in image: " << file);
+			node->pointStore.at(numDetections) = node->points;
 		}
 	}
-	rectifyOutput();
-	for (auto& node: nodes) cv::imwrite(directory + "/" + outputDirectory + "/rect" + std::to_string(rectifyCounter) + "-" + std::to_string(node->id) + ".jpg", *node->output);
-	rectifyCounter++;
+
+	calibrate();
+}
+
+
+
+bool CalibrationCV::rectifyCalibrationImages()
+{
+	for (; rectifyCounter<=numImages; rectifyCounter++)
+	{
+		LOG(2, "rectifying image " << rectifyCounter << "/" << numImages);
+
+		for (auto& node: nodes) {
+			std::string file = directory + "/" + imageDirectory + "/img" + std::to_string(rectifyCounter) + "-" + std::to_string(node->id) + ".pbm";
+			node->frame = cv::imread(file);
+			if (node->frame.empty()) {
+				LOG(0, "image not found: " << file);
+				return false;
+			}
+			if (imageSize == cv::Size()) imageSize = nodes[0]->frame.size();
+		}
+		rectifyOutputNodes();
+		for (auto& node: nodes) cv::imwrite(directory + "/" + rectifiedDirectory + "/rect" + std::to_string(rectifyCounter) + "-" + std::to_string(node->id) + ".jpg", *node->output);
+	}
 	return true;
 }
 
