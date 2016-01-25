@@ -106,6 +106,10 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& _bvs)
 			enableInputs();
 			parseImageFileName();
 			break;
+		case 'D':
+			displayMode = true;
+			enableInputs();
+			break;
 		default:
 			LOG(0, "Incorrect mode: '" << mode << "', aborting!");
 			break;
@@ -121,6 +125,7 @@ CaptureCV::~CaptureCV()
 		case 'I': break;
 		case 'R': for (auto& wr: writers) if (wr.isOpened()) wr.release(); break;
 		case 'S': break;
+		case 'D': break;
 		default: break;
 	}
 
@@ -187,6 +192,11 @@ BVS::Status CaptureCV::execute()
 			}
 			LOG(2, "Writing frame(s) to " << numNodes << " file(s)!");
 			counterStart += stepSize;
+			break;
+		case 'D':
+			for (int i=0; i<numNodes; i++) {
+				if (displayMode) cv::imshow("in"+std::to_string(i+1), **inputs.at(i));
+			}
 			break;
 		default: break;
 	}
