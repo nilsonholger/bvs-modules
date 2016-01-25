@@ -28,6 +28,7 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	, height{bvs.config.getValue<int>(info.conf + ".height", 480)}
 	, binning{bvs.config.getValue<int>(info.conf + ".binning", -1)}
 	, fps{bvs.config.getValue<float>(info.conf + ".fps", -1)}
+	, timeStamp(0)
 {
 	if (OpenDUO(&duo)) {
 		LOG(1, "Connection to DUO established!");
@@ -107,19 +108,26 @@ Duo3D::~Duo3D()
 
 BVS::Status Duo3D::execute()
 {
-	std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-	if (duo==NULL) return BVS::Status::SHUTDOWN;
+	using namespace std::chrono;
+	using namespace std::literals;
+	high_resolution_clock::time_point start = high_resolution_clock::now();
+
+	if (duo==nullptr) return BVS::Status::SHUTDOWN;
 
 	if (duo_frame==nullptr) {
 		LOG(2, "Waiting max 500ms for first duo frame!");
 		for (int i=0; i<50; i++) {
-			std::this_thread::sleep_for(std::chrono::milliseconds{10});
-			if (duo_frame!=NULL) break;
+			std::this_thread::sleep_for(10ms);
+			if (duo_frame!=nullptr) break;
 		}
 	}
 	if (duo_frame==nullptr) return BVS::Status::WAIT;
 
 	std::lock_guard<std::mutex> lock{mutex};
+
+	if (timeStamp==duo_frame->timeStamp)
+		return BVS::Status::WAIT;
+	timeStamp = duo_frame->timeStamp;
 
 	if (outL.active()) {
 		cv::Mat duo_left(cv::Size{(int)duo_frame->width, (int)duo_frame->height}, CV_8UC1);
@@ -137,9 +145,13 @@ BVS::Status Duo3D::execute()
 	if (outMag.active()) outMag.send({{duo_frame->magData[0], duo_frame->magData[1], duo_frame->magData[2]}});
 	if (outTemp.active()) outTemp.send(duo_frame->tempData);
 	if (outDUOFrame.active()) outDUOFrame.send(*duo_frame);
-	if (blockModule)
-		std::this_thread::sleep_for(std::chrono::milliseconds{
-				(int)(1000/fps-std::chrono::duration_cast<std::chrono::milliseconds>(start - std::chrono::high_resolution_clock::now()).count())});
+
+	if (blockModule) {
+		long duration{duration_cast<milliseconds>(start-high_resolution_clock::now()).count()};
+		if (duration<1000/fps)
+			std::this_thread::sleep_for(milliseconds{
+				(long)(1000/fps-duration)});
+	}
 
 	return BVS::Status::OK;
 }
