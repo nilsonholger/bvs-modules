@@ -2,7 +2,7 @@
 
 
 
-PDUOFrame Duo3D::duo_frame = NULL;
+PDUOFrame Duo3D::duo_frame = nullptr;
 std::mutex Duo3D::mutex{};
 
 
@@ -87,7 +87,7 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 		LOG(0, "Could not connect to DUO!");
 	}
 
-	if (StartDUO(duo, DUOCallback, NULL)) {
+	if (StartDUO(duo, DUOCallback, nullptr)) {
 		LOG(1, "Starting frame capture on DUO!");
 	} else {
 		LOG(0, "Could not start frame capture on DUO!");
@@ -100,7 +100,7 @@ Duo3D::~Duo3D()
 {
 	StopDUO(duo);
 	CloseDUO(duo);
-	duo = NULL;
+	duo = nullptr;
 }
 
 
@@ -110,14 +110,14 @@ BVS::Status Duo3D::execute()
 	std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 	if (duo==NULL) return BVS::Status::SHUTDOWN;
 
-	if (duo_frame==NULL) {
+	if (duo_frame==nullptr) {
 		LOG(2, "Waiting max 500ms for first duo frame!");
 		for (int i=0; i<50; i++) {
 			std::this_thread::sleep_for(std::chrono::milliseconds{10});
 			if (duo_frame!=NULL) break;
 		}
 	}
-	if (duo_frame==NULL) return BVS::Status::WAIT;
+	if (duo_frame==nullptr) return BVS::Status::WAIT;
 
 	std::lock_guard<std::mutex> lock{mutex};
 
