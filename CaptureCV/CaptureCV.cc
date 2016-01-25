@@ -204,8 +204,6 @@ BVS::Status CaptureCV::execute()
 	for (auto& in: inputs) in->unlockConnection();
 	for (auto& out: outputs) out->unlockConnection();
 
-	if (displayMode) cv::waitKey(1);
-
 	return BVS::Status::OK;
 }
 
