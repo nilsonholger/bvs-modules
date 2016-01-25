@@ -28,6 +28,10 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	, height{bvs.config.getValue<int>(info.conf + ".height", 480)}
 	, binning{bvs.config.getValue<int>(info.conf + ".binning", -1)}
 	, fps{bvs.config.getValue<float>(info.conf + ".fps", -1)}
+	, autoCorrect{bvs.config.getValue<bool>(info.conf + ".autoCorrect", false)}
+	, autoQuantile{bvs.config.getValue<double>(info.conf + ".autoQuantile", 0.05)}
+	, autoTargetMean{bvs.config.getValue<unsigned int>(info.conf + ".autoTargetMean", 96)}
+	, autoAttenuation{bvs.config.getValue<double>(info.conf + ".autoAttenuation", 0.8)}
 	, timeStamp(0)
 {
 	if (OpenDUO(&duo)) {
@@ -146,6 +150,8 @@ BVS::Status Duo3D::execute()
 	if (outTemp.active()) outTemp.send(duo_frame->tempData);
 	if (outDUOFrame.active()) outDUOFrame.send(*duo_frame);
 
+	if (autoCorrect) autoCorrection();
+
 	if (blockModule) {
 		long duration{duration_cast<milliseconds>(start-high_resolution_clock::now()).count()};
 		if (duration<1000/fps)
@@ -173,6 +179,47 @@ void Duo3D::setParam(bool success, std::string parameterName)
 {
 	if (!success)
 		LOG(0, "Failed to set parameter: " << parameterName << "!");
+}
+
+
+
+void Duo3D::autoCorrection() {
+	cv::Mat img;
+	if (outL.active()) img = *outL;
+	else if (outR.active()) img = *outR;
+	if (!img.empty()) {
+		// calculate quantiles
+		std::array<uint32_t, 256> hist{ {0} };
+		uint32_t hist_sum = 0;
+		for (auto pix=img.begin<uchar>(); pix<img.end<uchar>(); pix++) hist[*pix]++;
+		for (const auto& h: hist) hist_sum+= h;
+		uint32_t hist_q05 = autoQuantile / 100.0 * hist_sum;
+		uint32_t hist_q95 = (100 - autoQuantile) / 100.0 * hist_sum;
+
+		// calculate mean (disregard quantiles)
+		uint32_t acc = 0;
+		uint32_t mean_sum = 0;
+		uint32_t mean_elements = 0;
+		for (size_t i=0; i<hist.size(); i++) {
+			acc += hist[i];
+			if (acc<hist_q05) continue;
+			if (acc>hist_q95) break;
+			mean_sum += i*hist[i];
+			mean_elements += hist[i];
+		}
+		uint32_t mean = mean_sum / double(mean_elements);
+		// TODO: check for mean == 0!!!
+		
+		// calculate new gain
+		double gain = 0;
+		GetDUOGain(duo, &gain);
+		gain = (autoAttenuation * (autoTargetMean - mean) / double(mean) + 1.0 ) * gain;
+		if (gain==0) gain = 0.1;
+		SetDUOGain(duo, gain);
+
+		// TODO: consider exposure time (exp < 1000/fps)
+		// TODO denoise gain dependent!!!
+	}
 }
 
 

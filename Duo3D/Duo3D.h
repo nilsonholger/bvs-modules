@@ -82,12 +82,22 @@ class Duo3D : public BVS::Module
 		int height; /**< Selected image height. */
 		int binning; /**< Selected binning mode. */
 		float fps; /**< Selected frames per second. */
+		bool autoCorrect; /**< Automagically update gain/exposure. */
+		double autoQuantile; /**< Remove quantiles when calculating mean. */
+		unsigned int autoTargetMean; /** Target mean for auto correction. */
+		double autoAttenuation; /** Attenuation factor for gain correction. */
+
+		unsigned int timeStamp; /**< Duo frame time stamp. */
 
 		/** Checks DUO function success and prints error otherwise.
 		 * @param[in] success Whether the DUO function was successfull.
 		 * @param[in] parameterName Name of parameter for error message.
 		 */
 		void setParam(bool success, std::string parameterName);
+
+		/** Perform automagic(TM) image correction.
+		 */
+		void autoCorrection();
 
 		/** Checks DUO function success and prints retrieved parameter.
 		 * @param[in] success Whether the DUO function was successfull.
