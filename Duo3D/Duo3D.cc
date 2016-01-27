@@ -207,13 +207,12 @@ void Duo3D::autoCorrection() {
 			mean_sum += i*hist[i];
 			mean_elements += hist[i];
 		}
-		uint32_t mean = mean_sum / double(mean_elements);
-		// TODO: check for mean == 0!!!
+		double mean = mean_sum / double(mean_elements);
 		
 		// calculate new gain
 		double gain = 0;
 		GetDUOGain(duo, &gain);
-		gain = (autoAttenuation * (autoTargetMean - mean) / double(mean) + 1.0 ) * gain;
+		gain = (autoAttenuation*(autoTargetMean-mean)/mean+1.0)*gain;
 		if (gain==0) gain = 0.1;
 		SetDUOGain(duo, gain);
 
