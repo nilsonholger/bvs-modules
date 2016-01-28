@@ -209,11 +209,10 @@ void Duo3D::autoCorrection() {
 		}
 		double mean = mean_sum / double(mean_elements);
 		
-		// calculate new gain
-		double gain = 0;
+		// calculate new gain, add 0.01 to prevent stall on 0
+		double gain{};
 		GetDUOGain(duo, &gain);
-		gain = (autoAttenuation*(autoTargetMean-mean)/mean+1.0)*gain;
-		if (gain==0) gain = 0.1;
+		gain = (autoAttenuation*(autoTargetMean-mean)/mean+1.0)*(gain+0.01);
 		SetDUOGain(duo, gain);
 
 		// TODO: consider exposure time (exp < 1000/fps)
