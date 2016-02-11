@@ -129,6 +129,7 @@ CaptureCV::~CaptureCV()
 		default: break;
 	}
 
+	if (displayMode) cv::destroyAllWindows();
 	for (auto& in: inputs) delete in;
 	for (auto& out: outputs) delete out;
 }
