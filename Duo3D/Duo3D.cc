@@ -31,7 +31,12 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	, autoCorrect{bvs.config.getValue<bool>(info.conf + ".autoCorrect", false)}
 	, autoQuantile{bvs.config.getValue<double>(info.conf + ".autoQuantile", 0.05)}
 	, autoTargetMean{bvs.config.getValue<unsigned int>(info.conf + ".autoTargetMean", 96)}
-	, autoAttenuation{bvs.config.getValue<double>(info.conf + ".autoAttenuation", 0.8)}
+	, autoAttenuation{bvs.config.getValue<double>(info.conf + ".autoAttenuation", 0.5)}
+	, antiReadNoise{bvs.config.getValue<bool>(info.conf + ".antiReadNoise", false)}
+	, noiseFrameFileLeft{bvs.config.getValue<std::string>(info.conf + ".noiseFrameFileLeft", {})}
+	, noiseFrameFileRight{bvs.config.getValue<std::string>(info.conf + ".noiseFrameFileRight", {})}
+	, noiseLeft{}
+	, noiseRight{}
 	, timeStamp(0)
 {
 	if (OpenDUO(&duo)) {
@@ -72,7 +77,7 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 		setParam(SetDUOHFlip(duo, bvs.config.getValue(info.conf + ".hFlip", false)), "Horizontal Flip");
 		setParam(SetDUOVFlip(duo, bvs.config.getValue(info.conf + ".vFlip", false)), "Vertical Flip");
 		setParam(SetDUOCameraSwap(duo, bvs.config.getValue(info.conf + ".cameraSwap", false)), "Camera Swap");
-		setParam(SetDUOLedPWM(duo, bvs.config.getValue(info.conf + ".led", 0.0f)), "LED PWM");
+		setParam(SetDUOLedPWM(duo, bvs.config.getValue(info.conf + ".led", 0.1f)), "LED PWM");
 
 		if(showDuoParams) {
 			LOG(2, "DUO3D PARAMETERS:");
@@ -96,6 +101,24 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 		LOG(1, "Starting frame capture on DUO!");
 	} else {
 		LOG(0, "Could not start frame capture on DUO!");
+	}
+	// TODO: std::function
+	// TODO: should be done with used exposure time and gain or multiply with gain 100
+	if (antiReadNoise) {
+		if (noiseFrameFileLeft.empty()) {
+			LOG(0, "No left noise frame given!");
+		} else {
+			noiseLeft = cv::imread(noiseFrameFileLeft, cv::ImreadModes::IMREAD_GRAYSCALE);
+			if (noiseLeft.empty())
+				LOG(0, "Could not load left noise frame!");
+		}
+		if (noiseFrameFileRight.empty()) {
+			LOG(0, "No right noise frame given!");
+		} else {
+			noiseRight = cv::imread(noiseFrameFileRight, cv::ImreadModes::IMREAD_GRAYSCALE);
+			if (noiseRight.empty())
+				LOG(0, "Could not load right noise frame!");
+		}
 	}
 }
 
@@ -136,11 +159,18 @@ BVS::Status Duo3D::execute()
 	if (outL.active()) {
 		cv::Mat duo_left(cv::Size{(int)duo_frame->width, (int)duo_frame->height}, CV_8UC1);
 		duo_left.data = (unsigned char*)duo_frame->leftData;
+		//if (antiReadNoise) readNoiseCorrection(duo_left.data, readNoiseLeft);
+		if (antiReadNoise) {
+			duo_left = duo_left - noiseLeft;
+		}
 		outL.send(duo_left);
 	}
 	if (outR.active()) {
 		cv::Mat duo_right(cv::Size{(int)duo_frame->width, (int)duo_frame->height}, CV_8UC1);
 		duo_right.data = (unsigned char*)duo_frame->rightData;
+		if (antiReadNoise) {
+			duo_right = duo_right - noiseRight;
+		}
 		outR.send(duo_right);
 	}
 	if (outTime.active()) outTime.send(duo_frame->timeStamp);

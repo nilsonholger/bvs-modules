@@ -86,6 +86,11 @@ class Duo3D : public BVS::Module
 		double autoQuantile; /**< Remove quantiles when calculating mean. */
 		unsigned int autoTargetMean; /** Target mean for auto correction. */
 		double autoAttenuation; /** Attenuation factor for gain correction. */
+		bool antiReadNoise; /** Reduce CCD read noise. */
+		std::string noiseFrameFileLeft; // TODO
+		std::string noiseFrameFileRight;
+		cv::Mat noiseLeft; // TODO
+		cv::Mat noiseRight;
 
 		unsigned int timeStamp; /**< Duo frame time stamp. */
 
@@ -98,6 +103,10 @@ class Duo3D : public BVS::Module
 		/** Perform automagic(TM) image correction.
 		 */
 		void autoCorrection();
+
+		/** Reduce CCD read noise.
+		 */
+		void readNoiseCorrection();
 
 		/** Checks DUO function success and prints retrieved parameter.
 		 * @param[in] success Whether the DUO function was successfull.
