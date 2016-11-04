@@ -223,30 +223,47 @@ void Duo3D::autoCorrection() {
 		uint32_t hist_sum = 0;
 		for (auto pix=img.begin<uchar>(); pix<img.end<uchar>(); pix++) hist[*pix]++;
 		for (const auto& h: hist) hist_sum+= h;
-		uint32_t hist_q05 = autoQuantile / 100.0 * hist_sum;
-		uint32_t hist_q95 = (100 - autoQuantile) / 100.0 * hist_sum;
+		uint32_t quant_low = autoQuantile * hist_sum;
+		uint32_t quant_high = (1.0 - autoQuantile) * hist_sum;
 
 		// calculate mean (disregard quantiles)
 		uint32_t acc = 0;
 		uint32_t mean_sum = 0;
 		uint32_t mean_elements = 0;
-		for (size_t i=0; i<hist.size(); i++) {
+		size_t i{};
+		// discard lower quantile
+		for ( i=0; i<hist.size(); ++i) {
 			acc += hist[i];
-			if (acc<hist_q05) continue;
-			if (acc>hist_q95) break;
+			if (acc>quant_low) break;
+		}
+		// partly add current histogram bin
+		mean_sum = i*(acc-quant_low);
+		mean_elements = acc-quant_low;
+		// collect data for mean until upper quantile reached
+		for ( ++i; i<hist.size(); ++i) {
+			acc += hist[i];
 			mean_sum += i*hist[i];
 			mean_elements += hist[i];
+			if (acc>quant_high) break;
 		}
+		// partly add current histogram bin
+		mean_sum += i*(acc-quant_high);
+		mean_elements += acc-quant_high;
+		// calculate mean
 		double mean = mean_sum / double(mean_elements);
-		
-		// calculate new gain, add 0.01 to prevent stall on 0
+
+		// calculate new gain, add 0.1 to prevent 0 stall, cut to 2 digits
 		double gain{};
 		GetDUOGain(duo, &gain);
-		gain = (autoAttenuation*(autoTargetMean-mean)/mean+1.0)*(gain+0.01);
+		gain = (gain+0.1)*(autoAttenuation*(autoTargetMean/mean-1.0)+1.0);
+		gain = int(gain*100)/100.0;
 		SetDUOGain(duo, gain);
 
-		// TODO: consider exposure time (exp < 1000/fps)
-		// TODO denoise gain dependent!!!
+		// TODO: create proper debug output (exp, gain, led?)
+		//LOG(1, gain);
+
+		// TODO consider exposure time if necessary (exp < 1000/fps)
+		// TODO: also enable LEDs when to dark
 	}
 }
 
