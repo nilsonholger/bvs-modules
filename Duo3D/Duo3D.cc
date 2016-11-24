@@ -200,7 +200,6 @@ BVS::Status Duo3D::execute()
 	if (outL.active()) {
 		cv::Mat duo_left(cv::Size{(int)duo_frame->width, (int)duo_frame->height}, CV_8UC1);
 		duo_left.data = (unsigned char*)duo_frame->leftData;
-		//if (antiReadNoise) readNoiseCorrection(duo_left.data, readNoiseLeft);
 		if (antiReadNoise) {
 			duo_left = duo_left - noiseLeft;
 		}
@@ -217,7 +216,6 @@ BVS::Status Duo3D::execute()
 	if (outTime.active()) outTime.send(duo_frame->timeStamp);
 	if (outAccel.active()) outAccel.send({{duo_frame->IMUData->accelData[0], duo_frame->IMUData->accelData[1], duo_frame->IMUData->accelData[2]}});
 	if (outGyro.active()) outGyro.send({{duo_frame->IMUData->gyroData[0], duo_frame->IMUData->gyroData[1], duo_frame->IMUData->gyroData[2]}});
-	//if (outMag.active()) outMag.send({{duo_frame->magData[0], duo_frame->magData[1], duo_frame->magData[2]}});
 	if (outTemp.active()) outTemp.send(duo_frame->IMUData->tempData);
 	if (outDUOFrame.active()) outDUOFrame.send(*duo_frame);
 
@@ -241,7 +239,6 @@ void Duo3D::DUOCallback(const PDUOFrame pFrameData, void * pUserData)
 
 	std::lock_guard<std::mutex> lock{mutex};
 	duo_frame = pFrameData;
-	//printf("DUO Callback captured a frame, timestamp: %d",duo_frame->timeStamp);
 }
 
 
@@ -299,12 +296,6 @@ void Duo3D::autoCorrection() {
 		gain = (gain+0.1)*(autoAttenuation*(autoTargetMean/mean-1.0)+1.0);
 		gain = int(gain*100)/100.0;
 		SetDUOGain(duo, gain);
-
-		// TODO: create proper debug output (exp, gain, led?)
-		//LOG(1, gain);
-
-		// TODO consider exposure time if necessary (exp < 1000/fps)
-		// TODO: also enable LEDs when to dark
 	}
 }
 
