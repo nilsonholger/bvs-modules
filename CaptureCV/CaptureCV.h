@@ -2,7 +2,9 @@
 #define CAPTURECV_H
 
 #include "bvs/module.h"
-#include "opencv2/opencv.hpp"
+#include "opencv2/core.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/videoio.hpp"
 #include <string>
 #include <vector>
 

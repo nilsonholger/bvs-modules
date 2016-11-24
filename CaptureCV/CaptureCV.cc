@@ -48,7 +48,7 @@ CaptureCV::CaptureCV(BVS::ModuleInfo info, const BVS::Info& _bvs)
 			inputs.emplace_back(new BVS::Connector<cv::Mat>("in"+std::to_string(i+1), BVS::ConnectorType::INPUT));
 			if (displayMode) cv::namedWindow("in"+std::to_string(i+1));
 		}
-		if (displayMode) cv::startWindowThread();
+		if (displayMode) cv::startWindowThread(); // NOTE: shutdown segfault, GTK's icvWindowThreadLoop can't be joined/destroyed
 	};
 
 	std::function<void()> getVideoFiles = [&]() {
