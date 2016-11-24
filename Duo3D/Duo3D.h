@@ -25,8 +25,6 @@
  *  - outTemp (float)
  *  - outDUOFrame (struct DUOFrame from DUO API, includes all of the above)
  * Configuration Options: please see Duo3D.conf
- *
- * TODO: SetDUOLedPWMSeq(duo, val, size)
  */
 class Duo3D : public BVS::Module
 {
@@ -89,12 +87,12 @@ class Duo3D : public BVS::Module
 		bool autoCorrect; /**< Automagically update gain/exposure. */
 		double autoQuantile; /**< Remove quantiles when calculating mean. */
 		unsigned int autoTargetMean; /** Target mean for auto correction. */
-		double autoAttenuation; /** Attenuation factor for gain correction. */
-		bool antiReadNoise; /** Reduce CCD read noise. */
-		std::string noiseFrameFileLeft; // TODO
-		std::string noiseFrameFileRight;
-		cv::Mat noiseLeft; // TODO
-		cv::Mat noiseRight;
+		double autoAttenuation; /**< Attenuation factor for gain correction. */
+		bool antiReadNoise; /**< Reduce CCD read noise. */
+		std::string noiseFrameFileLeft; /**< Path to left noise frame. */
+		std::string noiseFrameFileRight; /**< Path to right noise frame. */
+		cv::Mat noiseLeft; /**< Noise for left camera. */
+		cv::Mat noiseRight; /**< Noise for right camera. */
 
 		unsigned int timeStamp; /**< Duo frame time stamp. */
 

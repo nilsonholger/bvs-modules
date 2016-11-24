@@ -83,11 +83,6 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 		setParam(SetDUOCameraSwap(duo, bvs.config.getValue(info.conf + ".cameraSwap", false)), "Camera Swap");
 		setParam(SetDUOLedPWM(duo, bvs.config.getValue(info.conf + ".led", 0.1f)), "LED PWM");
 		setParam(SetDUOUndistort(duo, undistort), "Undistort");
-		// TODO add DUO_INTR, DUO_EXTR, DUO_STEREO
-		// TODO add GetDUOIntrinsics, GetDUOExtrinsics, GetDUOStereoParameters
-		// TODO add Set/GetDUOIMURange
-		// TODO add SetDUOIMURate
-		// TODO add DUOAccelRange, DUOGyroRange, SetDUOLedPWMSeq
 
 		if (undistort) {
 			bool b;
@@ -150,8 +145,6 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 		LOG(0, "Could not start frame capture on DUO!");
 	}
 
-	// TODO: std::function
-	// TODO: should be done with used exposure time and gain or multiply with gain 100
 	if (antiReadNoise) {
 		if (noiseFrameFileLeft.empty()) {
 			LOG(0, "No left noise frame given!");
