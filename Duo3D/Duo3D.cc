@@ -23,11 +23,14 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	, duo_res{ 0, 0, 0, 0, 0, 0}
 	, showDuoInfo{bvs.config.getValue<bool>(info.conf + ".showDuoInfo", false)}
 	, showDuoParams{bvs.config.getValue<bool>(info.conf + ".showDuoParams", false)}
+	, showDuoFOV{bvs.config.getValue<bool>(info.conf + ".showDuoFOV", false)}
+	, showDuoStereo{bvs.config.getValue<bool>(info.conf + ".showDuoStereo", false)}
 	, blockModule{bvs.config.getValue<bool>(info.conf + ".blockModule", true)}
 	, width{bvs.config.getValue<int>(info.conf + ".width", 752)}
 	, height{bvs.config.getValue<int>(info.conf + ".height", 480)}
 	, binning{bvs.config.getValue<int>(info.conf + ".binning", -1)}
 	, fps{bvs.config.getValue<float>(info.conf + ".fps", -1)}
+	, undistort{bvs.config.getValue<bool>(info.conf + ".undistort", true)}
 	, autoCorrect{bvs.config.getValue<bool>(info.conf + ".autoCorrect", false)}
 	, autoQuantile{bvs.config.getValue<double>(info.conf + ".autoQuantile", 0.05)}
 	, autoTargetMean{bvs.config.getValue<unsigned int>(info.conf + ".autoTargetMean", 96)}
@@ -45,16 +48,16 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 		if (showDuoInfo) {
 			char tmp[260];
 			LOG(2, "DUO3D INFO:");
-			LOG(2,                                           "Library Version:  v" << GetLibVersion());
+			LOG(2,                                           "Library Version:  v" << GetDUOLibVersion());
 			printParam(GetDUODeviceName(duo, tmp), tmp,      "Device Name:      ");
 			printParam(GetDUOSerialNumber(duo, tmp), tmp,    "Serial Number:    ");
 			printParam(GetDUOFirmwareVersion(duo, tmp), tmp, "Firmware Version: v");
 			printParam(GetDUOFirmwareBuild(duo, tmp), tmp,   "Firmware Build:   ");
 		}
 
-		if (EnumerateResolutions(&duo_res, 1, width, height, binning, fps)==0) {
+		if (EnumerateDUOResolutions(&duo_res, 1, width, height, binning, fps)==0) {
 			DUOResolutionInfo res[100];
-			int num = EnumerateResolutions(res, 100, width, height, binning, fps);
+			int num = EnumerateDUOResolutions(res, 100, width, height, binning, fps);
 			LOG(1, "Available resolutions for " << width << "x" << height << "@" << fps << " - mode: " << binning << ":");
 			for (int i=0; i<=num; i++)
 				LOG(0, res[i].width
@@ -73,17 +76,31 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 		setParam(SetDUOExposure(duo, bvs.config.getValue(info.conf + ".exposure", 80.0f)), "Exposure");
 		double exp = bvs.config.getValue(info.conf + ".exposureMS", 0.0f);
 		if (exp>0.0f) setParam(SetDUOExposureMS(duo, exp), "Exposure in ms");
+		setParam(SetDUOAutoExposure(duo, bvs.config.getValue(info.conf + ".autoExposure", false)), "AutoExposure");
 		setParam(SetDUOGain(duo, bvs.config.getValue(info.conf + ".gain", 0)), "Gain");
 		setParam(SetDUOHFlip(duo, bvs.config.getValue(info.conf + ".hFlip", false)), "Horizontal Flip");
 		setParam(SetDUOVFlip(duo, bvs.config.getValue(info.conf + ".vFlip", false)), "Vertical Flip");
 		setParam(SetDUOCameraSwap(duo, bvs.config.getValue(info.conf + ".cameraSwap", false)), "Camera Swap");
 		setParam(SetDUOLedPWM(duo, bvs.config.getValue(info.conf + ".led", 0.1f)), "LED PWM");
+		setParam(SetDUOUndistort(duo, undistort), "Undistort");
+		// TODO add DUO_INTR, DUO_EXTR, DUO_STEREO
+		// TODO add GetDUOIntrinsics, GetDUOExtrinsics, GetDUOStereoParameters
+		// TODO add Set/GetDUOIMURange
+		// TODO add SetDUOIMURate
+		// TODO add DUOAccelRange, DUOGyroRange, SetDUOLedPWMSeq
 
-		if(showDuoParams) {
+		if (undistort) {
+			bool b;
+			GetDUOCalibrationPresent(duo, &b);
+			if (!b) LOG(0, "Undistort requested but no calibration available on DUO device!");
+		}
+
+		if (showDuoParams) {
 			LOG(2, "DUO3D PARAMETERS:");
 			double d;
 			bool b;
 			uint32_t w, h;
+			printParam(GetDUOAutoExposure(duo, &b), b,       "AutoExposure:     ");
 			printParam(GetDUOExposure(duo, &d), d,           "Exposure [0,100]: ");
 			printParam(GetDUOExposureMS(duo, &d), d,         "Exposure [ms]:    ");
 			printParam(GetDUOGain(duo, &d), d,               "Gain [0, 100]:    ");
@@ -91,7 +108,37 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 			printParam(GetDUOVFlip(duo, &b), b,              "Vertical Flip:    ");
 			printParam(GetDUOCameraSwap(duo, &b), b,         "Camera Swap:      ");
 			printParam(GetDUOLedPWM(duo, &d), d,             "LED PWM [0,100]:  ");
+			printParam(GetDUOCalibrationPresent(duo, &b), b, "Calibration:      ");
+			printParam(GetDUOUndistort(duo, &b), b,          "Undistort:        ");
 			if (GetDUOFrameDimension(duo, &w, &h)) LOG(2,    "Image Size [WxH]: " << w << "x" << h);
+		}
+		if (showDuoFOV) {
+			LOG(2, "DUO3D FOV:");
+			double d[4];
+			GetDUOFOV(duo, d);
+			LOG(2, "Distorted Left: H" << d[0] << " V"<< d[1] << " Right: H" << d[2] << " V" << d[3]);
+			GetDUORectifiedFOV(duo, d);
+			LOG(2, "Rectified Left: H" << d[0] << " V"<< d[1] << " Right: H" << d[2] << " V" << d[3]);
+		}
+
+		if (showDuoStereo) {
+			LOG(2, "DUO3D STEREO:");
+			DUO_STEREO st;
+			GetDUOStereoParameters(duo, &st);
+
+			std::function<void(const std::string&, const double[9], const double[8])> showIntrinsics = [&](const std::string& str, const double m[9], const double d[8]) {
+				LOG(2, "INTRINSICS " << str << ": [M]" << std::fixed);
+				LOG(2, "| " << m[0] << " " << m[3] << " " << m[6] << " |" << "   Distortion Coefficients");
+				LOG(2, "| " << m[1] << " " << m[4] << " " << m[7] << " |" << "   K: " << d[0] << " " << d[1] << " " << d[2] << " " << d[3] << " " << d[4] << " " << d[5]);
+				LOG(2, "| " << m[2] << " " << m[5] << " " << m[8] << " |" << "   P: " << d[6] << " " << d[7]);
+			};
+			showIntrinsics("LEFT CAMERA:", st.M1, st.D1);
+			showIntrinsics("RIGHT CAMERA:", st.M2, st.D2);
+
+			LOG(2, "EXTRINSICS: [R|T]");
+			LOG(2, "| " << st.R[0] << " " << st.R[3] << " " << st.R[6] << " | " << st.T[0] << " |");
+			LOG(2, "| " << st.R[1] << " " << st.R[4] << " " << st.R[7] << " | " << st.T[1] << " |");
+			LOG(2, "| " << st.R[2] << " " << st.R[5] << " " << st.R[8] << " | " << st.T[2] << " |");
 		}
 	} else {
 		LOG(0, "Could not connect to DUO!");
@@ -102,20 +149,21 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	} else {
 		LOG(0, "Could not start frame capture on DUO!");
 	}
+
 	// TODO: std::function
 	// TODO: should be done with used exposure time and gain or multiply with gain 100
 	if (antiReadNoise) {
 		if (noiseFrameFileLeft.empty()) {
 			LOG(0, "No left noise frame given!");
 		} else {
-			noiseLeft = cv::imread(noiseFrameFileLeft, cv::ImreadModes::IMREAD_GRAYSCALE);
+			noiseLeft = cv::imread(noiseFrameFileLeft, cv::IMREAD_GRAYSCALE);
 			if (noiseLeft.empty())
 				LOG(0, "Could not load left noise frame!");
 		}
 		if (noiseFrameFileRight.empty()) {
 			LOG(0, "No right noise frame given!");
 		} else {
-			noiseRight = cv::imread(noiseFrameFileRight, cv::ImreadModes::IMREAD_GRAYSCALE);
+			noiseRight = cv::imread(noiseFrameFileRight, cv::IMREAD_GRAYSCALE);
 			if (noiseRight.empty())
 				LOG(0, "Could not load right noise frame!");
 		}
@@ -174,10 +222,10 @@ BVS::Status Duo3D::execute()
 		outR.send(duo_right);
 	}
 	if (outTime.active()) outTime.send(duo_frame->timeStamp);
-	if (outAccel.active()) outAccel.send({{duo_frame->accelData[0], duo_frame->accelData[1], duo_frame->accelData[2]}});
-	if (outGyro.active()) outGyro.send({{duo_frame->gyroData[0], duo_frame->gyroData[1], duo_frame->gyroData[2]}});
-	if (outMag.active()) outMag.send({{duo_frame->magData[0], duo_frame->magData[1], duo_frame->magData[2]}});
-	if (outTemp.active()) outTemp.send(duo_frame->tempData);
+	if (outAccel.active()) outAccel.send({{duo_frame->IMUData->accelData[0], duo_frame->IMUData->accelData[1], duo_frame->IMUData->accelData[2]}});
+	if (outGyro.active()) outGyro.send({{duo_frame->IMUData->gyroData[0], duo_frame->IMUData->gyroData[1], duo_frame->IMUData->gyroData[2]}});
+	//if (outMag.active()) outMag.send({{duo_frame->magData[0], duo_frame->magData[1], duo_frame->magData[2]}});
+	if (outTemp.active()) outTemp.send(duo_frame->IMUData->tempData);
 	if (outDUOFrame.active()) outDUOFrame.send(*duo_frame);
 
 	if (autoCorrect) autoCorrection();

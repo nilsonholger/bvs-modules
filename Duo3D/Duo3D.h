@@ -8,7 +8,8 @@
 
 #include "bvs/module.h"
 #include "DUOLib.h"
-#include "opencv2/opencv.hpp"
+#include "opencv2/core.hpp"
+#include "opencv2/imgcodecs.hpp"
 
 
 
@@ -76,12 +77,15 @@ class Duo3D : public BVS::Module
 
 		bool showDuoInfo; /**< Show DUO device info at startup. */
 		bool showDuoParams; /**< Show DUO parameters used by device. */
+		bool showDuoFOV; /**< Show DUO's field of view parameters. */
+		bool showDuoStereo; /**< Show DUO's builtin stereo calibration details. */
 		bool blockModule; /**< Whether to block the module n ms after sending a frame. */
 
 		int width; /**< Selected image width. */
 		int height; /**< Selected image height. */
 		int binning; /**< Selected binning mode. */
 		float fps; /**< Selected frames per second. */
+		bool undistort; /** Enable builtin image rectification. */
 		bool autoCorrect; /**< Automagically update gain/exposure. */
 		double autoQuantile; /**< Remove quantiles when calculating mean. */
 		unsigned int autoTargetMean; /** Target mean for auto correction. */
