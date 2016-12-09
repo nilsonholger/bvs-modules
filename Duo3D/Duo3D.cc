@@ -123,17 +123,17 @@ Duo3D::Duo3D(BVS::ModuleInfo info, const BVS::Info& _bvs)
 
 			std::function<void(const std::string&, const double[9], const double[8])> showIntrinsics = [&](const std::string& str, const double m[9], const double d[8]) {
 				LOG(2, "INTRINSICS " << str << ": [M]" << std::fixed);
-				LOG(2, "| " << m[0] << " " << m[3] << " " << m[6] << " |" << "   Distortion Coefficients");
-				LOG(2, "| " << m[1] << " " << m[4] << " " << m[7] << " |" << "   K: " << d[0] << " " << d[1] << " " << d[2] << " " << d[3] << " " << d[4] << " " << d[5]);
-				LOG(2, "| " << m[2] << " " << m[5] << " " << m[8] << " |" << "   P: " << d[6] << " " << d[7]);
+				LOG(2, "⎡ " << m[0] << " " << m[1] << " " << m[2] << "⎤" << "   Distortion Coefficients");
+				LOG(2, "⎢ " << m[3] << " " << m[4] << " " << m[5] << "⎥" << "   K: " << d[0] << " " << d[1] << " " << d[2] << " " << d[3] << " " << d[4] << " " << d[5]);
+				LOG(2, "⎣ " << m[6] << " " << m[7] << " " << m[8] << "⎦" << "   P: " << d[6] << " " << d[7]);
 			};
 			showIntrinsics("LEFT CAMERA:", st.M1, st.D1);
 			showIntrinsics("RIGHT CAMERA:", st.M2, st.D2);
 
 			LOG(2, "EXTRINSICS: [R|T]");
-			LOG(2, "| " << st.R[0] << " " << st.R[3] << " " << st.R[6] << " | " << st.T[0] << " |");
-			LOG(2, "| " << st.R[1] << " " << st.R[4] << " " << st.R[7] << " | " << st.T[1] << " |");
-			LOG(2, "| " << st.R[2] << " " << st.R[5] << " " << st.R[8] << " | " << st.T[2] << " |");
+			LOG(2, "⎡ " << st.R[0] << " " << st.R[1] << " " << st.R[2] << " | " << st.T[0] << "⎤");
+			LOG(2, "⎢ " << st.R[3] << " " << st.R[4] << " " << st.R[5] << " | " << st.T[1] << "⎥");
+			LOG(2, "⎣ " << st.R[6] << " " << st.R[7] << " " << st.R[8] << " | " << st.T[2] << "⎦");
 		}
 	} else {
 		LOG(0, "Could not connect to DUO!");
