@@ -7,6 +7,7 @@ BVS (BASE) MODULES
 * **Duo3D:** Wrapper for the DUO3D camera device, requires the DUO libraries.
 * **ExampleCV:** Example of how to use the framework.
 * **FlowerBoxReader:** Provides serialized access to the flowerbox dataset.
+* **GPSParser:** Parses NMEA text format data from GPS receivers.
 * **KinectXLite:** Manuel Martinez's header only Kinect driver.
 * **OpenNIXLite:** Manuel Martinez's header only OpenNI wrapper [requires OpenNI2].
 * **StereoCVCUDA:** Wrapper for OpenCV's CUDA stereo capabilities.
