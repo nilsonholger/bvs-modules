@@ -18,7 +18,6 @@ GPSParser::GPSParser(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	, mutex{}
 	, shutdown{false}
 	, data{{0}}
-	, out_data{}
 	, out("gps-data", BVS::ConnectorType::OUTPUT)
 {
 	consoleListenerThread = std::thread{&GPSParser::consoleListener, this};
@@ -39,7 +38,7 @@ BVS::Status GPSParser::execute()
 	if (out.active())
 	{
 		std::lock_guard<std::mutex> lock{mutex};
-		out_data = {
+		out.send({
 			{"stat", data[0]},
 			{"date", data[1]},
 			{"time", data[2]},
@@ -55,7 +54,7 @@ BVS::Status GPSParser::execute()
 			{"vdop", data[12]},
 			{"amsl", data[13]},
 			{"ageo", data[14]}
-		};
+		});
 	}
 
 	return BVS::Status::OK;

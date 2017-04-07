@@ -91,7 +91,6 @@ class GPSParser : public BVS::Module
 		GPSParser& consoleListener();
 
 		std::array<double, 15> data; /**> Temporary data store, protected by mutex. */
-		std::map<std::string, double> out_data;
 
 		/** Example Connector used to retrieve/send data from/to other modules.
 		 * @see Connector
