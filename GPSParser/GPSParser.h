@@ -15,9 +15,10 @@
  * This module parses GPS information from USB attached GNSS/GPS receivers that
  * provide their data in text format over a serial console. Supported format is
  * NMEA 0183 version 3.00 [1] (with active Mode indicator field). It collects
- * data from $GPRMC, $GPVTG, $GPGGA and $GPGLL sentences. All four must be
- * present or data will be incomplete. Only $GPGLL occurences will update the
- * provided GPS data. See [2] for NMEA data sentence examples and explanations.
+ * data from $GPRMC, $GPVTG, $GPGGA, $GPGSA and $GPGLL sentences. All five must
+ * be present or the data will be incomplete. Only $GPGLL occurences will
+ * update the provided GPS data. See [2] for NMEA data sentence examples and
+ * explanations.
  *
  * [1] http://www.nmea.org
  * [2] http://home.mira.net/~gnb/gps/nmea.html
@@ -29,7 +30,8 @@
  * Output format:
  * Out provides a std::map<std::string, double>, which can be used to retrieve
  * various GPS provided data:
- *    "date" -> date of last GPS fix (valid received position)
+ *    "stat" -> validity status of GPS data (1: Valid position)
+ *    "date" -> date of last GPS fix (received position)
  *    "time" -> time of last fix
  *    "lat"  -> latitude in (-)ddmm.mm (degrees and minutes, '-' denotes 'S')
  *    "lon"  -> longitude in (-)dddmm.mm ('-' denotes 'W')
@@ -38,7 +40,9 @@
  *    "cot" -> true course
  *    "com" -> magnetic course
  *    "sats" -> number of satellites used
+ *    "pdop" -> position dilution of precision
  *    "hdop" -> horizontal dilution of precision
+ *    "vdop" -> vertical dilution of precision
  *    "amsl" -> altitude above mean sea level
  *    "ageo" -> geoidal altitude
 		};
@@ -87,7 +91,7 @@ class GPSParser : public BVS::Module
 
 		GPSParser& consoleListener();
 
-		std::array<double, 12> temp;
+		std::array<double, 15> temp;
 		std::map<std::string, double> out_data;
 
 		/** Example Connector used to retrieve/send data from/to other modules.
