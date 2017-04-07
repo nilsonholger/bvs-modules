@@ -23,7 +23,8 @@
  * [1] http://www.nmea.org
  * [2] http://home.mira.net/~gnb/gps/nmea.html
  *
- * Dependencies: none.
+ * Dependencies: none
+ * Inputs: none
  * Outputs: out
  * Configuration Options: please see GPSParser.conf
  *
@@ -87,15 +88,16 @@ class GPSParser : public BVS::Module
 		std::thread consoleListenerThread; /**< Thread for console listener. */
 		std::mutex mutex; /**< Mutex to synchronize data access. */
 		bool shutdown; /**< Signals console thread to close device. */
+		std::array<double, 15> data; /**< Temporary data store, protected by mutex. */
+		BVS::Connector<std::map<std::string, double>> out; /**< All GPS data. */
 
-		GPSParser& consoleListener();
-
-		std::array<double, 15> data; /**> Temporary data store, protected by mutex. */
-
-		/** Example Connector used to retrieve/send data from/to other modules.
-		 * @see Connector
+		/** Function for listener thread, recieves and parses NMEA sentences.
+		 * Receive and parse NMEA sentences, but handles only certain types of
+		 * NMEA sentences, also includes NMEA checksum generation. Uses mutex
+		 * to synchronize access to 'data' to prevent race conditions during
+		 * update.
 		 */
-		BVS::Connector<std::map<std::string, double>> out;
+		GPSParser& consoleListener();
 
 		GPSParser(const GPSParser&) = delete; /**< -Weffc++ */
 		GPSParser& operator=(const GPSParser&) = delete; /**< -Weffc++ */

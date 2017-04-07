@@ -35,8 +35,8 @@ GPSParser::~GPSParser() noexcept
 
 BVS::Status GPSParser::execute()
 {
-	if (out.active())
-	{
+	// update and send data if required
+	if (out.active()) {
 		std::lock_guard<std::mutex> lock{mutex};
 		out.send({
 			{"stat", data[0]},
@@ -66,6 +66,7 @@ GPSParser& GPSParser::consoleListener()
 {
 	BVS::nameThisThread("GPSlistener");
 
+	// open console and disable buffering
 	console.open(interface, std::ios_base::in | std::ios_base::ate);
 	console.rdbuf()->pubsetbuf(0, 0);
 	if (!console.is_open()) {
@@ -86,6 +87,7 @@ GPSParser& GPSParser::consoleListener()
 	};
 
 	// local storage
+	std::string sentence;                // NMEA sentence
 	char valid = ' ';                    // data status
 	double fix_d = 0, fix_t = 0;         // fix date and time
 	double lat = 0, lon = 0;             // latitude and longitude in (d)ddmm.mm
@@ -97,14 +99,12 @@ GPSParser& GPSParser::consoleListener()
 	double alt_amsl = 0, alt_geo = 0;    // altitude above mean sea level and geoidal
 
 	// parse messages
-	std::string sentence;
 	while (!shutdown) {
 		if (!console.fail()) std::getline(console, sentence);
 		else LOG(0, "lost connection to " << interface);
 
-		// parse content
-		std::string type = sentence.substr(1,5);
-		/* $GPRMC: recommended miminum specific GPS data
+		/* parse content
+		 * $GPRMC: recommended miminum specific GPS data
 		 * $GPVTG: track made good and ground speed
 		 * $GPGGA: global positioning system fix data
 		 * $GPGSA: dilution of precision and active satellites
@@ -143,6 +143,7 @@ GPSParser& GPSParser::consoleListener()
 		 * nnnn       - Differential reference station ID, 0000 to 1023
 		 * CS         - Checksum
 		 */
+		std::string type = sentence.substr(1,5);
 		if (type=="GPRMC") {
 			checksum_match &= calc_checksum_state(sentence);
 			if (checksum_match) {
