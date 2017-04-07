@@ -5,10 +5,6 @@
 
 
 
-// This is your module's constructor.
-// Please do not change its signature as it is called by the framework (so the
-// framework actually creates your module) and the framework assigns the unique
-// identifier and gives you access to configuration data.
 GPSParser::GPSParser(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	: BVS::Module()
 	, info(info)
@@ -30,7 +26,6 @@ GPSParser::GPSParser(BVS::ModuleInfo info, const BVS::Info& _bvs)
 
 
 
-// This is your module's destructor.
 GPSParser::~GPSParser() noexcept
 {
 	shutdown = true;
@@ -39,7 +34,6 @@ GPSParser::~GPSParser() noexcept
 
 
 
-// Put all your work here.
 BVS::Status GPSParser::execute()
 {
 	if (out.active())
@@ -175,7 +169,7 @@ GPSParser& GPSParser::consoleListener()
 				sscanf(dop.c_str(), ",%lf,%lf,%lf,%*s", &pdop, &hdop, &vdop);
 				//LOG(1, pdop << " " << hdop << " " << vdop);
 			}
-		} else if (type=="GPGLL") { // updates provided GPS data
+		} else if (type=="GPGLL") {
 			checksum_match &= calc_checksum_state(sentence);
 			if (checksum_match) {
 				sscanf(sentence.c_str(), "$GPGLL,%lf,%c,%lf,%c,%lf,%c,%*s", &lat, &lat_h, &lon, &lon_h, &fix_t, &valid);

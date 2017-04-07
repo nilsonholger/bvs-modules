@@ -45,7 +45,6 @@
  *    "vdop" -> vertical dilution of precision
  *    "amsl" -> altitude above mean sea level
  *    "ageo" -> geoidal altitude
-		};
  */
 class GPSParser : public BVS::Module
 {
