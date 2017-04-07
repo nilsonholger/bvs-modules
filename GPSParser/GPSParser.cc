@@ -21,6 +21,8 @@ GPSParser::GPSParser(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	, consoleListenerThread{}
 	, mutex{}
 	, shutdown{false}
+	, data{{0}}
+	, out_data{}
 	, out("gps-data", BVS::ConnectorType::OUTPUT)
 {
 	consoleListenerThread = std::thread{&GPSParser::consoleListener, this};
@@ -44,21 +46,21 @@ BVS::Status GPSParser::execute()
 	{
 		std::lock_guard<std::mutex> lock{mutex};
 		out_data = {
-			{"stat", temp[0]},
-			{"date", temp[1]},
-			{"time", temp[2]},
-			{"lat", temp[3]},
-			{"lon", temp[4]},
-			{"skn", temp[5]},
-			{"skph", temp[6]},
-			{"cot", temp[7]},
-			{"com", temp[8]},
-			{"sats", temp[9]},
-			{"pdop", temp[10]},
-			{"hdop", temp[11]},
-			{"vdop", temp[12]},
-			{"amsl", temp[13]},
-			{"ageo", temp[14]}
+			{"stat", data[0]},
+			{"date", data[1]},
+			{"time", data[2]},
+			{"lat", data[3]},
+			{"lon", data[4]},
+			{"skn", data[5]},
+			{"skph", data[6]},
+			{"cot", data[7]},
+			{"com", data[8]},
+			{"sats", data[9]},
+			{"pdop", data[10]},
+			{"hdop", data[11]},
+			{"vdop", data[12]},
+			{"amsl", data[13]},
+			{"ageo", data[14]}
 		};
 	}
 
@@ -182,7 +184,7 @@ GPSParser& GPSParser::consoleListener()
 				// update data
 				if (valid == 'V') LOG(1, "navigation receiver warning (no/invalid data)!");
 				std::lock_guard<std::mutex> lock{mutex};
-				temp = {{
+				data = {{
 					double(valid&0b1), // valid: 'A'==65, 'V'==86, valid&0b1==mod2
 					fix_d, fix_t,
 					lat * (1-2*(lat_h&0b1)), // lat_h: 'N'==78, 'S'==83, lat_h&0b1==mod2
