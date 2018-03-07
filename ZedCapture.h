@@ -26,10 +26,15 @@ class ZedCapture : public BVS::Module
         const BVS::Info& bvs;
 
         bool mConfShowImages;
+        bool mConfWithDepth;
+        bool mConfWithPointCloud;
+        bool mConfWithTracking;
         std::string mConfCamResolution;
         int mConfFps;
         std::string mConfDepthMode;
         std::string mConfDepthQuality;
+        std::string mConfDepthUnits;
+        bool mConfMeasureDepthRight;
 
         sl::Camera mCamera;
         sl::RuntimeParameters mRuntimeParameters;
@@ -39,6 +44,9 @@ class ZedCapture : public BVS::Module
         BVS::Connector<cv::Mat> mOutputImgRight;
         BVS::Connector<cv::Mat> mOutputDepthLeft;
         BVS::Connector<cv::Mat> mOutputDepthRight;
+        BVS::Connector<cv::Mat> mOutputPointCloudLeft;
+        BVS::Connector<cv::Mat> mOutputPointCloudRight;
+        BVS::Connector<cv::Mat> mOutputMotion;
 
         cv::Mat slMat2cvMat(sl::Mat& input) const;
 
