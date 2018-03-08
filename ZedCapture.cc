@@ -112,12 +112,32 @@ ZedCapture::ZedCapture(BVS::ModuleInfo info, const BVS::Info& bvs)
     }
 
 
-
     sl::ERROR_CODE err = mCamera.open(initParams);
     if (err != sl::SUCCESS) {
         LOG(3, "Could not open camera");
         mShutdown = true;
     } else {
+        sl::CalibrationParameters camParams = mCamera.getCameraInformation().calibration_parameters;
+        std::stringstream ss;
+        ss << "ZED found with parameters:" << std::endl;
+
+        ss << " Internal:" << std::endl;
+        ss << "\t LEFT (" << camParams.left_cam.image_size.width << " x " << camParams.left_cam.image_size.height << ")";
+        ss << "  --- fx: " << camParams.left_cam.fx << " fy: " << camParams.left_cam.fy << " cx: " << camParams.left_cam.cx << " cy: " << camParams.left_cam.cy;
+        ss << "  |  k1: " << camParams.left_cam.disto[0] << " k2: " << camParams.left_cam.disto[1] << " p1: " << camParams.left_cam.disto[2]
+              << " p2: " << camParams.left_cam.disto[3] << " p3: " << camParams.left_cam.disto[4] << std::endl;
+
+        ss << "\t RIGHT (" << camParams.right_cam.image_size.width << " x " << camParams.right_cam.image_size.height << ")";
+        ss << " --- fx: " << camParams.right_cam.fx << " fy: " << camParams.right_cam.fy << " cx: " << camParams.right_cam.cx << " cy: " << camParams.right_cam.cy;
+        ss << "  |  k1: " << camParams.right_cam.disto[0] << " k2: " << camParams.right_cam.disto[1] << " p1: " << camParams.right_cam.disto[2]
+              << " p2: " << camParams.right_cam.disto[3] << " p3: " << camParams.right_cam.disto[4] << std::endl;
+
+        ss << " External:" << std::endl;
+        ss << "\t T  --- x: " << camParams.T.x << " y: " << camParams.T.y << " z: " << camParams.T.z << std::endl;
+        ss << "\t R  --- tilt: " << camParams.R.x << " convergence: " << camParams.R.y << " roll: " << camParams.R.z << std::endl;
+
+        std::cout << ss.str();
+
         if (mConfWithTracking) {
             sl::TrackingParameters trackingParams;
             err = mCamera.enableTracking(trackingParams);
@@ -180,7 +200,6 @@ BVS::Status ZedCapture::execute() {
     if (mConfPlaybackRec && mFrameCounter >= mCamera.getSVONumberOfFrames()) {
         return BVS::Status::SHUTDOWN;
     }
-
 
     if (mCamera.grab(mRuntimeParameters) == sl::SUCCESS) {
         if (mConfWriteToFile && !mConfPlaybackRec) {
