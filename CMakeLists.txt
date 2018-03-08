@@ -5,6 +5,9 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_SOURC
 find_package(OpenCV REQUIRED)
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
+find_package(Boost REQUIRED COMPONENTS filesystem)
+include_directories(${Boost_INCLUDE_DIR})
+
 find_package(ZED 2 REQUIRED)
 find_package(CUDA ${ZED_CUDA_VERSION} EXACT REQUIRED)
 
@@ -16,7 +19,7 @@ link_directories(${CUDA_LIBRARY_DIRS})
 
 set(ENV{BVS_STATIC_MODULES} "$ENV{BVS_STATIC_MODULES};ZedCapture")
 add_library(ZedCapture ${BVS_MODULE_TYPE} ZedCapture.cc)
-target_link_libraries(ZedCapture ${BVS_LINK_LIBRARIES})
+target_link_libraries(ZedCapture ${BVS_LINK_LIBRARIES} ${Boost_LIBRARIES})
 
 target_link_libraries(ZedCapture ${ZED_LIBRARIES} ${CUDA_CUDA_LIBRARY} ${CUDA_CUDART_LIBRARY} ${CUDA_NPP_LIBRARIES_ZED})
 

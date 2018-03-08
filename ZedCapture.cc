@@ -1,5 +1,10 @@
 #include "ZedCapture.h"
 #include <opencv2/imgproc.hpp>
+#include <string>
+#include <iostream>
+#include <boost/filesystem/fstream.hpp>
+#include <chrono>
+
 
 
 
@@ -18,9 +23,15 @@ ZedCapture::ZedCapture(BVS::ModuleInfo info, const BVS::Info& bvs)
     , mConfDepthQuality(bvs.config.getValue<std::string>(info.conf+".depthQuality", ""))
     , mConfDepthUnits(bvs.config.getValue<std::string>(info.conf+".depthUnits", ""))
     , mConfMeasureDepthRight(bvs.config.getValue<bool>(info.conf+".measureDepthRight", false))
+    , mConfWriteToFile(bvs.config.getValue<bool>(info.conf+".writeToFile", false))
+    , mConfOutputDir(bvs.config.getValue<std::string>(info.conf+".outputDir", ""))
+    , mConfPlaybackRec(bvs.config.getValue<bool>(info.conf+".playbackRec", false))
+    , mConfPathToRec(bvs.config.getValue<std::string>(info.conf+".pathToRec", ""))
+    , mOutputPath(mConfOutputDir)
     , mCamera()
     , mRuntimeParameters()
     , mShutdown(false)
+    , mFrameCounter(0)
     , mOutputImgLeft{"imgLeft", BVS::ConnectorType::OUTPUT}
     , mOutputImgRight{"imgRight", BVS::ConnectorType::OUTPUT}
     , mOutputDepthLeft{"depthLeft", BVS::ConnectorType::OUTPUT}
@@ -96,6 +107,11 @@ ZedCapture::ZedCapture(BVS::ModuleInfo info, const BVS::Info& bvs)
     }
 
 
+    if (mConfPlaybackRec) {
+        initParams.svo_input_filename = mConfPathToRec.c_str();
+    }
+
+
 
     sl::ERROR_CODE err = mCamera.open(initParams);
     if (err != sl::SUCCESS) {
@@ -112,8 +128,21 @@ ZedCapture::ZedCapture(BVS::ModuleInfo info, const BVS::Info& bvs)
         }
     }
 
+    if (mConfWriteToFile && !mShutdown && !mConfPlaybackRec) {
+        if (boost::filesystem::exists(mOutputPath) && boost::filesystem::is_directory(mOutputPath)) {
+            std::chrono::steady_clock::time_point timeNow = std::chrono::steady_clock::now();
 
+            std::stringstream ss;
+            ss << "zed_rec_" << timeNow.time_since_epoch().count() << ".svo";
+            std::string filePath = (mOutputPath / ss.str()).string();
 
+            mCamera.enableRecording(filePath.c_str(), sl::SVO_COMPRESSION_MODE_RAW);
+
+        } else {
+            LOG(3, "The output file path is not valid");
+            mShutdown = true;
+        }
+    }
 }
 
 
@@ -124,7 +153,7 @@ ZedCapture::~ZedCapture() {
 }
 
 
-cv::Mat ZedCapture::slMat2cvMat(sl::Mat& input) const {
+cv::Mat ZedCapture::slMat2cvMat(const sl::Mat& input) const {
     int cv_type = -1;
     switch (input.getDataType()) {
     case sl::MAT_TYPE_32F_C1: cv_type = CV_32FC1; break;
@@ -143,14 +172,21 @@ cv::Mat ZedCapture::slMat2cvMat(sl::Mat& input) const {
 }
 
 
-
 BVS::Status ZedCapture::execute() {
     if (mShutdown) {
-
         return BVS::Status::SHUTDOWN;
     }
 
+    if (mConfPlaybackRec && mFrameCounter >= mCamera.getSVONumberOfFrames()) {
+        return BVS::Status::SHUTDOWN;
+    }
+
+
     if (mCamera.grab(mRuntimeParameters) == sl::SUCCESS) {
+        if (mConfWriteToFile && !mConfPlaybackRec) {
+            mCamera.record();
+        }
+
         //left camera image
         sl::Mat imageZedLeft(mCamera.getResolution(), sl::MAT_TYPE_8U_C4);
         cv::Mat imageOcvLeft = slMat2cvMat(imageZedLeft);
@@ -162,6 +198,7 @@ BVS::Status ZedCapture::execute() {
         mCamera.retrieveImage(imageZedLeft, sl::VIEW_LEFT); // Retrieve the left image
         mCamera.retrieveImage(imageZedRight, sl::VIEW_RIGHT); // Retrieve the right image
 
+        //convert color images to grayscale (TODO: do this in modules using these images, not here)
         cv::Mat imgLeftNoAlpha;
         cv::cvtColor(imageOcvLeft, imgLeftNoAlpha, cv::COLOR_BGRA2GRAY);
         mOutputImgLeft.send(imgLeftNoAlpha);
@@ -272,8 +309,9 @@ BVS::Status ZedCapture::execute() {
         if (mConfShowImages) {
             cv::waitKey(1);
         }
-
     }
+
+    mFrameCounter++;
 
     return BVS::Status::OK;
 }

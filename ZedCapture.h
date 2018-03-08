@@ -4,6 +4,7 @@
 #include "bvs/module.h"
 #include <sl/Camera.hpp>
 #include <opencv2/opencv.hpp>
+#include <boost/filesystem.hpp>
 
 class ZedCapture : public BVS::Module
 {
@@ -21,6 +22,7 @@ class ZedCapture : public BVS::Module
 		BVS::Status debugDisplay();
 
 	private:
+
         const BVS::ModuleInfo info;
         BVS::Logger logger;
         const BVS::Info& bvs;
@@ -35,10 +37,18 @@ class ZedCapture : public BVS::Module
         std::string mConfDepthQuality;
         std::string mConfDepthUnits;
         bool mConfMeasureDepthRight;
+        bool mConfWriteToFile;
+        std::string mConfOutputDir;
+        bool mConfPlaybackRec;
+        std::string mConfPathToRec;
+
+        boost::filesystem::path mOutputPath;
 
         sl::Camera mCamera;
         sl::RuntimeParameters mRuntimeParameters;
         bool mShutdown;
+
+        int mFrameCounter;
 
         BVS::Connector<cv::Mat> mOutputImgLeft;
         BVS::Connector<cv::Mat> mOutputImgRight;
@@ -48,7 +58,8 @@ class ZedCapture : public BVS::Module
         BVS::Connector<cv::Mat> mOutputPointCloudRight;
         BVS::Connector<cv::Mat> mOutputMotion;
 
-        cv::Mat slMat2cvMat(sl::Mat& input) const;
+        cv::Mat slMat2cvMat(const sl::Mat& input) const;
+
 
 		ZedCapture(const ZedCapture&) = delete; /**< -Weffc++ */
 		ZedCapture& operator=(const ZedCapture&) = delete; /**< -Weffc++ */
