@@ -27,6 +27,7 @@ ZedCapture::ZedCapture(BVS::ModuleInfo info, const BVS::Info& bvs)
     , mConfOutputDir(bvs.config.getValue<std::string>(info.conf+".outputDir", ""))
     , mConfPlaybackRec(bvs.config.getValue<bool>(info.conf+".playbackRec", false))
     , mConfPathToRec(bvs.config.getValue<std::string>(info.conf+".pathToRec", ""))
+    , mConfWithNormals(bvs.config.getValue<bool>(info.conf+".withNormals", true))
     , mOutputPath(mConfOutputDir)
     , mCamera()
     , mRuntimeParameters()
@@ -38,6 +39,8 @@ ZedCapture::ZedCapture(BVS::ModuleInfo info, const BVS::Info& bvs)
     , mOutputDepthRight{"depthRight", BVS::ConnectorType::OUTPUT}
     , mOutputPointCloudLeft{"cloudLeft", BVS::ConnectorType::OUTPUT}
     , mOutputPointCloudRight{"cloudRight", BVS::ConnectorType::OUTPUT}
+    , mOutputNormalsLeft{"normalsLeft", BVS::ConnectorType::OUTPUT}
+    , mOutputNormalsRight{"normalsRight", BVS::ConnectorType::OUTPUT}
     , mOutputMotion{"motion", BVS::ConnectorType::OUTPUT}
 
 {
@@ -125,12 +128,12 @@ ZedCapture::ZedCapture(BVS::ModuleInfo info, const BVS::Info& bvs)
         ss << "\t LEFT (" << camParams.left_cam.image_size.width << " x " << camParams.left_cam.image_size.height << ")";
         ss << "  --- fx: " << camParams.left_cam.fx << " fy: " << camParams.left_cam.fy << " cx: " << camParams.left_cam.cx << " cy: " << camParams.left_cam.cy;
         ss << "  |  k1: " << camParams.left_cam.disto[0] << " k2: " << camParams.left_cam.disto[1] << " p1: " << camParams.left_cam.disto[2]
-              << " p2: " << camParams.left_cam.disto[3] << " p3: " << camParams.left_cam.disto[4] << std::endl;
+           << " p2: " << camParams.left_cam.disto[3] << " p3: " << camParams.left_cam.disto[4] << std::endl;
 
         ss << "\t RIGHT (" << camParams.right_cam.image_size.width << " x " << camParams.right_cam.image_size.height << ")";
         ss << " --- fx: " << camParams.right_cam.fx << " fy: " << camParams.right_cam.fy << " cx: " << camParams.right_cam.cx << " cy: " << camParams.right_cam.cy;
         ss << "  |  k1: " << camParams.right_cam.disto[0] << " k2: " << camParams.right_cam.disto[1] << " p1: " << camParams.right_cam.disto[2]
-              << " p2: " << camParams.right_cam.disto[3] << " p3: " << camParams.right_cam.disto[4] << std::endl;
+           << " p2: " << camParams.right_cam.disto[3] << " p3: " << camParams.right_cam.disto[4] << std::endl;
 
         ss << " External:" << std::endl;
         ss << "\t T  --- x: " << camParams.T.x << " y: " << camParams.T.y << " z: " << camParams.T.z << std::endl;
@@ -220,11 +223,11 @@ BVS::Status ZedCapture::execute() {
         //convert color images to grayscale (TODO: do this in modules using these images, not here)
         cv::Mat imgLeftNoAlpha;
         cv::cvtColor(imageOcvLeft, imgLeftNoAlpha, cv::COLOR_BGRA2GRAY);
-        mOutputImgLeft.send(imgLeftNoAlpha);
+        mOutputImgLeft.send(imgLeftNoAlpha.clone());
 
         cv::Mat imgRightNoAlpha;
         cv::cvtColor(imageOcvRight, imgRightNoAlpha, cv::COLOR_BGRA2GRAY);
-        mOutputImgRight.send(imgRightNoAlpha);
+        mOutputImgRight.send(imgRightNoAlpha.clone());
 
         if (mConfShowImages) {
             cv::namedWindow("imgLeft", CV_WINDOW_NORMAL);
@@ -250,7 +253,7 @@ BVS::Status ZedCapture::execute() {
                 cv::imshow("depthLeft", depthImgOcvLeft);
             }
 
-            mOutputDepthLeft.send(depthOcvLeft);
+            mOutputDepthLeft.send(depthOcvLeft.clone());
 
             if (mConfMeasureDepthRight) {
                 //depth right
@@ -268,7 +271,7 @@ BVS::Status ZedCapture::execute() {
                     cv::imshow("depthRight", depthImgOcvRight);
                 }
 
-                mOutputDepthRight.send(depthOcvRight);
+                mOutputDepthRight.send(depthOcvRight.clone());
             }
         }
 
@@ -279,7 +282,12 @@ BVS::Status ZedCapture::execute() {
 
             mCamera.retrieveMeasure(pointCloudZedLeft, sl::MEASURE_XYZRGBA); //Retrieve the left point cloud
 
-            mOutputPointCloudLeft.send(pointCloudOcvLeft);
+            cv::Mat pcChannelsLeft[4];
+            cv::split(pointCloudOcvLeft, pcChannelsLeft);
+            cv::Mat pc3Channels;
+            cv::merge(pcChannelsLeft, 3, pc3Channels);
+
+            mOutputPointCloudLeft.send(pc3Channels);
 
             if (mConfMeasureDepthRight) {
                 //point cloud right
@@ -288,7 +296,42 @@ BVS::Status ZedCapture::execute() {
 
                 mCamera.retrieveMeasure(pointCloudZedRight, sl::MEASURE_XYZRGBA_RIGHT); //Retrieve the right point cloud
 
-                mOutputPointCloudRight.send(pointCloudOcvRight);
+                cv::Mat pcChannelsRight[4];
+                cv::split(pointCloudOcvRight, pcChannelsRight);
+                cv::Mat pc3Channels;
+                cv::merge(pcChannelsRight, 3, pc3Channels);
+
+                mOutputPointCloudRight.send(pc3Channels);
+            }
+        }
+
+        if (mConfWithNormals) {
+            //normals left
+            sl::Mat normalsZedLeft(mCamera.getResolution(), sl::MAT_TYPE_32F_C4);
+            cv::Mat normalsOcvLeft = slMat2cvMat(normalsZedLeft);
+
+            mCamera.retrieveMeasure(normalsZedLeft, sl::MEASURE_NORMALS); //Retrieve the left normals
+
+            cv::Mat normalsChannelsLeft[4];
+            cv::split(normalsOcvLeft, normalsChannelsLeft);
+            cv::Mat normals3Channels;
+            cv::merge(normalsChannelsLeft, 3, normals3Channels);
+
+            mOutputNormalsLeft.send(normals3Channels);
+
+            if (mConfMeasureDepthRight) {
+                //normals left
+                sl::Mat normalsZedRight(mCamera.getResolution(), sl::MAT_TYPE_32F_C4);
+                cv::Mat normalsOcvRight = slMat2cvMat(normalsZedRight);
+
+                mCamera.retrieveMeasure(normalsZedRight, sl::MEASURE_NORMALS_RIGHT); //Retrieve the left normals
+
+                cv::Mat normalsChannelsRight[4];
+                cv::split(normalsOcvRight, normalsChannelsRight);
+                cv::Mat normals3Channels;
+                cv::merge(normalsChannelsRight, 3, normals3Channels);
+
+                mOutputNormalsRight.send(normals3Channels);
             }
         }
 
@@ -318,6 +361,7 @@ BVS::Status ZedCapture::execute() {
                 motion.at<double>(3,3) = 1.0;
 
                 mOutputMotion.send(motion);
+
 
             } else if (state == sl::TRACKING_STATE_SEARCHING) {
                 //TODO: check whether tracking is lost and reset accordingly

@@ -41,6 +41,7 @@ class ZedCapture : public BVS::Module
         std::string mConfOutputDir;
         bool mConfPlaybackRec;
         std::string mConfPathToRec;
+        bool mConfWithNormals;
 
         boost::filesystem::path mOutputPath;
 
@@ -56,6 +57,8 @@ class ZedCapture : public BVS::Module
         BVS::Connector<cv::Mat> mOutputDepthRight;
         BVS::Connector<cv::Mat> mOutputPointCloudLeft;
         BVS::Connector<cv::Mat> mOutputPointCloudRight;
+        BVS::Connector<cv::Mat> mOutputNormalsLeft;
+        BVS::Connector<cv::Mat> mOutputNormalsRight;
         BVS::Connector<cv::Mat> mOutputMotion;
 
         cv::Mat slMat2cvMat(const sl::Mat& input) const;
