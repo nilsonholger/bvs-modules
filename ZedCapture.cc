@@ -28,6 +28,7 @@ ZedCapture::ZedCapture(BVS::ModuleInfo info, const BVS::Info& bvs)
     , mConfPlaybackRec(bvs.config.getValue<bool>(info.conf+".playbackRec", false))
     , mConfPathToRec(bvs.config.getValue<std::string>(info.conf+".pathToRec", ""))
     , mConfWithNormals(bvs.config.getValue<bool>(info.conf+".withNormals", true))
+    , mConfWithConfidence(bvs.config.getValue<bool>(info.conf+".withConfidence", true))
     , mOutputPath(mConfOutputDir)
     , mCamera()
     , mRuntimeParameters()
@@ -42,6 +43,7 @@ ZedCapture::ZedCapture(BVS::ModuleInfo info, const BVS::Info& bvs)
     , mOutputNormalsLeft{"normalsLeft", BVS::ConnectorType::OUTPUT}
     , mOutputNormalsRight{"normalsRight", BVS::ConnectorType::OUTPUT}
     , mOutputMotion{"motion", BVS::ConnectorType::OUTPUT}
+    , mOutputConfidence{"confidence", BVS::ConnectorType::OUTPUT}
 
 {
 
@@ -282,10 +284,9 @@ BVS::Status ZedCapture::execute() {
 
             mCamera.retrieveMeasure(pointCloudZedLeft, sl::MEASURE_XYZRGBA); //Retrieve the left point cloud
 
-            cv::Mat pcChannelsLeft[4];
-            cv::split(pointCloudOcvLeft, pcChannelsLeft);
-            cv::Mat pc3Channels;
-            cv::merge(pcChannelsLeft, 3, pc3Channels);
+            cv::Mat pc3Channels(pointCloudOcvLeft.rows, pointCloudOcvLeft.cols, CV_32FC3);
+            std::vector<int> mix = { 0,0 , 1,1 , 2,2};
+            cv::mixChannels(pointCloudOcvLeft, pc3Channels, mix);
 
             mOutputPointCloudLeft.send(pc3Channels);
 
@@ -296,13 +297,13 @@ BVS::Status ZedCapture::execute() {
 
                 mCamera.retrieveMeasure(pointCloudZedRight, sl::MEASURE_XYZRGBA_RIGHT); //Retrieve the right point cloud
 
-                cv::Mat pcChannelsRight[4];
-                cv::split(pointCloudOcvRight, pcChannelsRight);
-                cv::Mat pc3Channels;
-                cv::merge(pcChannelsRight, 3, pc3Channels);
+                cv::Mat pc3Channels(pointCloudOcvRight.rows, pointCloudOcvRight.cols, CV_32FC3);
+                std::vector<int> mix = { 0,0 , 1,1 , 2,2};
+                cv::mixChannels(pointCloudOcvRight, pc3Channels, mix);
 
                 mOutputPointCloudRight.send(pc3Channels);
             }
+
         }
 
         if (mConfWithNormals) {
@@ -312,10 +313,9 @@ BVS::Status ZedCapture::execute() {
 
             mCamera.retrieveMeasure(normalsZedLeft, sl::MEASURE_NORMALS); //Retrieve the left normals
 
-            cv::Mat normalsChannelsLeft[4];
-            cv::split(normalsOcvLeft, normalsChannelsLeft);
-            cv::Mat normals3Channels;
-            cv::merge(normalsChannelsLeft, 3, normals3Channels);
+            cv::Mat normals3Channels(normalsOcvLeft.rows, normalsOcvLeft.cols, CV_32FC3);
+            std::vector<int> mix = { 0,0 , 1,1 , 2,2};
+            cv::mixChannels(normalsOcvLeft, normals3Channels, mix);
 
             mOutputNormalsLeft.send(normals3Channels);
 
@@ -326,14 +326,25 @@ BVS::Status ZedCapture::execute() {
 
                 mCamera.retrieveMeasure(normalsZedRight, sl::MEASURE_NORMALS_RIGHT); //Retrieve the left normals
 
-                cv::Mat normalsChannelsRight[4];
-                cv::split(normalsOcvRight, normalsChannelsRight);
-                cv::Mat normals3Channels;
-                cv::merge(normalsChannelsRight, 3, normals3Channels);
+                cv::Mat normals3Channels(normalsOcvRight.rows, normalsOcvRight.cols, CV_32FC3);
+                std::vector<int> mix = { 0,0 , 1,1 , 2,2};
+                cv::mixChannels(normalsOcvRight, normals3Channels, mix);
 
                 mOutputNormalsRight.send(normals3Channels);
             }
         }
+
+        if (mConfWithConfidence) {
+            //confidence map
+            sl::Mat confidenceZedLeft(mCamera.getResolution(), sl::MAT_TYPE_32F_C1);
+            cv::Mat confidenceOcvLeft = slMat2cvMat(confidenceZedLeft);
+
+            mCamera.retrieveMeasure(confidenceZedLeft, sl::MEASURE_CONFIDENCE);
+
+            mOutputConfidence.send(confidenceOcvLeft);
+        }
+
+
 
         if (mConfWithTracking) {
             cv::Mat motion(4,4, CV_64FC1, cv::Scalar(0.0));
