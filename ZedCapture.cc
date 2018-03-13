@@ -339,7 +339,7 @@ BVS::Status ZedCapture::execute() {
 
             mCamera.retrieveMeasure(confidenceZedLeft, sl::MEASURE_CONFIDENCE);
 
-            mOutputConfidence.send(confidenceOcvLeft);
+            mOutputConfidence.send(confidenceOcvLeft.clone());
         }
 
 
