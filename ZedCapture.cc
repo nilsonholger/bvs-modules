@@ -222,21 +222,19 @@ BVS::Status ZedCapture::execute() {
         mCamera.retrieveImage(imageZedLeft, sl::VIEW_LEFT); // Retrieve the left image
         mCamera.retrieveImage(imageZedRight, sl::VIEW_RIGHT); // Retrieve the right image
 
-        //convert color images to grayscale (TODO: do this in modules using these images, not here)
-        cv::Mat imgLeftNoAlpha;
-        cv::cvtColor(imageOcvLeft, imgLeftNoAlpha, cv::COLOR_BGRA2GRAY);
-        mOutputImgLeft.send(imgLeftNoAlpha.clone());
-
-        cv::Mat imgRightNoAlpha;
-        cv::cvtColor(imageOcvRight, imgRightNoAlpha, cv::COLOR_BGRA2GRAY);
-        mOutputImgRight.send(imgRightNoAlpha.clone());
+        mOutputImgLeft.send(imageOcvLeft.clone());
+        mOutputImgRight.send(imageOcvRight.clone());
 
         if (mConfShowImages) {
+            cv::Mat imgLeftClone = imageOcvLeft.clone();
+
+            //show current FPS in image
+            cv::putText(imgLeftClone, bvs.getFPS(), cv::Point(30,30), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0,0,0), 2);
             cv::namedWindow("imgLeft", CV_WINDOW_NORMAL);
-            cv::imshow("imgLeft", imgLeftNoAlpha);
+            cv::imshow("imgLeft", imgLeftClone);
 
             cv::namedWindow("imgRight", CV_WINDOW_NORMAL);
-            cv::imshow("imgRight", imgRightNoAlpha);
+            cv::imshow("imgRight", imageOcvRight);
         }
 
         if (mConfWithDepth) {
