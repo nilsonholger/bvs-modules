@@ -1,8 +1,11 @@
 #ifndef GPSPARSER_H
 #define GPSPARSER_H
 
+#include <fcntl.h>
+#include <unistd.h>
+#include <termios.h>
+
 #include <array>
-#include <fstream>
 #include <map>
 #include <mutex>
 #include <thread>
@@ -82,7 +85,7 @@ class GPSParser : public BVS::Module
 
 		bool verbose; /**< Whether to log each received NMEA sentence (level 3). */
 		std::string interface; /**< The serial console path. */
-		std::ifstream console; /**< The serial console (ifstream). */
+		int console; /**< The serial console (file descriptor). */
 		bool checksum_match; /**< Whether there was a checksum (mis-)match. */
 
 		std::thread consoleListenerThread; /**< Thread for console listener. */

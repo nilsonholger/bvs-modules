@@ -66,19 +66,23 @@ GPSParser& GPSParser::consoleListener()
 {
 	BVS::nameThisThread("GPSlistener");
 
-	// open console and disable buffering
-	console.open(interface, std::ios_base::in | std::ios_base::ate);
-	console.rdbuf()->pubsetbuf(0, 0);
-	if (!console.is_open()) {
-		LOG(0, "could not open serial console interface from " << interface);
-	}
+	// initialize state and open serial console
+	struct termios state;
+	console = open(interface.c_str(), O_RDONLY | O_NOCTTY);
+	if (console<=0) LOG(0, "could not open serial interface from: " << interface);
+
+	// disable input character echoing (same as 'ssty -echo ...')
+	if (tcgetattr(console, &state)<0) LOG(0, "could not get terminal state, 'tcgetattr' returned errno: " << errno);
+	state.c_lflag &= ~ECHO;
+	if (tcsetattr(console, TCSAFLUSH, &state)<0) LOG(0, "could not set terminal state, 'tcsetattr' returned errno: " << errno);
 
 	// checksum calculation functional
 	std::function<bool(std::string&)> calc_checksum_state = [&](std::string str) {
 		int checksum = 0;
-		const char *s = str.substr(1, str.length()-5).c_str();
+		std::string tmp = str.substr(1, str.length()-4);
+		const char *s = tmp.c_str();
 		while(*s) checksum^= *s++;
-		if (checksum != std::stoi(str.substr(str.length()-3, 2), nullptr, 16)) {
+		if (checksum != std::stoi(str.substr(str.length()-2, 2), nullptr, 16)) {
 			LOG(1, "NMEA sentence checksum failure!");
 			return false;
 		} else {
@@ -88,6 +92,7 @@ GPSParser& GPSParser::consoleListener()
 
 	// local storage
 	std::string sentence;                // NMEA sentence
+	char buffer[100];                    // console buffer
 	char valid = ' ';                    // data status
 	double fix_d = 0, fix_t = 0;         // fix date and time
 	double lat = 0, lon = 0;             // latitude and longitude in (d)ddmm.mm
@@ -100,8 +105,14 @@ GPSParser& GPSParser::consoleListener()
 
 	// parse messages
 	while (!shutdown) {
-		if (!console.fail()) std::getline(console, sentence);
+		ssize_t bytes = read(console, buffer, sizeof(buffer));
+		if (bytes>0) sentence = std::string(buffer);
 		else LOG(0, "lost connection to " << interface);
+
+		// check for NMEA start sign and clean sentence
+		if (sentence.at(0)!='$') continue;
+		if (sentence.find('\n') != std::string::npos)
+			sentence.erase(sentence.find('\n'), std::string::npos);
 
 		/* parse content
 		 * $GPRMC: recommended miminum specific GPS data
@@ -195,7 +206,9 @@ GPSParser& GPSParser::consoleListener()
 		}
 		if (verbose) LOG(3, sentence);
 	}
-	console.close();
+
+	// close serial connection
+	close(console);
 
 	return *this;
 }
