@@ -1,6 +1,7 @@
 #include "GPSParser.h"
 
 #include <cstdio>
+#include <iomanip>
 #include <functional>
 
 
@@ -79,10 +80,11 @@ GPSParser& GPSParser::consoleListener()
 	// checksum calculation functional
 	std::function<bool(std::string&)> calc_checksum_state = [&](std::string str) {
 		int checksum = 0;
-		std::string tmp = str.substr(1, str.length()-4);
-		const char *s = tmp.c_str();
+		size_t sep = str.find('*', 7);
+		std::string tmp = str.substr(1, sep-1);
+		const char* s = tmp.c_str();
 		while(*s) checksum^= *s++;
-		if (checksum != std::stoi(str.substr(str.length()-2, 2), nullptr, 16)) {
+		if (checksum != std::stoi(str.substr(sep+1, 2), nullptr, 16)) {
 			LOG(1, "NMEA sentence checksum failure!");
 			return false;
 		} else {
@@ -113,6 +115,7 @@ GPSParser& GPSParser::consoleListener()
 		if (sentence.at(0)!='$') continue;
 		if (sentence.find('\n') != std::string::npos)
 			sentence.erase(sentence.find('\n'), std::string::npos);
+		if (verbose) LOG(3, sentence);
 
 		/* parse content
 		 * $GPRMC: recommended miminum specific GPS data
@@ -159,32 +162,32 @@ GPSParser& GPSParser::consoleListener()
 			checksum_match &= calc_checksum_state(sentence);
 			if (checksum_match) {
 				sscanf(sentence.c_str(), "$GPRMC,%lf,%c,%lf,%c,%lf,%c,%lf,%lf,%lf,%*s", &fix_t, &valid, &lat, &lat_h, &lon, &lon_h, &speed_kn, &course_t, &fix_d);
-				//LOG(1, fix_t << " " << valid << " " << lat << lat_h << " " << lon << lon_h << " " << speed_kn << " " << course_t << " " << fix_d);
+				LOG(4, std::setprecision(9) << fix_t << " " << valid << " " << lat << lat_h << " " << lon << lon_h << " " << speed_kn << " " << course_t << " " << fix_d);
 			}
 		} else if (type=="GPVTG") {
 			checksum_match &= calc_checksum_state(sentence);
 			if (checksum_match) {
 				sscanf(sentence.c_str(), "$GPVTG,%lf,T,%lf,M,%lf,N,%lf,K,%*s", &course_t, &course_m, &speed_kn, &speed_kph);
-				//LOG(1, course_t << " " << course_m << " " << speed_kn << " " << speed_kph << " " << mode);
+				LOG(4, course_t << " " << course_m << " " << speed_kn << " " << speed_kph);
 			}
 		} else if (type=="GPGGA") {
 			checksum_match &= calc_checksum_state(sentence);
 			if (checksum_match) {
 				sscanf(sentence.c_str(), "$GPGGA,%lf,%lf,%c,%lf,%c,%*c,%d,%lf,%lf,M,%lf,M,%*s", &fix_t, &lat, &lat_h, &lon, &lon_h, &satellites, &hdop, &alt_amsl, &alt_geo);
-				//LOG(1, fix_t << " " << lat << lat_h << " " << lon << lon_h << " " << quality << " " << satellites << " " << hdop << " " << alt_amsl << "m " << alt_geo << "m");
+				LOG(4, std::setprecision(9) << fix_t << " " << lat << lat_h << " " << lon << lon_h << " " << satellites << " " << hdop << " " << alt_amsl << "m " << alt_geo << "m");
 			}
 		} else if (type=="GPGSA") {
 			checksum_match &= calc_checksum_state(sentence);
 			if (checksum_match) {
 				std::string dop = sentence.substr(sentence.rfind(',', sentence.find_first_of('.')), std::string::npos);
 				sscanf(dop.c_str(), ",%lf,%lf,%lf,%*s", &pdop, &hdop, &vdop);
-				//LOG(1, pdop << " " << hdop << " " << vdop);
+				LOG(4, pdop << " " << hdop << " " << vdop);
 			}
 		} else if (type=="GPGLL") {
 			checksum_match &= calc_checksum_state(sentence);
 			if (checksum_match) {
 				sscanf(sentence.c_str(), "$GPGLL,%lf,%c,%lf,%c,%lf,%c,%*s", &lat, &lat_h, &lon, &lon_h, &fix_t, &valid);
-				//LOG(1, lat << lat_h << " " << lon << lon_h << " " << fix_t << " " << valid << " " << mode);
+				LOG(4, std::setprecision(9) << lat << lat_h << " " << lon << lon_h << " " << fix_t << " " << valid);
 
 				// update data
 				if (valid == 'V') LOG(1, "navigation receiver warning (no/invalid data)!");
@@ -204,7 +207,6 @@ GPSParser& GPSParser::consoleListener()
 				checksum_match = true;
 			}
 		}
-		if (verbose) LOG(3, sentence);
 	}
 
 	// close serial connection
