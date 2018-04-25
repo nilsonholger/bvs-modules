@@ -130,12 +130,14 @@ ZedCapture::ZedCapture(BVS::ModuleInfo info, const BVS::Info& bvs)
         ss << "\t LEFT (" << camParams.left_cam.image_size.width << " x " << camParams.left_cam.image_size.height << ")";
         ss << "  --- fx: " << camParams.left_cam.fx << " fy: " << camParams.left_cam.fy << " cx: " << camParams.left_cam.cx << " cy: " << camParams.left_cam.cy;
         ss << "  |  k1: " << camParams.left_cam.disto[0] << " k2: " << camParams.left_cam.disto[1] << " p1: " << camParams.left_cam.disto[2]
-           << " p2: " << camParams.left_cam.disto[3] << " p3: " << camParams.left_cam.disto[4] << std::endl;
+           << " p2: " << camParams.left_cam.disto[3] << " p3: " << camParams.left_cam.disto[4];
+        ss << "  |  fov_h: " << camParams.left_cam.h_fov << " fov_v: " << camParams.left_cam.v_fov << std::endl;
 
         ss << "\t RIGHT (" << camParams.right_cam.image_size.width << " x " << camParams.right_cam.image_size.height << ")";
         ss << " --- fx: " << camParams.right_cam.fx << " fy: " << camParams.right_cam.fy << " cx: " << camParams.right_cam.cx << " cy: " << camParams.right_cam.cy;
         ss << "  |  k1: " << camParams.right_cam.disto[0] << " k2: " << camParams.right_cam.disto[1] << " p1: " << camParams.right_cam.disto[2]
-           << " p2: " << camParams.right_cam.disto[3] << " p3: " << camParams.right_cam.disto[4] << std::endl;
+           << " p2: " << camParams.right_cam.disto[3] << " p3: " << camParams.right_cam.disto[4];
+        ss << "  |  fov_h: " << camParams.right_cam.h_fov << " fov_v: " << camParams.right_cam.v_fov << std::endl;
 
         ss << " External:" << std::endl;
         ss << "\t T  --- x: " << camParams.T.x << " y: " << camParams.T.y << " z: " << camParams.T.z << std::endl;
@@ -210,6 +212,8 @@ BVS::Status ZedCapture::execute() {
         if (mConfWriteToFile && !mConfPlaybackRec) {
             mCamera.record();
         }
+
+
 
         //left camera image
         sl::Mat imageZedLeft(mCamera.getResolution(), sl::MAT_TYPE_8U_C4);
@@ -318,7 +322,7 @@ BVS::Status ZedCapture::execute() {
             mOutputNormalsLeft.send(normals3Channels);
 
             if (mConfMeasureDepthRight) {
-                //normals left
+                //normals right
                 sl::Mat normalsZedRight(mCamera.getResolution(), sl::MAT_TYPE_32F_C4);
                 cv::Mat normalsOcvRight = slMat2cvMat(normalsZedRight);
 
@@ -371,9 +375,11 @@ BVS::Status ZedCapture::execute() {
 
                 mOutputMotion.send(motion);
 
-
             } else if (state == sl::TRACKING_STATE_SEARCHING) {
                 //TODO: check whether tracking is lost and reset accordingly
+                std::cout << "motion tracking is lost" << std::endl;
+
+
             }
 
         }
