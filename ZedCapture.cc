@@ -29,11 +29,15 @@ ZedCapture::ZedCapture(BVS::ModuleInfo info, const BVS::Info& bvs)
     , mConfPathToRec(bvs.config.getValue<std::string>(info.conf+".pathToRec", ""))
     , mConfWithNormals(bvs.config.getValue<bool>(info.conf+".withNormals", true))
     , mConfWithConfidence(bvs.config.getValue<bool>(info.conf+".withConfidence", true))
+    , mConfWithExternalOdometry(bvs.config.getValue<bool>(info.conf+".withExternalOdometry", false))
+    , mConfMinFramesForTrackingReset(bvs.config.getValue<int>(info.conf+".minFramesForTrackingReset", 5))
     , mOutputPath(mConfOutputDir)
     , mCamera()
     , mRuntimeParameters()
     , mShutdown(false)
     , mFrameCounter(0)
+    , motionLostCounter(0)
+    , mInputMotion{"motionIn", BVS::ConnectorType::INPUT}
     , mOutputImgLeft{"imgLeft", BVS::ConnectorType::OUTPUT}
     , mOutputImgRight{"imgRight", BVS::ConnectorType::OUTPUT}
     , mOutputDepthLeft{"depthLeft", BVS::ConnectorType::OUTPUT}
@@ -44,6 +48,7 @@ ZedCapture::ZedCapture(BVS::ModuleInfo info, const BVS::Info& bvs)
     , mOutputNormalsRight{"normalsRight", BVS::ConnectorType::OUTPUT}
     , mOutputMotion{"motion", BVS::ConnectorType::OUTPUT}
     , mOutputConfidence{"confidence", BVS::ConnectorType::OUTPUT}
+    , mOutputMotionLost{"motionLost", BVS::ConnectorType::OUTPUT}
 
 {
 
@@ -91,7 +96,7 @@ ZedCapture::ZedCapture(BVS::ModuleInfo info, const BVS::Info& bvs)
         initParams.depth_mode = sl::DEPTH_MODE_PERFORMANCE;
     }
 
-    //depth units)
+    //depth units
     if (mConfDepthUnits == "MM") {
         initParams.coordinate_units = sl::UNIT_MILLIMETER;
     } else if (mConfDepthUnits == "CM") {
@@ -117,11 +122,13 @@ ZedCapture::ZedCapture(BVS::ModuleInfo info, const BVS::Info& bvs)
     }
 
 
+    //init camera
     sl::ERROR_CODE err = mCamera.open(initParams);
     if (err != sl::SUCCESS) {
         LOG(3, "Could not open camera");
         mShutdown = true;
     } else {
+        //output camera parameters
         sl::CalibrationParameters camParams = mCamera.getCameraInformation().calibration_parameters;
         std::stringstream ss;
         ss << "ZED found with parameters:" << std::endl;
@@ -145,6 +152,7 @@ ZedCapture::ZedCapture(BVS::ModuleInfo info, const BVS::Info& bvs)
 
         std::cout << ss.str();
 
+        //Enable tracking
         if (mConfWithTracking) {
             sl::TrackingParameters trackingParams;
             err = mCamera.enableTracking(trackingParams);
@@ -155,6 +163,7 @@ ZedCapture::ZedCapture(BVS::ModuleInfo info, const BVS::Info& bvs)
         }
     }
 
+    //enable recording
     if (mConfWriteToFile && !mShutdown && !mConfPlaybackRec) {
         if (boost::filesystem::exists(mOutputPath) && boost::filesystem::is_directory(mOutputPath)) {
             std::chrono::steady_clock::time_point timeNow = std::chrono::steady_clock::now();
@@ -346,12 +355,12 @@ BVS::Status ZedCapture::execute() {
             mOutputConfidence.send(confidenceOcvLeft.clone());
         }
 
-
-
         if (mConfWithTracking) {
+            //tracking
             cv::Mat motion(4,4, CV_64FC1, cv::Scalar(0.0));
             sl::Pose pose;
             sl::TRACKING_STATE state = mCamera.getPosition(pose, sl::REFERENCE_FRAME_WORLD);
+
             if (state == sl::TRACKING_STATE_OK) {
                 sl::Translation trans = pose.getTranslation();
                 sl::Rotation rot = pose.getRotationMatrix();
@@ -374,15 +383,52 @@ BVS::Status ZedCapture::execute() {
                 motion.at<double>(3,3) = 1.0;
 
                 mOutputMotion.send(motion);
+                mOutputMotionLost.send(false);
+                motionLostCounter = 0;
 
             } else if (state == sl::TRACKING_STATE_SEARCHING) {
-                //TODO: check whether tracking is lost and reset accordingly
-                std::cout << "motion tracking is lost" << std::endl;
+                LOG(3, "Tracking state: lost");
+                //reset tracking if lost for a certain amount of frames. Optionally use an external odometry module to continue tracking while in lost state
+                if (motionLostCounter >= mConfMinFramesForTrackingReset) {
+                    sl::Transform initFrame;
 
+                    cv::Mat motionExternal;
+                    if (mInputMotion.receive(motionExternal) && motionExternal.rows == 4  && motionExternal.cols == 4 ) {
+                        initFrame.r00 = motionExternal.at<double>(0,0);
+                        initFrame.r01 = motionExternal.at<double>(0,1);
+                        initFrame.r02 = motionExternal.at<double>(0,2);
+                        initFrame.tx = motionExternal.at<double>(0,3);
+                        initFrame.r10 = motionExternal.at<double>(1,0);
+                        initFrame.r11 = motionExternal.at<double>(1,1);
+                        initFrame.r12 = motionExternal.at<double>(1,2);
+                        initFrame.ty = motionExternal.at<double>(1,3);
+                        initFrame.r20 = motionExternal.at<double>(2,0);
+                        initFrame.r21 = motionExternal.at<double>(2,1);
+                        initFrame.r22 = motionExternal.at<double>(2,2);
+                        initFrame.tz = motionExternal.at<double>(2,3);
+                        initFrame.m30 = motionExternal.at<double>(3,0);
+                        initFrame.m31 = motionExternal.at<double>(3,1);
+                        initFrame.m32 = motionExternal.at<double>(3,2);
+                        initFrame.m33 = motionExternal.at<double>(3,3);
+                    } else {
+                        initFrame.setIdentity();
+                    }
 
+                    sl::ERROR_CODE err = mCamera.resetTracking(initFrame);
+                    if (err != sl::SUCCESS) {
+                        LOG(3, "Could not reset tracking");
+                        mShutdown = true;
+                    }
+
+                }
+
+                ++motionLostCounter;
+                mOutputMotionLost.send(true);
             }
 
         }
+
+
 
         if (mConfShowImages) {
             cv::waitKey(1);

@@ -43,6 +43,8 @@ class ZedCapture : public BVS::Module
         std::string mConfPathToRec;
         bool mConfWithNormals;
         bool mConfWithConfidence;
+        bool mConfWithExternalOdometry;
+        int mConfMinFramesForTrackingReset;
 
         boost::filesystem::path mOutputPath;
 
@@ -51,6 +53,10 @@ class ZedCapture : public BVS::Module
         bool mShutdown;
 
         int mFrameCounter;
+
+        int motionLostCounter;
+
+        BVS::Connector<cv::Mat> mInputMotion;
 
         BVS::Connector<cv::Mat> mOutputImgLeft;
         BVS::Connector<cv::Mat> mOutputImgRight;
@@ -62,6 +68,7 @@ class ZedCapture : public BVS::Module
         BVS::Connector<cv::Mat> mOutputNormalsRight;
         BVS::Connector<cv::Mat> mOutputMotion;
         BVS::Connector<cv::Mat> mOutputConfidence;
+        BVS::Connector<bool> mOutputMotionLost;
 
         cv::Mat slMat2cvMat(const sl::Mat& input) const;
 
