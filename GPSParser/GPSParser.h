@@ -4,6 +4,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
+#include <iostream>
+#include <fstream>
 
 #include <array>
 #include <map>
@@ -88,10 +90,16 @@ class GPSParser : public BVS::Module
 		int console; /**< The serial console (file descriptor). */
 		bool checksum_match; /**< Whether there was a checksum (mis-)match. */
 
+		bool writeToFile; /** Wheter gps-results will be written to file or not */
+		std::string outFilePath; /** path of the file where gps-result will be written to */
+		std::ofstream outFile; /** file to write gps-results to */
+
 		std::thread consoleListenerThread; /**< Thread for console listener. */
 		std::mutex mutex; /**< Mutex to synchronize data access. */
 		bool shutdown; /**< Signals console thread to close device. */
 		std::array<double, 15> data; /**< Temporary data store, protected by mutex. */
+
+		std::map<std::string, double> dataMap; /** All GPS data for output to file or connector */
 		BVS::Connector<std::map<std::string, double>> out; /**< All GPS data. */
 
 		/** Function for listener thread, recieves and parses NMEA sentences.
