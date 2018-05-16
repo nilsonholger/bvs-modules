@@ -28,6 +28,7 @@ class ZedCapture : public BVS::Module
         const BVS::Info& bvs;
 
         bool mConfShowImages;
+        bool mConfWithRightSide;
         bool mConfWithDepth;
         bool mConfWithPointCloud;
         bool mConfWithTracking;
@@ -36,7 +37,6 @@ class ZedCapture : public BVS::Module
         std::string mConfDepthMode;
         std::string mConfDepthQuality;
         std::string mConfDepthUnits;
-        bool mConfMeasureDepthRight;
         bool mConfWriteToFile;
         std::string mConfOutputDir;
         bool mConfPlaybackRec;
