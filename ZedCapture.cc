@@ -14,7 +14,7 @@ ZedCapture::ZedCapture(BVS::ModuleInfo info, const BVS::Info& bvs)
     , logger(info.id)
     , bvs(bvs)
     , mConfShowImages(bvs.config.getValue<bool>(info.conf+".showImages", false))
-    , mConfWithRightSide(bvs.config.getValue<bool>(info.conf+".withRightSide", false))
+    , mConfMeasureDepthRight(bvs.config.getValue<bool>(info.conf+".measureDepthRight", false))
     , mConfWithDepth(bvs.config.getValue<bool>(info.conf+".withDepth", true))
     , mConfWithPointCloud(bvs.config.getValue<bool>(info.conf+".withPointCloud", true))
     , mConfWithTracking(bvs.config.getValue<bool>(info.conf+".withTracking", true))
@@ -110,7 +110,7 @@ ZedCapture::ZedCapture(BVS::ModuleInfo info, const BVS::Info& bvs)
     }
 
     //measure depth right
-    if (mConfWithRightSide) {
+    if (mConfMeasureDepthRight) {
         initParams.enable_right_side_measure = true;
     } else {
         initParams.enable_right_side_measure = false;
@@ -192,15 +192,15 @@ ZedCapture::~ZedCapture() {
 cv::Mat ZedCapture::slMat2cvMat(const sl::Mat& input) const {
     int cv_type = -1;
     switch (input.getDataType()) {
-		case sl::MAT_TYPE_32F_C1: cv_type = CV_32FC1; break;
-		case sl::MAT_TYPE_32F_C2: cv_type = CV_32FC2; break;
-		case sl::MAT_TYPE_32F_C3: cv_type = CV_32FC3; break;
-		case sl::MAT_TYPE_32F_C4: cv_type = CV_32FC4; break;
-		case sl::MAT_TYPE_8U_C1: cv_type = CV_8UC1; break;
-		case sl::MAT_TYPE_8U_C2: cv_type = CV_8UC2; break;
-		case sl::MAT_TYPE_8U_C3: cv_type = CV_8UC3; break;
-		case sl::MAT_TYPE_8U_C4: cv_type = CV_8UC4; break;
-		default: break;
+        case sl::MAT_TYPE_32F_C1: cv_type = CV_32FC1; break;
+        case sl::MAT_TYPE_32F_C2: cv_type = CV_32FC2; break;
+        case sl::MAT_TYPE_32F_C3: cv_type = CV_32FC3; break;
+        case sl::MAT_TYPE_32F_C4: cv_type = CV_32FC4; break;
+        case sl::MAT_TYPE_8U_C1: cv_type = CV_8UC1; break;
+        case sl::MAT_TYPE_8U_C2: cv_type = CV_8UC2; break;
+        case sl::MAT_TYPE_8U_C3: cv_type = CV_8UC3; break;
+        case sl::MAT_TYPE_8U_C4: cv_type = CV_8UC4; break;
+        default: break;
     }
 
     // cv::Mat and sl::Mat will share a single memory structure
@@ -223,95 +223,95 @@ BVS::Status ZedCapture::execute() {
         }
 
 
-		// ###################### Images ######################
-		if(mOutputImgLeft.active || mConfShowImages)
-		{
-			//left camera image
-			sl::Mat imageZedLeft(mCamera.getResolution(), sl::MAT_TYPE_8U_C4);
-			cv::Mat imageOcvLeft = slMat2cvMat(imageZedLeft);
-			mCamera.retrieveImage(imageZedLeft, sl::VIEW_LEFT); // Retrieve the left image
-			
-			if(mOutputImgLeft.active) mOutputImgLeft.send(imageOcvLeft.clone());
-						
-			if (mConfShowImages) 
-			{
-				cv::Mat imgLeftClone = imageOcvLeft.clone();
+        // ###################### Images ######################
+        if(mOutputImgLeft.active || mConfShowImages)
+        {
+            //left camera image
+            sl::Mat imageZedLeft(mCamera.getResolution(), sl::MAT_TYPE_8U_C4);
+            cv::Mat imageOcvLeft = slMat2cvMat(imageZedLeft);
+            mCamera.retrieveImage(imageZedLeft, sl::VIEW_LEFT); // Retrieve the left image
 
-				//show current FPS in image
-				cv::putText(imgLeftClone, bvs.getFPS(), cv::Point(30,30), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0,0,0), 2);
-				cv::namedWindow("imgLeft", CV_WINDOW_NORMAL);
-				cv::imshow("imgLeft", imgLeftClone);
-			}        
-		}
-		
-		if((mOutputImgRight.active || mConfShowImages) && mConfWithRightSide)
-		{
-			//right camera image
-			sl::Mat imageZedRight(mCamera.getResolution(), sl::MAT_TYPE_8U_C4);
-			cv::Mat imageOcvRight = slMat2cvMat(imageZedRight);
-			mCamera.retrieveImage(imageZedRight, sl::VIEW_RIGHT); // Retrieve the right image
-			
-			if(mOutputImgRight.active) mOutputImgRight.send(imageOcvRight.clone());
-			
-			if (mConfShowImages) 
-			{
-				cv::Mat imgRightClone = imageOcvRight.clone();
+            if(mOutputImgLeft.active) mOutputImgLeft.send(imageOcvLeft.clone());
 
-				//show current FPS in image
-				cv::putText(imgRightClone, bvs.getFPS(), cv::Point(30,30), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0,0,0), 2);
-				cv::namedWindow("imgRight", CV_WINDOW_NORMAL);
-				cv::imshow("imgRight", imageRightClone);
-			}
-		}        
-		
-		
-		// ###################### Depth ######################  
-		if((mOutputDepthLeft.active || mConfShowImages) && mConfWithDepth)
-		{
+            if (mConfShowImages)
+            {
+                cv::Mat imgLeftClone = imageOcvLeft.clone();
+
+                //show current FPS in image
+                cv::putText(imgLeftClone, bvs.getFPS(), cv::Point(30,30), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0,0,0), 2);
+                cv::namedWindow("imgLeft", CV_WINDOW_NORMAL);
+                cv::imshow("imgLeft", imgLeftClone);
+            }
+        }
+
+        if (mOutputImgRight.active || mConfShowImages)
+        {
+            //right camera image
+            sl::Mat imageZedRight(mCamera.getResolution(), sl::MAT_TYPE_8U_C4);
+            cv::Mat imageOcvRight = slMat2cvMat(imageZedRight);
+            mCamera.retrieveImage(imageZedRight, sl::VIEW_RIGHT); // Retrieve the right image
+
+            if(mOutputImgRight.active) mOutputImgRight.send(imageOcvRight.clone());
+
+            if (mConfShowImages)
+            {
+                cv::Mat imgRightClone = imageOcvRight.clone();
+
+                //show current FPS in image
+                cv::putText(imgRightClone, bvs.getFPS(), cv::Point(30,30), cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(0,0,0), 2);
+                cv::namedWindow("imgRight", CV_WINDOW_NORMAL);
+                cv::imshow("imgRight", imageRightClone);
+            }
+        }
+
+
+        // ###################### Depth ######################
+        if ((mOutputDepthLeft.active || mConfShowImages) && mConfWithDepth)
+        {
             //depth left
             sl::Mat depthZedLeft(mCamera.getResolution(), sl::MAT_TYPE_32F_C1);
             cv::Mat depthOcvLeft = slMat2cvMat(depthZedLeft);
-		
-			sl::Mat depthImgZedLeft(mCamera.getResolution(), sl::MAT_TYPE_8U_C4);
+
+            sl::Mat depthImgZedLeft(mCamera.getResolution(), sl::MAT_TYPE_8U_C4);
             cv::Mat depthImgOcvLeft = slMat2cvMat(depthImgZedLeft);
 
             mCamera.retrieveMeasure(depthZedLeft, sl::MEASURE_DEPTH); // Retrieve the left depth image
             mCamera.retrieveImage(depthImgZedLeft, sl::VIEW_DEPTH); // Retrieve the left depth image to display
 
-			if(mOutputDepthLeft.active) mOutputDepthLeft.send(depthOcvLeft.clone());
-			
-            if (mConfShowImages) 
+            if(mOutputDepthLeft.active) mOutputDepthLeft.send(depthOcvLeft.clone());
+
+            if (mConfShowImages)
             {
                 cv::namedWindow("depthLeft", CV_WINDOW_NORMAL);
                 cv::imshow("depthLeft", depthImgOcvLeft);
             }
-		}
-		
-		if((mOutputDepthRight.active || mConfShowImages) && mConfWithDepth && mConfWithRightSide)
+        }
+
+        if((mOutputDepthRight.active || mConfShowImages) && mConfWithDepth && mConfMeasureDepthRight)
         {
             //depth right
-			sl::Mat depthZedRight(mCamera.getResolution(), sl::MAT_TYPE_32F_C1);
-			cv::Mat depthOcvRight = slMat2cvMat(depthZedRight);
+            sl::Mat depthZedRight(mCamera.getResolution(), sl::MAT_TYPE_32F_C1);
+            cv::Mat depthOcvRight = slMat2cvMat(depthZedRight);
 
-			sl::Mat depthImgZedRight(mCamera.getResolution(), sl::MAT_TYPE_8U_C4);
-			cv::Mat depthImgOcvRight = slMat2cvMat(depthImgZedRight);
+            sl::Mat depthImgZedRight(mCamera.getResolution(), sl::MAT_TYPE_8U_C4);
+            cv::Mat depthImgOcvRight = slMat2cvMat(depthImgZedRight);
 
-			mCamera.retrieveMeasure(depthZedRight, sl::MEASURE_DEPTH_RIGHT); // Retrieve the right depth image
-			mCamera.retrieveImage(depthImgZedRight, sl::VIEW_DEPTH_RIGHT); // Retrieve the right depth image to display
+            mCamera.retrieveMeasure(depthZedRight, sl::MEASURE_DEPTH_RIGHT); // Retrieve the right depth image
+            mCamera.retrieveImage(depthImgZedRight, sl::VIEW_DEPTH_RIGHT); // Retrieve the right depth image to display
 
-			if(mOutputDepthRight.active) mOutputDepthRight.send(depthOcvRight.clone());
-			
-			if (mConfShowImages) 
-			{
-				cv::namedWindow("depthRight", CV_WINDOW_NORMAL);
-				cv::imshow("depthRight", depthImgOcvRight);
-			}		
+            if(mOutputDepthRight.active) mOutputDepthRight.send(depthOcvRight.clone());
+
+            if (mConfShowImages)
+            {
+                cv::namedWindow("depthRight", CV_WINDOW_NORMAL);
+                cv::imshow("depthRight", depthImgOcvRight);
+            }
         }
 
 
-		// ###################### PointClouds ######################  
-		if(mOutputPointCloudLeft.active && mConfWithPointCloud)
-		{
+        // ###################### PointClouds ######################
+        if(mOutputPointCloudLeft.active && mConfWithPointCloud)
+        {
             //point cloud left
             sl::Mat pointCloudZedLeft(mCamera.getResolution(), sl::MAT_TYPE_32F_C4);
             cv::Mat pointCloudOcvLeft = slMat2cvMat(pointCloudZedLeft);
@@ -323,27 +323,27 @@ BVS::Status ZedCapture::execute() {
             cv::mixChannels(pointCloudOcvLeft, pc3Channels, mix);
 
             mOutputPointCloudLeft.send(pc3Channels);
-		}
-		
-		if(mOutputPointCloudRight.active && mConfWithPointCloud && mConfWithRightSide)
-		{
-			//point cloud right
-			sl::Mat pointCloudZedRight(mCamera.getResolution(), sl::MAT_TYPE_32F_C4);
-			cv::Mat pointCloudOcvRight = slMat2cvMat(pointCloudZedRight);
+        }
 
-			mCamera.retrieveMeasure(pointCloudZedRight, sl::MEASURE_XYZRGBA_RIGHT); //Retrieve the right point cloud
+        if(mOutputPointCloudRight.active && mConfWithPointCloud && mConfMeasureDepthRight)
+        {
+            //point cloud right
+            sl::Mat pointCloudZedRight(mCamera.getResolution(), sl::MAT_TYPE_32F_C4);
+            cv::Mat pointCloudOcvRight = slMat2cvMat(pointCloudZedRight);
 
-			cv::Mat pc3Channels(pointCloudOcvRight.rows, pointCloudOcvRight.cols, CV_32FC3);
-			std::vector<int> mix = { 0,0 , 1,1 , 2,2};
-			cv::mixChannels(pointCloudOcvRight, pc3Channels, mix);
+            mCamera.retrieveMeasure(pointCloudZedRight, sl::MEASURE_XYZRGBA_RIGHT); //Retrieve the right point cloud
 
-			mOutputPointCloudRight.send(pc3Channels);
+            cv::Mat pc3Channels(pointCloudOcvRight.rows, pointCloudOcvRight.cols, CV_32FC3);
+            std::vector<int> mix = { 0,0 , 1,1 , 2,2};
+            cv::mixChannels(pointCloudOcvRight, pc3Channels, mix);
+
+            mOutputPointCloudRight.send(pc3Channels);
         }
 
 
-		// ###################### Normals ######################  
-		if(mOutputNormalsLeft.active && mConfWithNormals)
-		{
+        // ###################### Normals ######################
+        if(mOutputNormalsLeft.active && mConfWithNormals)
+        {
             //normals left
             sl::Mat normalsZedLeft(mCamera.getResolution(), sl::MAT_TYPE_32F_C4);
             cv::Mat normalsOcvLeft = slMat2cvMat(normalsZedLeft);
@@ -355,26 +355,26 @@ BVS::Status ZedCapture::execute() {
             cv::mixChannels(normalsOcvLeft, normals3Channels, mix);
 
             mOutputNormalsLeft.send(normals3Channels);
-		}
-		
-		if(mOutputNormalsRight.active && mConfWithNormals  && mConfWithRightSide)
-		{
-			//normals right
-			sl::Mat normalsZedRight(mCamera.getResolution(), sl::MAT_TYPE_32F_C4);
-			cv::Mat normalsOcvRight = slMat2cvMat(normalsZedRight);
+        }
 
-			mCamera.retrieveMeasure(normalsZedRight, sl::MEASURE_NORMALS_RIGHT); //Retrieve the left normals
+        if(mOutputNormalsRight.active && mConfWithNormals  && mConfMeasureDepthRight)
+        {
+            //normals right
+            sl::Mat normalsZedRight(mCamera.getResolution(), sl::MAT_TYPE_32F_C4);
+            cv::Mat normalsOcvRight = slMat2cvMat(normalsZedRight);
 
-			cv::Mat normals3Channels(normalsOcvRight.rows, normalsOcvRight.cols, CV_32FC3);
-			std::vector<int> mix = { 0,0 , 1,1 , 2,2};
-			cv::mixChannels(normalsOcvRight, normals3Channels, mix);
+            mCamera.retrieveMeasure(normalsZedRight, sl::MEASURE_NORMALS_RIGHT); //Retrieve the left normals
 
-			mOutputNormalsRight.send(normals3Channels);
+            cv::Mat normals3Channels(normalsOcvRight.rows, normalsOcvRight.cols, CV_32FC3);
+            std::vector<int> mix = { 0,0 , 1,1 , 2,2};
+            cv::mixChannels(normalsOcvRight, normals3Channels, mix);
+
+            mOutputNormalsRight.send(normals3Channels);
         }
 
 
-		// ###################### Confidence ######################  
-        if (mOutputConfidence.active && mConfWithConfidence) 
+        // ###################### Confidence ######################
+        if (mOutputConfidence.active && mConfWithConfidence)
         {
             //confidence map
             sl::Mat confidenceZedLeft(mCamera.getResolution(), sl::MAT_TYPE_32F_C1);
@@ -386,15 +386,15 @@ BVS::Status ZedCapture::execute() {
         }
 
 
-		// ###################### Motion Tracking ######################  
-        if ((mOutputMotion.active || mOutputMotionLost.active) && mConfWithTracking) 
+        // ###################### Motion Tracking ######################
+        if ((mOutputMotion.active || mOutputMotionLost.active) && mConfWithTracking)
         {
             //tracking
             cv::Mat motion(4,4, CV_64FC1, cv::Scalar(0.0));
             sl::Pose pose;
             sl::TRACKING_STATE state = mCamera.getPosition(pose, sl::REFERENCE_FRAME_WORLD);
 
-            if (state == sl::TRACKING_STATE_OK) 
+            if (state == sl::TRACKING_STATE_OK)
             {
                 sl::Translation trans = pose.getTranslation();
                 sl::Rotation rot = pose.getRotationMatrix();
@@ -420,8 +420,8 @@ BVS::Status ZedCapture::execute() {
                 mOutputMotionLost.send(false);
                 motionLostCounter = 0;
 
-            } 
-            else if (state == sl::TRACKING_STATE_SEARCHING) 
+            }
+            else if (state == sl::TRACKING_STATE_SEARCHING)
             {
                 LOG(3, "Tracking state: lost");
                 //reset tracking if lost for a certain amount of frames. Optionally use an external odometry module to continue tracking while in lost state

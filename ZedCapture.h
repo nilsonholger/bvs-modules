@@ -28,7 +28,7 @@ class ZedCapture : public BVS::Module
         const BVS::Info& bvs;
 
         bool mConfShowImages;
-        bool mConfWithRightSide;
+        bool mConfMeasureDepthRight;
         bool mConfWithDepth;
         bool mConfWithPointCloud;
         bool mConfWithTracking;
