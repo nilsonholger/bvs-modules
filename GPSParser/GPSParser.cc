@@ -12,11 +12,11 @@ GPSParser::GPSParser(BVS::ModuleInfo info, const BVS::Info& _bvs)
 	, logger(info.id)
 	, bvs(_bvs)
 	, verbose{bvs.config.getValue<bool>(info.conf + ".verbose", false)}
-	, writeToFile{bvs.config.getValue<bool>(info.conf + ".writeToFile", false)}
-        , outFilePath{bvs.config.getValue<std::string>(info.conf + ".outFilePath", {})}
 	, interface{bvs.config.getValue<std::string>(info.conf + ".interface", {})}
 	, console{}
 	, checksum_match{true}
+	, writeToFile{bvs.config.getValue<bool>(info.conf + ".writeToFile", false)}
+	, outFilePath{bvs.config.getValue<std::string>(info.conf + ".outFilePath", {})}
 	, consoleListenerThread{}
 	, mutex{}
 	, shutdown{false}
@@ -27,26 +27,26 @@ GPSParser::GPSParser(BVS::ModuleInfo info, const BVS::Info& _bvs)
 
 
 	// create folder and filename of video writer for saving output video
-        if(writeToFile)
-        {
-                // get time string
-                time_t t = time(NULL);
-                tm* timePtr = localtime(&t);
-                std::stringstream timeString;
-                timeString << (timePtr->tm_year + 1900);
-                timeString << std::setw(2) << std::setfill('0') << (timePtr->tm_mon + 1);
-                timeString << std::setw(2) << std::setfill('0') << timePtr->tm_mday << "_";
-                timeString << std::setw(2) << std::setfill('0') << timePtr->tm_hour;
-                timeString << std::setw(2) << std::setfill('0') << timePtr->tm_min;
-                timeString << std::setw(2) << std::setfill('0') << timePtr->tm_sec;
+	if(writeToFile)
+	{
+		// get time string
+		time_t t = time(NULL);
+		tm* timePtr = localtime(&t);
+		std::stringstream timeString;
+		timeString << (timePtr->tm_year + 1900);
+		timeString << std::setw(2) << std::setfill('0') << (timePtr->tm_mon + 1);
+		timeString << std::setw(2) << std::setfill('0') << timePtr->tm_mday << "_";
+		timeString << std::setw(2) << std::setfill('0') << timePtr->tm_hour;
+		timeString << std::setw(2) << std::setfill('0') << timePtr->tm_min;
+		timeString << std::setw(2) << std::setfill('0') << timePtr->tm_sec;
 
-                // create path for output file
-                std::stringstream ss;
-                ss << outFilePath << "/gpsData_" << timeString.str() << ".txt";
+		// create path for output file
+		std::stringstream ss;
+		ss << outFilePath << "/gpsData_" << timeString.str() << ".txt";
 
 		// open the output file
 		outFile.open(ss.str());
-        }
+	}
 }
 
 
