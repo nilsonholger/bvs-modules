@@ -13,6 +13,7 @@ BVS (BASE) MODULES
 * **StereoCVCUDA:** Wrapper for OpenCV's CUDA stereo capabilities.
 * **StereoELAS:** Wrapper for Andreas Geiger's excellent libELAS stereo library.
 * **WebStreamer:** Small MJPEG web(socket) stream to view on a browser, built upon Manuel Martinez's awesome uSnippets.
+* ZedCapture: Wrapper for Stereolabs ZED camera devices, requires the ZED-SDK.
 
 **NOTE:**
 
